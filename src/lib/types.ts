@@ -380,6 +380,15 @@ export type PromocodeClick = {
     ipAddress: string;
 }
 
+export type InvitationClick = {
+    id?: string;
+    invitationId: string;
+    shortId: string;
+    timestamp: any;
+    userAgent: string;
+    ipAddress: string;
+}
+
 export type AuditLog = {
     id?: string;
     timestamp: any;
@@ -445,8 +454,7 @@ export type Invitation = {
     eventId?: string; // Optional: for event-specific roles like verifier
     listingName?: string; // Optional: name of the event
     shortId: string;
-    promocodeId?: string;
-    activity?: PromocodeClick[];
+    activity?: InvitationClick[];
 };
 
 export type TeamMember = {
@@ -564,6 +572,7 @@ export type CheckoutFeedback = {
 
 export type ShortLink = {
     longUrl: string;
+    invitationId?: string;
     promocodeId?: string;
     trackingLinkId?: string;
     createdAt: any;

@@ -1,10 +1,27 @@
 
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import type { ShortLink } from '@/lib/types';
-import { trackLinkClick } from '@/app/influencer/campaigns/[id]/actions';
 import { headers } from 'next/headers';
+
+async function trackClick(shortId: string, invitationId: string) {
+    const headersList = headers();
+    const ipAddress = headersList.get('x-forwarded-for') || 'unknown';
+    const userAgent = headersList.get('user-agent') || 'unknown';
+
+    try {
+        await addDoc(collection(db, 'invitationClicks'), {
+            invitationId,
+            shortId,
+            timestamp: serverTimestamp(),
+            ipAddress,
+            userAgent,
+        });
+    } catch (error) {
+        console.error("Failed to track invitation click:", error);
+    }
+}
 
 export async function GET(
   request: Request,
@@ -26,14 +43,11 @@ export async function GET(
     const linkDoc = await getDoc(linkDocRef);
 
     if (linkDoc.exists()) {
-      const { longUrl, promocodeId, trackingLinkId } = linkDoc.data() as ShortLink;
+      const { longUrl, invitationId } = linkDoc.data() as ShortLink;
       
       // --- Activity Tracking ---
-      if (promocodeId && trackingLinkId) {
-        trackLinkClick({
-            promocodeId,
-            trackingLinkId,
-        });
+      if (invitationId) {
+        trackClick(shortId, invitationId);
       }
       // --- End Activity Tracking ---
 

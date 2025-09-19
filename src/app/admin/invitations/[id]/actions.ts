@@ -1,9 +1,10 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc, collection, query, where, orderBy, getDocs, Timestamp, updateDoc } from 'firebase/firestore';
-import type { Invitation, FirebaseUser, AuditLog, UserEvent, PromocodeClick, TrackingLink } from '@/lib/types';
+import type { Invitation, FirebaseUser, InvitationClick } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { auth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
@@ -26,7 +27,7 @@ type InvitationDetails = Invitation & {
         email: string;
         photoURL?: string;
     };
-    activity?: PromocodeClick[];
+    activity?: InvitationClick[];
 }
 
 export async function getInvitationDetails(invitationId: string): Promise<{ success: boolean; data?: InvitationDetails; error?: string; }> {
@@ -61,20 +62,18 @@ export async function getInvitationDetails(invitationId: string): Promise<{ succ
             }
         }
         
-        // Fetch click activity
-        if (inviteData.shortId) {
-            const activityQuery = query(
-                collection(db, 'promocodeClicks'),
-                where('shortId', '==', inviteData.shortId)
-            );
-            const activitySnapshot = await getDocs(activityQuery);
-            const activities = await Promise.all(activitySnapshot.docs.map(d => serializeData(d)));
-            
-            // Sort in code to avoid complex-query index issues
-            activities.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        // Fetch click activity from the new dedicated collection
+        const activityQuery = query(
+            collection(db, 'invitationClicks'),
+            where('invitationId', '==', invitationId)
+        );
+        const activitySnapshot = await getDocs(activityQuery);
+        const activities = await Promise.all(activitySnapshot.docs.map(d => serializeData(d)));
+        
+        // Sort in code to avoid complex-query index issues
+        activities.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-            resultData.activity = activities as PromocodeClick[];
-        }
+        resultData.activity = activities as InvitationClick[];
 
 
         return { success: true, data: resultData };

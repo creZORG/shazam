@@ -4,7 +4,7 @@
 import { notFound, useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
 import { getInvitationDetails, voidInvitation } from './actions';
-import type { Invitation, UserEvent, AuditLog, PromocodeClick } from '@/lib/types';
+import type { Invitation, InvitationClick } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Loader2, ArrowLeft, Mail, Shield, Calendar, Clock, CheckCircle, XCircle, MousePointerClick, Globe, Ban } from 'lucide-react';
 import Link from 'next/link';
@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 
-type InvitationWithActivity = Invitation & { activity?: PromocodeClick[] };
+type InvitationWithActivity = Invitation & { activity?: InvitationClick[] };
 
 function StatCard({ title, value, icon: Icon }: { title: string; value: string | number; icon: React.ElementType }) {
     return (

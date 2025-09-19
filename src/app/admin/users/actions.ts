@@ -110,12 +110,10 @@ interface InvitationPayload {
     role: UserRole;
     eventId?: string;
     sendEmail?: boolean;
-    promocodeId?: string;
-    trackingLinkId?: string;
 }
 
 export async function generateInviteLink(payload: InvitationPayload): Promise<{ success: boolean; inviteLink?: string; error?: string }> {
-    const { email, role, eventId, sendEmail = false, promocodeId, trackingLinkId } = payload;
+    const { email, role, eventId, sendEmail = false } = payload;
     
     if (sendEmail && !email) {
         return { success: false, error: "Email is required to send an invitation." };
@@ -160,12 +158,12 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
             }
         }
 
+        const inviteRef = doc(collection(db, 'invitations'));
         const longInviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${token}`;
-        
-        const shortId = await createShortLink({ longUrl: longInviteLink, promocodeId, trackingLinkId });
+        const shortId = await createShortLink({ longUrl: longInviteLink, invitationId: inviteRef.id });
         const shortInviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/l/${shortId}`;
 
-        const inviteData: any = {
+        const inviteData: Partial<Invitation> = {
             email: email || null,
             role,
             token,
@@ -173,19 +171,12 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
             status: 'pending',
             invitedBy: decodedClaims.uid,
             createdAt: serverTimestamp(),
-            eventId: eventId || null,
-            listingName: listingName || null,
+            eventId: eventId,
+            listingName: listingName,
             shortId,
         };
-
-        if (promocodeId) {
-            inviteData.promocodeId = promocodeId;
-        }
-        if (trackingLinkId) {
-            inviteData.trackingLinkId = trackingLinkId;
-        }
-
-        await addDoc(collection(db, 'invitations'), inviteData);
+        
+        await setDoc(inviteRef, inviteData);
         
         if (sendEmail && email) {
             await sendInvitationEmail({ to: email, role, inviteLink: shortInviteLink, listingName });
