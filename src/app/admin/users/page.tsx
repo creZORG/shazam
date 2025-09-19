@@ -26,7 +26,7 @@ import { useSearchParams } from "next/navigation";
 
 
 type UserWithId = FirebaseUser & { id: string };
-const STAFF_ROLES: UserRole[] = ['organizer', 'influencer', 'verifier', 'admin', 'club', 'developer'];
+const STAFF_ROLES: UserRole[] = ['organizer', 'influencer', 'verifier', 'admin', 'super-admin', 'club', 'developer'];
 
 const roleLabels: Record<UserRole, string> = {
     'super-admin': 'Super Admins',
@@ -105,7 +105,7 @@ function InviteUserForm() {
                              <FormItem><FormLabel>Email (optional)</FormLabel><FormControl><Input placeholder="user@example.com" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                          <FormField control={form.control} name="role" render={({field}) => (
-                             <FormItem><FormLabel>Assign Role</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{STAFF_ROLES.filter(r => r !== 'super-admin').map(role => <SelectItem key={role} value={role} className="capitalize">{role}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                             <FormItem><FormLabel>Assign Role</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{STAFF_ROLES.map(role => <SelectItem key={role} value={role} className="capitalize">{role}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
                         )} />
                         
                         {selectedRole === 'verifier' && (
