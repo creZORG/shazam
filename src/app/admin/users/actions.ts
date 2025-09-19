@@ -177,13 +177,13 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
             inviteData.listingName = listingName;
         }
 
+        const longInviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${token}`;
+        const shortId = await createShortLink({ longUrl: longInviteLink, invitationId: inviteRef.id });
+
+        inviteData.shortId = shortId;
+
         await setDoc(inviteRef, inviteData, { merge: true });
 
-        const longInviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${token}`;
-        const shortId = await createShortLink({ longUrl, invitationId: inviteRef.id });
-
-        await updateDoc(inviteRef, { shortId });
-        
         if (sendEmail && email) {
             await sendInvitationEmail({ to: email, role, inviteLink: `${process.env.NEXT_PUBLIC_APP_URL}/l/${shortId}`, listingName });
         }
