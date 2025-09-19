@@ -64,7 +64,7 @@ export default function LoginPage() {
 
   const signInForm = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: searchParams.get('email') || "", password: "" },
   });
 
   const signUpForm = useForm<z.infer<typeof signUpSchema>>({
@@ -155,12 +155,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] px-4">
-      <Card className="w-full max-w-md">
+    <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4">
+      <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">A Warm Welcome!</CardTitle>
+          <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+             {showResetForm ? "Reset Password" : "Welcome to NaksYetu"}
+          </CardTitle>
           <CardDescription>
-            {showResetForm ? "Reset your password" : "Sign in or create an account to get started"}
+            {showResetForm ? "Enter your email to receive a reset link" : "Sign in or create an account to get started"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -194,7 +196,7 @@ export default function LoginPage() {
                    </FormItem>
                  )}
                />
-               <Button type="submit" className="w-full" disabled={isLoading}>
+               <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent text-white" disabled={isLoading}>
                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                  Send Reset Link
                </Button>
@@ -243,7 +245,7 @@ export default function LoginPage() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent text-white" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Sign In
                   </Button>
@@ -318,7 +320,7 @@ export default function LoginPage() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent text-white" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Create Account
                   </Button>
@@ -335,14 +337,14 @@ export default function LoginPage() {
                         <span className="w-full border-t" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">
-                        Or continue with
+                        <span className="bg-card px-2 text-muted-foreground">
+                        Or
                         </span>
                     </div>
                 </div>
                 <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isGoogleLoading}>
                     {isGoogleLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 23.4 172.9 61.9l-76.3 64.5c-24.3-23.6-58.2-38.3-96.6-38.3-83.3 0-151.5 68.2-151.5 151.5s68.2 151.5 151.5 151.5c97.1 0 134-60.8 138.6-93.6H248v-85.3h236.1c2.3 12.7 3.9 26.9 3.9 41.4z"></path></svg>}
-                    Google
+                    Continue with Google
                 </Button>
             </>
           )}
