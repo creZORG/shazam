@@ -165,7 +165,7 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
         const shortId = await createShortLink({ longUrl: longInviteLink, promocodeId, trackingLinkId });
         const shortInviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/l/${shortId}`;
 
-        await addDoc(collection(db, 'invitations'), {
+        const inviteData: any = {
             email: email || null,
             role,
             token,
@@ -176,9 +176,16 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
             eventId: eventId || null,
             listingName: listingName || null,
             shortId,
-            promocodeId,
-            trackingLinkId
-        });
+        };
+
+        if (promocodeId) {
+            inviteData.promocodeId = promocodeId;
+        }
+        if (trackingLinkId) {
+            inviteData.trackingLinkId = trackingLinkId;
+        }
+
+        await addDoc(collection(db, 'invitations'), inviteData);
         
         if (sendEmail && email) {
             await sendInvitationEmail({ to: email, role, inviteLink: shortInviteLink, listingName });
