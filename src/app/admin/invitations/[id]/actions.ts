@@ -2,8 +2,8 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc, collection, query, where, orderBy, getDocs, Timestamp } from 'firebase/firestore';
-import type { Invitation, FirebaseUser, AuditLog, UserEvent } from '@/lib/types';
+import { doc, getDoc, collection, query, where, orderBy, getDocs, Timestamp } from 'firestore';
+import type { Invitation, FirebaseUser, AuditLog, UserEvent, PromocodeClick, TrackingLink } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 
 async function serializeData(doc: any): Promise<any> {
@@ -16,8 +16,17 @@ async function serializeData(doc: any): Promise<any> {
     return { id: doc.id, ...data };
 }
 
+type InvitationDetails = Invitation & {
+    acceptedBy?: {
+        uid: string;
+        name: string;
+        email: string;
+        photoURL?: string;
+    };
+    activity?: PromocodeClick[];
+}
 
-export async function getInvitationDetails(invitationId: string): Promise<{ success: boolean; data?: Invitation; error?: string; }> {
+export async function getInvitationDetails(invitationId: string): Promise<{ success: boolean; data?: InvitationDetails; error?: string; }> {
     noStore();
     if (!invitationId) {
         return { success: false, error: 'Invitation ID is required.' };
@@ -48,7 +57,19 @@ export async function getInvitationDetails(invitationId: string): Promise<{ succ
             }
         }
         
-        return { success: true, data: inviteData };
+        // Fetch activity logs for this invitation's shortId
+        let activity: PromocodeClick[] = [];
+        if (inviteData.shortId) {
+            const activityQuery = query(
+                collection(db, 'promocodeClicks'), 
+                where('shortId', '==', inviteData.shortId), 
+                orderBy('timestamp', 'desc')
+            );
+            const activitySnapshot = await getDocs(activityQuery);
+            activity = activitySnapshot.docs.map(doc => serializeData(doc) as PromocodeClick);
+        }
+
+        return { success: true, data: { ...inviteData, activity } };
 
     } catch (error: any) {
         console.error("Error fetching invitation details:", error);

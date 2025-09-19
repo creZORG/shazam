@@ -4,14 +4,16 @@
 import { notFound, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { getInvitationDetails } from './actions';
-import type { Invitation, UserEvent, AuditLog } from '@/lib/types';
+import type { Invitation, UserEvent, AuditLog, PromocodeClick } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, ArrowLeft, Mail, Shield, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, Mail, Shield, Calendar, Clock, CheckCircle, XCircle, MousePointerClick, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+type InvitationWithActivity = Invitation & { activity?: PromocodeClick[] };
 
 function StatCard({ title, value, icon: Icon }: { title: string; value: string | number; icon: React.ElementType }) {
     return (
@@ -39,7 +41,7 @@ function DetailItem({ label, value }: { label: string; value: React.ReactNode })
 export default function InvitationDetailsPage() {
     const params = useParams();
     const id = params.id as string;
-    const [invitation, setInvitation] = useState<Invitation | null>(null);
+    const [invitation, setInvitation] = useState<InvitationWithActivity | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -65,16 +67,21 @@ export default function InvitationDetailsPage() {
     };
 
     const StatusIcon = statusConfig[invitation.status].icon;
+    const totalClicks = invitation.activity?.length || 0;
 
     return (
         <div className="space-y-8">
-            <Link href="/admin/users" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
+            <Link href="/admin/users?tab=invites" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back to User Management
             </Link>
 
             <div>
                 <h1 className="text-3xl font-bold">Invitation Details</h1>
                 <p className="text-muted-foreground font-mono text-xs">{invitation.id}</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard title="Total Clicks" value={totalClicks} icon={MousePointerClick} />
             </div>
 
             <div className="grid lg:grid-cols-3 gap-8 items-start">
@@ -126,12 +133,35 @@ export default function InvitationDetailsPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Activity Log</CardTitle>
-                            <CardDescription>A log of actions related to this invitation.</CardDescription>
+                            <CardDescription>A log of all clicks on this invitation link.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                             <p className="text-center py-20 text-muted-foreground">
-                                Activity tracking for invitations is coming soon.
-                             </p>
+                             {invitation.activity && invitation.activity.length > 0 ? (
+                                 <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Time</TableHead>
+                                            <TableHead>IP Address</TableHead>
+                                            <TableHead>Device/Browser</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {invitation.activity.map(log => (
+                                            <TableRow key={log.id}>
+                                                <TableCell title={format(new Date(log.timestamp), 'PPpp')}>
+                                                    {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true })}
+                                                </TableCell>
+                                                <TableCell className="font-mono text-xs">{log.ipAddress}</TableCell>
+                                                <TableCell className="text-xs text-muted-foreground truncate max-w-xs">{log.userAgent}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                 </Table>
+                             ) : (
+                                <p className="text-center py-20 text-muted-foreground">
+                                    No link clicks recorded yet.
+                                </p>
+                             )}
                         </CardContent>
                     </Card>
                  </div>

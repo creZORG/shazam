@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import type { ShortLink } from '@/lib/types';
+import { trackLinkClick } from '@/app/influencer/campaigns/[id]/actions';
+import { headers } from 'next/headers';
 
 export async function GET(
   request: Request,
@@ -25,6 +27,23 @@ export async function GET(
 
     if (linkDoc.exists()) {
       const { longUrl } = linkDoc.data() as ShortLink;
+      
+      // --- Activity Tracking ---
+      // We can extract info from the longUrl if needed
+      const urlParams = new URLSearchParams(longUrl.split('?')[1]);
+      const couponCode = urlParams.get('coupon');
+      const trackingLinkId = urlParams.get('linkId');
+
+      if (couponCode && trackingLinkId) {
+        // This is an async call, but we don't need to wait for it.
+        // We can let it run in the background while we redirect the user immediately.
+        trackLinkClick({
+            couponCode,
+            trackingLinkId,
+        });
+      }
+      // --- End Activity Tracking ---
+
       // Perform a 302 temporary redirect
       return NextResponse.redirect(new URL(longUrl, request.url));
     } else {

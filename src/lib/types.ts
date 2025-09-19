@@ -372,6 +372,7 @@ export type PromocodeClick = {
     id?: string;
     promocodeId: string;
     trackingLinkId: string;
+    shortId: string;
     timestamp: any;
     userAgent: string;
     ipAddress: string;
@@ -441,6 +442,7 @@ export type Invitation = {
     };
     eventId?: string; // Optional: for event-specific roles like verifier
     listingName?: string; // Optional: name of the event
+    shortId: string;
 };
 
 export type TeamMember = {

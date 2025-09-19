@@ -2,12 +2,13 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc, collection, query, where, getDocs, Timestamp, orderBy, addDoc, serverTimestamp, increment, writeBatch, setDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, Timestamp, orderBy, addDoc, serverTimestamp, increment, writeBatch, setDoc } from 'firestore';
 import type { Promocode, TrackingLink, PromocodeClick, Order, ShortLink } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { headers } from 'next/headers';
 import { subDays, format } from 'date-fns';
 import { createShortLink } from '@/lib/shortlinks';
+import { getDocs as getFirestoreDocs, query as firestoreQuery, collection as firestoreCollection, where as firestoreWhere } from 'firebase/firestore';
 
 
 export async function getCampaignDetails(id: string) {
@@ -88,32 +89,45 @@ export async function createTrackingLink(payload: { promocodeId: string, listing
     }
 }
 
-export async function trackLinkClick(payload: { promocodeId: string, trackingLinkId: string }) {
-    const { promocodeId, trackingLinkId } = payload;
-    if (!promocodeId || !trackingLinkId) return { success: false, error: "Missing IDs" };
-
+export async function trackLinkClick(payload: { couponCode: string, trackingLinkId: string }) {
+    const { couponCode, trackingLinkId } = payload;
+    if (!couponCode || !trackingLinkId) return { success: false, error: "Missing IDs" };
+    
     const headersList = headers();
     const ipAddress = headersList.get('x-forwarded-for') || 'unknown';
     const userAgent = headersList.get('user-agent') || 'unknown';
 
-    const batch = writeBatch(db);
-
-    // Increment click count on the tracking link
-    const linkRef = doc(db, 'promocodes', promocodeId, 'trackingLinks', trackingLinkId);
-    batch.update(linkRef, { clicks: increment(1) });
-    
-    // Log the click event
-    const clickLogRef = doc(collection(db, 'promocodeClicks'));
-    const clickLog: PromocodeClick = {
-        promocodeId,
-        trackingLinkId,
-        timestamp: serverTimestamp(),
-        ipAddress,
-        userAgent
-    };
-    batch.set(clickLogRef, clickLog);
-    
     try {
+        // Find the promocode to get its ID
+        const promoQuery = firestoreQuery(firestoreCollection(db, "promocodes"), firestoreWhere("code", "==", couponCode));
+        const promoSnapshot = await getFirestoreDocs(promoQuery);
+
+        if (promoSnapshot.empty) {
+            console.warn(`trackLinkClick: Promocode not found for code "${couponCode}"`);
+            return { success: false, error: "Promocode not found" };
+        }
+        const promocodeId = promoSnapshot.docs[0].id;
+        const promocodeDoc = promoSnapshot.docs[0].data() as Promocode;
+        const shortId = (await getDoc(doc(db, 'promocodes', promocodeId, 'trackingLinks', trackingLinkId))).data()?.shortId;
+
+        const batch = writeBatch(db);
+
+        // Increment click count on the tracking link
+        const linkRef = doc(db, 'promocodes', promocodeId, 'trackingLinks', trackingLinkId);
+        batch.update(linkRef, { clicks: increment(1) });
+        
+        // Log the click event
+        const clickLogRef = doc(collection(db, 'promocodeClicks'));
+        const clickLog: PromocodeClick = {
+            promocodeId,
+            trackingLinkId,
+            shortId,
+            timestamp: serverTimestamp(),
+            ipAddress,
+            userAgent
+        };
+        batch.set(clickLogRef, clickLog);
+        
         await batch.commit();
         return { success: true };
     } catch (error) {

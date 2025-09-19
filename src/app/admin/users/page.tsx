@@ -22,6 +22,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useSearchParams } from "next/navigation";
 
 
 type UserWithId = FirebaseUser & { id: string };
@@ -147,8 +148,8 @@ function InvitationHistory() {
         })
     }, []);
     
-    const handleCopyLink = (token: string) => {
-        const url = `${window.location.origin}/invite/${token}`;
+    const handleCopyLink = (shortId: string) => {
+        const url = `${window.location.origin}/l/${shortId}`;
         navigator.clipboard.writeText(url);
         toast({ title: 'Invite Link Copied!' });
     }
@@ -184,7 +185,7 @@ function InvitationHistory() {
                                 </TableCell>
                                 <TableCell>{formatDistanceToNow(new Date(invite.createdAt), { addSuffix: true })}</TableCell>
                                 <TableCell className="text-right flex justify-end gap-2">
-                                     <Button variant="ghost" size="icon" onClick={() => handleCopyLink(invite.token)}><LinkIcon className="h-4 w-4" /></Button>
+                                     <Button variant="ghost" size="icon" onClick={() => handleCopyLink(invite.shortId)}><LinkIcon className="h-4 w-4" /></Button>
                                      <Link href={`/admin/invitations/${invite.id}`}>
                                         <Button variant="outline" size="sm"><Info className="h-4 w-4" /></Button>
                                      </Link>
@@ -202,6 +203,8 @@ export default function AdminUsersPage() {
   const [usersByRole, setUsersByRole] = useState<Record<string, UserWithId[]> | null>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'browse';
 
   useEffect(() => {
     setLoading(true);
@@ -227,7 +230,7 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-8">
         <InviteUserForm />
-        <Tabs defaultValue="browse" className="w-full">
+        <Tabs defaultValue={initialTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3 max-w-2xl">
                 <TabsTrigger value="browse">Browse Staff</TabsTrigger>
                 <TabsTrigger value="search">Search by Username</TabsTrigger>
