@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -127,9 +126,14 @@ export default function ProfilePage() {
         case 'bookmarked':
             return profileData.bookmarked.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {profileData.bookmarked.map(item => 'venue' in item ? <EventCard key={item.id} event={item} /> : <TourCard key={item.id} tour={item} /> )}
+                    {profileData.bookmarked.map((item) => {
+                        if (item.type === 'tour') {
+                            return <TourCard key={item.id} tour={item as Tour} />;
+                        }
+                        return <EventCard key={item.id} event={item as Event} />;
+                    })}
                 </div>
-            ) : <p className="text-muted-foreground text-center py-8">You haven't bookmarked any events.</p>;
+            ) : <p className="text-muted-foreground text-center py-8">You haven't bookmarked any items yet.</p>;
 
         case 'viewed':
             return profileData.viewed.length > 0 ? (
