@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { createTrackingLink, getCampaignDetails } from "@/app/influencer/campaigns/[id]/actions";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogFooter, DialogClose, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
 type Listing = { id: string; name: string; type: 'event' | 'tour' };
@@ -94,10 +94,18 @@ function CampaignLinkManager() {
 
     
     const handleCreateLink = () => {
-        if (!selectedListingData || !selectedPromocodeId || !newLinkName) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Please select a listing, a promocode, and provide a link name.'});
+        if (!selectedListingData || !newLinkName) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Please select a listing and provide a link name.'});
             return;
         }
+
+        // If no promocode is selected, we need to handle this.
+        // For now, we'll require one if available, but can be changed.
+        if (!selectedPromocodeId) {
+             toast({ variant: 'destructive', title: 'Error', description: 'Please select a promocode to create a link.'});
+            return;
+        }
+
 
         startCreating(async () => {
             const result = await createTrackingLink({
@@ -122,6 +130,16 @@ function CampaignLinkManager() {
         toast({ title: 'Link Copied!' });
     };
 
+    const handleDownloadQr = (shortId: string, name: string) => {
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(`${protocol}//${host}/l/${shortId}`)}`;
+        const link = document.createElement('a');
+        link.href = qrUrl;
+        link.download = `${name.replace(/\s+/g, '_')}_QR.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <Card>
             <CardHeader>
@@ -140,10 +158,11 @@ function CampaignLinkManager() {
                         </Select>
                     </div>
                      <div className="space-y-2">
-                        <Label>2. Attach Promocode</Label>
+                        <Label>2. Attach Promocode (Optional)</Label>
                          <Select onValueChange={setSelectedPromocodeId} value={selectedPromocodeId} disabled={!selectedListing}>
                             <SelectTrigger><SelectValue placeholder="Select a promocode..." /></SelectTrigger>
                             <SelectContent>
+                                <SelectItem value="">None</SelectItem>
                                 {availablePromocodes.map(p => <SelectItem key={p.id} value={p.id}>{p.code} ({p.influencerName || 'General'})</SelectItem>)}
                             </SelectContent>
                         </Select>
@@ -153,8 +172,8 @@ function CampaignLinkManager() {
                 <div className="p-4 border rounded-lg space-y-4">
                     <Label>3. Create & Track New Link</Label>
                      <div className="flex gap-2">
-                        <Input placeholder="Name for this link, e.g., 'Facebook Ad'" value={newLinkName} onChange={e => setNewLinkName(e.target.value)} disabled={!selectedPromocodeId} />
-                        <Button onClick={handleCreateLink} disabled={!newLinkName || isCreating}>
+                        <Input placeholder="Name for this link, e.g., 'Facebook Ad'" value={newLinkName} onChange={e => setNewLinkName(e.target.value)} disabled={!selectedListing} />
+                        <Button onClick={handleCreateLink} disabled={!newLinkName || isCreating || !selectedPromocodeId}>
                             {isCreating ? <Loader2 className="animate-spin" /> : <PlusCircle />}
                             <span className="hidden sm:inline ml-2">Create</span>
                         </Button>
@@ -188,10 +207,21 @@ function CampaignLinkManager() {
                                                             <Button variant="ghost" size="icon" className="h-8 w-8"><QrCode className="h-4 w-4"/></Button>
                                                         </DialogTrigger>
                                                         <DialogContent>
+                                                             <DialogHeader>
+                                                                <DialogTitle>QR Code for "{link.name}"</DialogTitle>
+                                                            </DialogHeader>
                                                             <div className="flex flex-col items-center justify-center p-4">
                                                                 <Image src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`${protocol}//${host}/l/${link.shortId}`)}`} alt="Generated QR Code" width={250} height={250} />
                                                                 <p className="font-mono text-sm mt-2">{`${host}/l/${link.shortId}`}</p>
                                                             </div>
+                                                            <DialogFooter>
+                                                                <DialogClose asChild>
+                                                                    <Button variant="outline">Close</Button>
+                                                                </DialogClose>
+                                                                <Button onClick={() => handleDownloadQr(link.shortId, link.name)}>
+                                                                    <Download className="mr-2 h-4 w-4" /> Download PNG
+                                                                </Button>
+                                                            </DialogFooter>
                                                         </DialogContent>
                                                     </Dialog>
                                                 </div>
