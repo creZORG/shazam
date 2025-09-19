@@ -59,7 +59,7 @@ export async function getCampaignDetails(id: string) {
 }
 
 
-export async function createTrackingLink(payload: { promocodeId?: string, listingType: string, listingId?: string, name: string, shortId?: string }): Promise<{ success: boolean; data?: TrackingLink; error?: string; }> {
+export async function createTrackingLink(payload: { promocodeId?: string | null, listingType: string, listingId: string, name: string, shortId?: string }): Promise<{ success: boolean; data?: TrackingLink; error?: string; }> {
     const { promocodeId, listingType, listingId, name, shortId } = payload;
     if (!name || !listingId) {
         return { success: false, error: "Listing ID and link name are required." };
@@ -103,8 +103,8 @@ export async function createTrackingLink(payload: { promocodeId?: string, listin
             longUrl,
             shortId: finalShortId,
             createdAt: serverTimestamp(),
+            promocodeId: promocodeId || null,
         };
-        if (promocodeId) newLink.promocodeId = promocodeId;
 
         await setDoc(linkRef, newLink);
         

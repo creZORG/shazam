@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect, useMemo, useTransition } from "react";
 import { getPromocodesByOrganizer } from "@/app/organizer/promocodes/actions";
-import { getPublishedEvents, getPublishedTours } from "./actions";
+import { getPublishedEvents, getPublishedTours, getGeneralTrackingLinks } from "./actions";
 import type { Promocode, Event, Tour, TrackingLink } from "@/lib/types";
 import { QrCode, Download, Link as LinkIcon, PlusCircle, Copy, BarChart, Ticket, Loader2, Eye } from "lucide-react";
 import Image from "next/image";
@@ -77,7 +77,13 @@ function CampaignLinkManager() {
     }, [user?.uid]);
 
     useEffect(() => {
-        if (selectedPromocodeId && selectedPromocodeId !== 'none') {
+        if (selectedPromocodeId === 'none') {
+            getGeneralTrackingLinks().then(res => {
+                 if (res.success && res.data) {
+                    setTrackingLinks(res.data);
+                }
+            })
+        } else if (selectedPromocodeId) {
             getCampaignDetails(selectedPromocodeId).then(detailsResult => {
                 if (detailsResult.success && detailsResult.data) {
                     setTrackingLinks(detailsResult.data.trackingLinks);
@@ -160,7 +166,7 @@ function CampaignLinkManager() {
                          <Select onValueChange={setSelectedPromocodeId} value={selectedPromocodeId} disabled={!selectedListing}>
                             <SelectTrigger><SelectValue placeholder="Select a promocode..." /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="none">None</SelectItem>
+                                <SelectItem value="none">None (General Link)</SelectItem>
                                 {availablePromocodes.map(p => <SelectItem key={p.id} value={p.id}>{p.code} ({p.influencerName || 'General'})</SelectItem>)}
                             </SelectContent>
                         </Select>
@@ -169,11 +175,11 @@ function CampaignLinkManager() {
 
                 <div className="p-4 border rounded-lg space-y-4">
                     <Label>3. Create & Track New Link</Label>
-                     <div className="grid sm:grid-cols-2 gap-2">
+                     <div className="grid sm:grid-cols-2 gap-4">
                         <Input placeholder="Name for this link, e.g., 'Facebook Ad'" value={newLinkName} onChange={e => setNewLinkName(e.target.value)} disabled={!selectedListing} />
-                         <div className="relative">
-                            <Input placeholder="Custom path (optional)" value={customShortId} onChange={e => setCustomShortId(e.target.value)} disabled={!selectedListing} className="pl-16" />
-                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">{host}/l/</span>
+                         <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground text-sm shrink-0">{host}/l/</span>
+                            <Input placeholder="custom-path" value={customShortId} onChange={e => setCustomShortId(e.target.value)} disabled={!selectedListing} />
                         </div>
                     </div>
                      <Button onClick={handleCreateLink} disabled={!newLinkName || isCreating} className="w-full">
@@ -203,7 +209,7 @@ function CampaignLinkManager() {
                                             <TableCell>{link.purchases}</TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex gap-1 justify-end">
-                                                    <Link href={`/admin/promotions/${link.id}?promocodeId=${selectedPromocodeId}`}>
+                                                    <Link href={`/admin/promotions/${link.id}${selectedPromocodeId !== 'none' ? `?promocodeId=${selectedPromocodeId}` : ''}`}>
                                                         <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="h-4 w-4" /></Button>
                                                     </Link>
                                                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCopyLink(link.shortId)}><Copy className="h-4 w-4"/></Button>

@@ -100,3 +100,20 @@ export async function getLinkAnalytics(linkId: string, promocodeId?: string) {
         return { success: false, error: e.message };
     }
 }
+
+
+export async function getGeneralTrackingLinks() {
+    noStore();
+    try {
+        const q = query(
+            collection(db, 'trackingLinks'),
+            where('promocodeId', '==', null),
+            orderBy('createdAt', 'desc')
+        );
+        const snapshot = await getDocs(q);
+        const links = snapshot.docs.map(doc => serializeData(doc)) as TrackingLink[];
+        return { success: true, data: links };
+    } catch (e: any) {
+        return { success: false, error: 'Failed to fetch general tracking links.' };
+    }
+}

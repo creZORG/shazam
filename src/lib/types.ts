@@ -94,6 +94,10 @@ export type Tour = {
   organizerName?: string;
   status?: ListingStatus;
   whatsappGroupLink?: string;
+  freeMerch?: {
+    productId: string;
+    productName: string;
+  };
   type: 'tour';
 };
 
@@ -247,7 +251,7 @@ export type Ticket = {
   createdAt: any;
   validatedAt?: any;
   validatedBy?: string; // UID of the verifier
-  generatedBy?: 'online_sale' | 'organizer';
+  generatedBy?: 'online_sale' | 'organizer' | 'admin';
 };
 
 
@@ -365,7 +369,7 @@ export type TrackingLink = {
     name: string;
     listingId: string;
     listingType: string;
-    promocodeId?: string;
+    promocodeId?: string | null;
     clicks: number;
     purchases: number;
     longUrl: string;
@@ -456,7 +460,7 @@ export type Invitation = {
     };
     eventId?: string; // Optional: for event-specific roles like verifier
     listingName?: string; // Optional: name of the event
-    shortId: string;
+    shortId?: string;
     activity?: InvitationClick[];
 };
 
@@ -575,9 +579,9 @@ export type CheckoutFeedback = {
 
 export type ShortLink = {
     longUrl: string;
-    listingId: string;
+    listingId?: string;
     invitationId?: string;
-    promocodeId?: string;
+    promocodeId?: string | null;
     trackingLinkId?: string;
     createdAt: any;
 }

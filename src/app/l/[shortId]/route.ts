@@ -12,12 +12,16 @@ async function trackClick(shortId: string, linkData: ShortLink) {
     const userAgent = headersList.get('user-agent') || 'unknown';
 
     try {
-        // If it's a tracking link (for a promocode or general campaign), increment its click count
-        if (linkData.trackingLinkId && linkData.promocodeId) {
-            const trackingLinkRef = doc(db, 'promocodes', linkData.promocodeId, 'trackingLinks', linkData.trackingLinkId);
-            await updateDoc(trackingLinkRef, { clicks: increment(1) });
-        } else if (linkData.trackingLinkId) {
-            const trackingLinkRef = doc(db, 'trackingLinks', linkData.trackingLinkId);
+        let collectionPath: string;
+        
+        // If it's a tracking link, increment its click count
+        if (linkData.trackingLinkId) {
+             if(linkData.promocodeId) {
+                collectionPath = `promocodes/${linkData.promocodeId}/trackingLinks`;
+            } else {
+                collectionPath = 'trackingLinks';
+            }
+            const trackingLinkRef = doc(db, collectionPath, linkData.trackingLinkId);
             await updateDoc(trackingLinkRef, { clicks: increment(1) });
         }
         

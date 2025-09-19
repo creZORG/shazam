@@ -11,10 +11,10 @@ const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 6);
 
 interface CreateShortLinkPayload {
     longUrl: string;
-    listingId: string;
+    listingId?: string;
     shortId?: string; // Optional custom ID
     invitationId?: string;
-    promocodeId?: string;
+    promocodeId?: string | null;
     trackingLinkId?: string;
 }
 
