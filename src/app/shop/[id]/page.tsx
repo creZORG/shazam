@@ -1,63 +1,21 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { notFound, useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { notFound, useRouter, useSearchParams } from 'next/navigation';
 import { getProductById } from '@/app/admin/shop/actions';
 import type { Product } from '@/lib/types';
-import type { Metadata } from 'next';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Loader2, ShoppingBag, ArrowLeft, ChevronLeft, ChevronRight, XCircle } from 'lucide-react';
-import Image from 'next/image';
+import { Loader2, ShoppingBag, ArrowLeft, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
+import Image from 'next/image';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
-type Props = {
-  params: { id: string }
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { data: product } = await getProductById(params.id);
-
-  if (!product) {
-    return {
-      title: 'Product Not Found',
-    }
-  }
-  
-  const productUrl = `https://naksyetu.com/shop/${product.id}`;
-
-  return {
-    title: `${product.name} | NaksYetu Shop`,
-    description: product.description.substring(0, 160),
-    openGraph: {
-      title: `${product.name} | NaksYetu Shop`,
-      description: product.description.substring(0, 160),
-      url: productUrl,
-      images: [
-        {
-          url: product.imageUrls[0],
-          width: 800,
-          height: 800,
-          alt: product.name,
-        },
-      ],
-      type: 'website',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: product.name,
-      description: product.description.substring(0, 160),
-      images: [product.imageUrls[0]],
-    },
-  }
-}
 
 function ProductPageSkeleton() {
     return (
@@ -75,7 +33,7 @@ function ProductPageSkeleton() {
     );
 }
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+function ProductDetailClient({ params }: { params: { id: string } }) {
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -89,10 +47,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             getProductById(params.id).then(result => {
                 if (result.success && result.data) {
                     setProduct(result.data);
-                    if (result.data.sizes.length > 0) {
+                    if (result.data.sizes && result.data.sizes.length > 0) {
                         setSelectedSize(result.data.sizes[0]);
                     }
-                     if (result.data.colors.length > 0) {
+                     if (result.data.colors && result.data.colors.length > 0) {
                         setSelectedColor(result.data.colors[0]);
                     }
                 } else {
@@ -208,5 +166,13 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function ProductDetailPage({ params }: { params: { id: string } }) {
+    return (
+        <Suspense fallback={<ProductPageSkeleton />}>
+            <ProductDetailClient params={params} />
+        </Suspense>
     );
 }
