@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -106,13 +105,13 @@ export async function getUserProfileData() {
         where('uid', '==', userId), 
         where('action', '==', 'click_event'),
         orderBy('timestamp', 'desc'),
-        limit(10)
+        limit(20)
     );
     
     const [userDoc, ticketsSnapshot, viewedSnapshot] = await Promise.all([
       getDoc(userDocRef),
       getDocs(ticketsQuery),
-      getDocs(viewedSnapshot)
+      getDocs(viewedEventsQuery)
     ]);
 
     if (!userDoc.exists()) {
@@ -162,7 +161,7 @@ export async function getUserProfileData() {
         }
     }
     
-    const purchasedWithListings = purchasedTickets.map(ticket => ({ ...ticket, event: listings[ticket.listingId] as Event | undefined })).filter(t => t.event);
+    const purchasedWithListings = purchasedTickets.map(ticket => ({ ...ticket, event: listings[ticket.listingId] as Event | Tour | undefined })).filter(t => t.event);
     const attendedWithListings = attendedTickets.map(ticket => listings[ticket.listingId]).filter(Boolean);
     const bookmarkedWithListings = bookmarkedItemIds.map(id => listings[id]).filter(Boolean);
     const viewedWithListings = viewedEventIds.map(id => listings[id]).filter(Boolean);

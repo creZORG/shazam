@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import Image from 'next/image';
@@ -242,7 +241,7 @@ export function EventCard({ event }: EventCardProps) {
                     <span>Facebook</span>
                 </a>
                  <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(eventUrl)}&text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer" aria-label="Share on Twitter" className="flex flex-col items-center gap-2 text-muted-foreground hover:text-primary">
-                    <Twitter className="h-8 w-8" />
+                    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-8 w-8"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.931 6.064-6.931z"/></svg>
                     <span>Twitter</span>
                 </a>
                  <button onClick={handleCopyLink} aria-label="Copy Link" className="flex flex-col items-center gap-2 text-muted-foreground hover:text-primary">
