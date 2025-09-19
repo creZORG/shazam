@@ -41,16 +41,23 @@ export async function POST(request: Request) {
         const transactionRef = doc(db, 'transactions', transactionDoc.id);
 
         if (resultCode === 0) {
+            // Success
             const updatePayload: any = {
                 status: 'completed',
                 mpesaCallbackData: stkCallback,
                 updatedAt: serverTimestamp(),
                 failReason: null,
             };
+            
+            // Destructure and save all available metadata fields
             if (stkCallback.CallbackMetadata) {
                 const metadataItem = (name: string) => stkCallback.CallbackMetadata.Item.find((item: any) => item.Name === name)?.Value;
+                
                 updatePayload.mpesaConfirmationCode = metadataItem('MpesaReceiptNumber');
+                updatePayload.mpesaTransactionDate = metadataItem('TransactionDate'); // YYYYMMDDHHMMSS format
+                updatePayload.mpesaPayerPhoneNumber = metadataItem('PhoneNumber');
             }
+
             batch.update(transactionRef, updatePayload);
 
             const orderRef = doc(db, 'orders', transaction.orderId);
@@ -117,9 +124,13 @@ export async function POST(request: Request) {
             }
             
             // Increment tracking link purchases
-            if(order.trackingLinkId && order.promocodeId) {
-                const trackingLinkRef = doc(db, 'promocodes', order.promocodeId, 'trackingLinks', order.trackingLinkId);
-                batch.update(trackingLinkRef, { purchases: increment(1) });
+            if(order.trackingLinkId) {
+                const collectionPath = order.promocodeId ? `promocodes/${order.promocodeId}/trackingLinks` : 'trackingLinks';
+                const trackingLinkRef = doc(db, collectionPath, order.trackingLinkId);
+                const trackingLinkDoc = await getDoc(trackingLinkRef);
+                if (trackingLinkDoc.exists()) {
+                    batch.update(trackingLinkRef, { purchases: increment(1) });
+                }
             }
 
         } else {

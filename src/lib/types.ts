@@ -269,6 +269,8 @@ export type Transaction = {
     mpesaCheckoutRequestId?: string;
     mpesaCallbackData?: any;
     mpesaConfirmationCode?: string;
+    mpesaTransactionDate?: string;
+    mpesaPayerPhoneNumber?: string;
     
     // Analytics
     failReason?: string;
