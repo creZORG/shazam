@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, Timestamp, orderBy, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, orderBy, doc, collectionGroup, getDoc } from 'firebase/firestore';
 import type { Event, Tour, TrackingLink, PromocodeClick } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { subDays, startOfDay, format } from 'date-fns';
@@ -102,18 +102,42 @@ export async function getLinkAnalytics(linkId: string, promocodeId?: string) {
 }
 
 
-export async function getGeneralTrackingLinks() {
+export async function getAllTrackingLinks() {
     noStore();
     try {
-        const q = query(
-            collection(db, 'trackingLinks'),
-            where('promocodeId', '==', null),
-            orderBy('createdAt', 'desc')
-        );
-        const snapshot = await getDocs(q);
-        const links = snapshot.docs.map(doc => serializeData(doc)) as TrackingLink[];
-        return { success: true, data: links };
+        const linksQuery = query(collectionGroup(db, 'trackingLinks'), orderBy('createdAt', 'desc'));
+        const linksSnapshot = await getDocs(linksQuery);
+        const links = linksSnapshot.docs.map(doc => serializeData(doc)) as TrackingLink[];
+
+        // Batch fetch event/tour names to avoid N+1 queries
+        const listingIds = [...new Set(links.map(l => l.listingId))];
+        const listingsData: Record<string, string> = {};
+
+        if (listingIds.length > 0) {
+            const eventsQuery = query(collection(db, 'events'), where('__name__', 'in', listingIds));
+            const toursQuery = query(collection(db, 'tours'), where('__name__', 'in', listingIds));
+
+            const [eventsSnapshot, toursSnapshot] = await Promise.all([
+                getDocs(eventsQuery),
+                getDocs(toursQuery)
+            ]);
+
+            eventsSnapshot.forEach(doc => {
+                listingsData[doc.id] = doc.data().name || 'Untitled Event';
+            });
+            toursSnapshot.forEach(doc => {
+                listingsData[doc.id] = doc.data().name || 'Untitled Tour';
+            });
+        }
+        
+        const data = links.map(link => ({
+            ...link,
+            listingName: listingsData[link.listingId] || 'N/A',
+        }));
+
+        return { success: true, data };
     } catch (e: any) {
-        return { success: false, error: 'Failed to fetch general tracking links.' };
+        console.error("Error fetching all tracking links:", e);
+        return { success: false, error: 'Failed to fetch tracking links.' };
     }
 }
