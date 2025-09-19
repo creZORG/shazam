@@ -99,7 +99,7 @@ export async function getUserProfileData() {
 
   try {
     const userDocRef = doc(db, 'users', userId);
-    const ticketsQuery = query(collection(db, 'tickets'), where('userId', '==', userId));
+    const ticketsQuery = query(collection(db, 'tickets'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
     const viewedEventsQuery = query(
         collection(db, 'userEvents'), 
         where('uid', '==', userId), 
@@ -119,8 +119,8 @@ export async function getUserProfileData() {
     }
 
     const userData = userDoc.data() as FirebaseUser;
-    const tickets = ticketsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ticket));
-    const viewedEventInteractions = viewedSnapshot.docs.map(doc => doc.data() as UserEvent);
+    const tickets = ticketsSnapshot.docs.map(doc => serializeData(doc) as Ticket);
+    const viewedEventInteractions = viewedSnapshot.docs.map(doc => serializeData(doc) as UserEvent);
     
     const purchasedTickets = tickets.filter(t => t.status === 'valid');
     const attendedTickets = tickets.filter(t => t.status === 'used');
@@ -150,29 +150,29 @@ export async function getUserProfileData() {
             
             eventDocs.forEach(doc => {
                 if(doc.exists()) {
-                    listings[doc.id] = { ...serializeData(doc), type: 'event' } as Event;
+                    listings[doc.id] = { ...(serializeData(doc) as Event), type: 'event' };
                 }
             });
             tourDocs.forEach(doc => {
                 if(doc.exists()) {
-                    listings[doc.id] = { ...serializeData(doc), type: 'tour' } as Tour;
+                    listings[doc.id] = { ...(serializeData(doc) as Tour), type: 'tour' };
                 }
             });
         }
     }
     
-    const purchasedWithEvents = purchasedTickets.map(ticket => ({ ...ticket, event: listings[ticket.listingId] as Event })).filter(t => t.event);
-    const attendedWithEvents = attendedTickets.map(ticket => listings[ticket.listingId] as Event).filter(Boolean);
+    const purchasedWithListings = purchasedTickets.map(ticket => ({ ...ticket, event: listings[ticket.listingId] as Event | undefined })).filter(t => t.event);
+    const attendedWithListings = attendedTickets.map(ticket => listings[ticket.listingId]).filter(Boolean);
     const bookmarkedWithListings = bookmarkedItemIds.map(id => listings[id]).filter(Boolean);
-    const viewedWithEvents = viewedEventIds.map(id => listings[id] as Event).filter(Boolean);
+    const viewedWithListings = viewedEventIds.map(id => listings[id]).filter(Boolean);
 
     return {
       success: true,
       data: {
-        purchased: purchasedWithEvents,
-        attended: attendedWithEvents,
+        purchased: purchasedWithListings,
+        attended: attendedWithListings,
         bookmarked: bookmarkedWithListings,
-        viewed: viewedWithEvents,
+        viewed: viewedWithListings,
       },
     };
 

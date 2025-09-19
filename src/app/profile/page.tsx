@@ -20,15 +20,17 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 type ActiveTab = 'purchased' | 'attended' | 'bookmarked' | 'viewed';
+type Listing = Event | Tour;
 
-function AttendedEventCard({ event }: { event: Event }) {
+function AttendedEventCard({ item }: { item: Listing }) {
     const { toast } = useToast();
-    const [currentRating, setCurrentRating] = useState(event.rating?.average || 0);
+    const [currentRating, setCurrentRating] = useState(item.rating?.average || 0);
+    const date = 'venue' in item ? item.date : item.startDate;
 
     const handleRating = async (rating: number) => {
-        const result = await rateEvent(event.id, rating);
+        const result = await rateEvent(item.id, rating);
         if (result.success) {
-            toast({ title: "Rating Submitted!", description: `You rated "${event.name}" ${rating} stars.` });
+            toast({ title: "Rating Submitted!", description: `You rated "${item.name}" ${rating} stars.` });
             if (result.newAverage) {
                 setCurrentRating(result.newAverage);
             }
@@ -40,11 +42,11 @@ function AttendedEventCard({ event }: { event: Event }) {
     return (
         <Card className="flex flex-col">
             <CardHeader>
-                <CardTitle>{event.name}</CardTitle>
-                <CardDescription>{new Date(event.date).toLocaleDateString()}</CardDescription>
+                <CardTitle>{item.name}</CardTitle>
+                <CardDescription>{new Date(date).toLocaleDateString()}</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
-                 <Image src={event.imageUrl} alt={event.name} width={400} height={300} className="rounded-md object-cover aspect-video" />
+                 <Image src={item.imageUrl} alt={item.name} width={400} height={300} className="rounded-md object-cover aspect-video" />
             </CardContent>
             <CardFooter className="flex-col items-start gap-2">
                  <p className="text-sm font-medium">Your Rating</p>
@@ -61,10 +63,10 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<ActiveTab>('purchased');
   const [profileData, setProfileData] = useState<{
-      purchased: (TicketType & { event?: Event })[],
-      attended: Event[],
-      bookmarked: (Event | Tour)[],
-      viewed: Event[],
+      purchased: (TicketType & { event?: Listing })[],
+      attended: Listing[],
+      bookmarked: Listing[],
+      viewed: Listing[],
   }>({ purchased: [], attended: [], bookmarked: [], viewed: [] });
   const [isUpgrading, startUpgradeTransition] = useTransition();
 
@@ -108,39 +110,46 @@ export default function ProfilePage() {
       return <div className="flex justify-center py-12"><Loader2 className="animate-spin h-8 w-8" /></div>;
     }
 
+    const renderGrid = (items: (any)[]) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {items.map((item) => {
+                if (!item) return null;
+                const key = item.id;
+                // Determine if it's an Event or Tour based on properties
+                if (item.type === 'tour') {
+                    return <TourCard key={key} tour={item as Tour} />;
+                }
+                return <EventCard key={key} event={item as Event} />;
+            })}
+        </div>
+    );
+
     switch(activeTab) {
         case 'purchased':
             return profileData.purchased.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {profileData.purchased.map(ticket => ticket.event && <EventCard key={ticket.id} event={ticket.event} />)}
+                    {profileData.purchased.map(ticket => ticket.event && (
+                        (ticket.event as Event).type === 'event' 
+                            ? <EventCard key={ticket.id} event={ticket.event as Event} />
+                            : <TourCard key={ticket.id} tour={ticket.event as Tour} />
+                    ))}
                 </div>
             ) : <p className="text-muted-foreground text-center py-8">You haven't purchased any tickets yet.</p>;
 
         case 'attended':
             return profileData.attended.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {profileData.attended.map(event => <AttendedEventCard key={event.id} event={event} />)}
+                    {profileData.attended.map(item => <AttendedEventCard key={item.id} item={item} />)}
                 </div>
             ) : <p className="text-muted-foreground text-center py-8">You haven't attended any events yet. After an event, they'll show up here for you to rate!</p>;
 
         case 'bookmarked':
-            return profileData.bookmarked.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {profileData.bookmarked.map((item) => {
-                        if (item.type === 'tour') {
-                            return <TourCard key={item.id} tour={item as Tour} />;
-                        }
-                        return <EventCard key={item.id} event={item as Event} />;
-                    })}
-                </div>
-            ) : <p className="text-muted-foreground text-center py-8">You haven't bookmarked any items yet.</p>;
+            return profileData.bookmarked.length > 0 ? renderGrid(profileData.bookmarked)
+             : <p className="text-muted-foreground text-center py-8">You haven't bookmarked any items yet.</p>;
 
         case 'viewed':
-            return profileData.viewed.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {profileData.viewed.map(event => <EventCard key={event.id} event={event} />)}
-                </div>
-            ) : <p className="text-muted-foreground text-center py-8">You haven't viewed any events recently.</p>;
+             return profileData.viewed.length > 0 ? renderGrid(profileData.viewed)
+             : <p className="text-muted-foreground text-center py-8">You haven't viewed any events recently.</p>;
 
         default:
             return null;
