@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -190,16 +191,26 @@ export async function rateEvent(targetId: string, rating: number): Promise<{succ
     if (rating < 1 || rating > 5) return { success: false, error: 'Invalid rating value.' };
 
     try {
-        const docRef = doc(db, 'events', targetId);
+        // Determine if it's an event or a tour
+        let docRef = doc(db, 'events', targetId);
+        let docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+            docRef = doc(db, 'tours', targetId);
+            docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) {
+                 throw new Error("Listing not found.");
+            }
+        }
         
         const newAverage = await runTransaction(db, async (transaction) => {
-            const docSnap = await transaction.get(docRef);
-            if (!docSnap.exists()) {
-                 throw new Error("Event not found.");
+            const freshDoc = await transaction.get(docRef);
+            if (!freshDoc.exists()) {
+                 throw new Error("Listing not found.");
             }
 
-            const eventData = docSnap.data() as Event;
-            const currentRating = eventData.rating || { average: 0, count: 0 };
+            const listingData = freshDoc.data() as Event | Tour;
+            const currentRating = listingData.rating || { average: 0, count: 0 };
             
             // This is a simplified rating model. A real one would prevent duplicate ratings.
             const newCount = currentRating.count + 1;
