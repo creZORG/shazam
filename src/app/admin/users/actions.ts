@@ -229,3 +229,4 @@ export async function getInvitations(): Promise<{ success: boolean, data?: Invit
         return { success: false, error: `Failed to fetch invitations: ${error.message}` };
     }
 }
+

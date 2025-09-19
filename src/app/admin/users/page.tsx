@@ -82,7 +82,7 @@ function InviteUserForm() {
                 toast({ variant: 'destructive', title: 'Error', description: result.error });
             }
         });
-    }
+    };
     
     const handleCopyLink = () => {
         if(inviteLink) {

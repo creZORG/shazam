@@ -160,7 +160,7 @@ export type FirebaseUser = {
   createdAt: any;
   lastLogin: string | number;
   bookmarkedEvents?: string[];
-  assignedEvents?: string[]; // For event-specific verifiers
+  assignedEvents?: string[]; // For event-specific roles like verifier
   
   // Analytics fields
   userAgent?: string;
@@ -437,6 +437,7 @@ export type Invitation = {
       uid: string;
       name: string;
       email: string;
+      photoURL?: string;
     };
     eventId?: string; // Optional: for event-specific roles like verifier
     listingName?: string; // Optional: name of the event
