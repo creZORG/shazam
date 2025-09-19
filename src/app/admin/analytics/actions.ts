@@ -184,8 +184,8 @@ export async function getAnalyticsData() {
             }
         };
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error fetching analytics data:", error);
-        return { success: false, error: "Failed to fetch analytics data." };
+        return { success: false, error: error.message || "Failed to fetch analytics data." };
     }
 }
