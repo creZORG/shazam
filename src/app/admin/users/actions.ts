@@ -219,3 +219,4 @@ export async function getVerifiersForEvent(eventId: string): Promise<{ success: 
         return { success: false, error: 'Failed to fetch verifiers.' };
     }
 }
+
