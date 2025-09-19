@@ -448,7 +448,7 @@ export async function getProducts(showTakenDown = false): Promise<{ data: Produc
         }
         
         const querySnapshot = await getDocs(q);
-        const products = querySnapshot.docs.map(serializeDoc(doc) as Product);
+        const products = querySnapshot.docs.map(doc => serializeDoc(doc) as Product);
         
         // If we didn't sort by date on the server (for the public page), sort here.
         if (!showTakenDown) {
@@ -533,3 +533,5 @@ export async function updateProduct(productId: string, data: Partial<Omit<Produc
         return { success: false, error: `Failed to update product. Details: ${error.message}` };
     }
 }
+
+    
