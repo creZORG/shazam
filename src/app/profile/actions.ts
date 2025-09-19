@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -16,7 +15,8 @@ import {
   runTransaction,
   orderBy,
   limit,
-  updateDoc
+  updateDoc,
+  documentId
 } from 'firebase/firestore';
 import { cookies } from 'next/headers';
 import { auth } from '@/lib/firebase/server-auth';
@@ -140,8 +140,8 @@ export async function getUserProfileData() {
         const batchSize = 30; // Firestore 'in' query limit
         for (let i = 0; i < allListingIds.length; i += batchSize) {
             const batchIds = allListingIds.slice(i, i + batchSize);
-            const eventsQuery = query(collection(db, 'events'), where('__name__', 'in', batchIds));
-            const toursQuery = query(collection(db, 'tours'), where('__name__', 'in', batchIds));
+            const eventsQuery = query(collection(db, 'events'), where(documentId(), 'in', batchIds));
+            const toursQuery = query(collection(db, 'tours'), where(documentId(), 'in', batchIds));
             
             const [eventDocs, tourDocs] = await Promise.all([
                 getDocs(eventsQuery),
