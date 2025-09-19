@@ -23,7 +23,6 @@ import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -220,18 +219,18 @@ function CarouselTab() {
         defaultValues: { title: "Carousel Image", imageUrl: "", ctaLink: "" },
     });
 
-    const fetchCarouselImages = () => {
+    const fetchCarouselImages = useCallback(() => {
          getPosters().then(result => {
             if (result.data) {
                 setCarouselImages(result.data.filter(p => p.title.toLowerCase().includes('carousel')));
             }
             setIsLoading(false);
         })
-    }
+    }, []);
 
     useEffect(() => {
         fetchCarouselImages();
-    }, []);
+    }, [fetchCarouselImages]);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop: async (acceptedFiles) => {
@@ -373,16 +372,16 @@ function PostersTab() {
         defaultValues: { title: "", imageUrl: "", ctaLink: "", venue: "", pricingType: 'Paid' },
     });
 
-    const fetchPosters = () => {
+    const fetchPosters = useCallback(() => {
         getPosters().then(result => {
             if (result.data) setPosters(result.data.filter(p => !p.title.toLowerCase().includes('carousel')));
             setIsLoadingPosters(false);
         })
-    }
+    }, []);
 
     useEffect(() => {
         fetchPosters();
-    }, []);
+    }, [fetchPosters]);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop: async (acceptedFiles) => {
@@ -718,16 +717,16 @@ function OpportunitiesTab() {
         defaultValues: { title: "", description: "", type: "Job", ctaLink: "" },
     });
     
-    const fetchOpportunities = () => {
+    const fetchOpportunities = useCallback(() => {
         getOpportunities().then(result => {
             if (result.data) setOpportunities(result.data);
             setIsLoading(false);
         })
-    }
+    }, []);
 
     useEffect(() => {
         fetchOpportunities();
-    }, []);
+    }, [fetchOpportunities]);
 
     const onSubmit = (values: z.infer<typeof opportunitySchema>) => {
         startSavingTransition(async () => {
@@ -805,9 +804,8 @@ function OpportunitiesTab() {
     )
 }
 
-export default function AdminContentPage() {
+function AdminContentPageContent() {
     const { toast } = useToast();
-    const [isLoading, setIsLoading] = useState(true);
     const [isSaving, startTransition] = useTransition();
     const [activeTab, setActiveTab] = useState("homepage");
 
@@ -837,7 +835,6 @@ export default function AdminContentPage() {
     });
 
     useEffect(() => {
-        setIsLoading(true);
         getSiteContent().then(result => {
             if (result.data) {
                 const mergedData = {
@@ -852,7 +849,6 @@ export default function AdminContentPage() {
             } else if (result.error) {
                 toast({ variant: 'destructive', title: "Error", description: result.error });
             }
-            setIsLoading(false);
         });
     }, [form, toast]);
 
@@ -865,10 +861,6 @@ export default function AdminContentPage() {
                 toast({ variant: 'destructive', title: "Error", description: result.error });
             }
         });
-    }
-
-    if (isLoading) {
-        return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>
     }
     
     const tabItems = [
@@ -968,4 +960,18 @@ export default function AdminContentPage() {
 }
 
 
+export default function AdminContentPage() {
+    const [isLoading, setIsLoading] = useState(true);
 
+    useEffect(() => {
+        getSiteContent().then(() => {
+            setIsLoading(false);
+        });
+    }, []);
+
+    if (isLoading) {
+        return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    }
+
+    return <AdminContentPageContent />;
+}
