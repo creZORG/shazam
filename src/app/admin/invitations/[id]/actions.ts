@@ -44,7 +44,7 @@ export async function getInvitationDetails(invitationId: string): Promise<{ succ
         }
         
         const inviteData = await serializeData(inviteSnap) as Invitation;
-        const resultData: InvitationDetails = { ...inviteData, activity: [] };
+        const resultData: InvitationDetails = { ...inviteData };
 
         // If the invite has been accepted, fetch acceptor's details
         if (inviteData.status === 'accepted' && inviteData.acceptedBy) {
@@ -61,8 +61,15 @@ export async function getInvitationDetails(invitationId: string): Promise<{ succ
             }
         }
         
-        // Temporarily disabled activity fetching to fix loading issue.
-        // We will re-add this carefully.
+        // Fetch click activity
+        const activityQuery = query(
+            collection(db, 'promocodeClicks'),
+            where('shortId', '==', inviteData.shortId),
+            orderBy('timestamp', 'desc')
+        );
+        const activitySnapshot = await getDocs(activityQuery);
+        resultData.activity = activitySnapshot.docs.map(d => serializeData(d) as PromocodeClick);
+
 
         return { success: true, data: resultData };
 
@@ -105,4 +112,3 @@ export async function voidInvitation(invitationId: string): Promise<{ success: b
         return { success: false, error: 'Failed to void invitation.' };
     }
 }
-

@@ -54,7 +54,7 @@ export default function InvitationDetailsPage() {
         if (id) {
             getInvitationDetails(id).then(result => {
                 if (result.success && result.data) {
-                    setInvitation(result.data);
+                    setInvitation(result.data as InvitationWithActivity);
                 } else {
                     notFound();
                 }

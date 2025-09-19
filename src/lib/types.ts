@@ -1,4 +1,5 @@
 
+
 export type EventTicketingType = 'naksyetu' | 'external';
 export type ExternalEventPricing = 'Free' | 'Paid' | 'RSVP' | 'Online';
 
@@ -66,6 +67,7 @@ export type Event = {
     productId: string;
     productName: string;
   };
+  type: 'event';
 };
 
 export type Tour = {
@@ -92,6 +94,7 @@ export type Tour = {
   organizerName?: string;
   status?: ListingStatus;
   whatsappGroupLink?: string;
+  type: 'tour';
 };
 
 export type NightlifeEvent = {
