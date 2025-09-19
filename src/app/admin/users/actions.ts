@@ -3,7 +3,7 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { collection, getDocs, query, where, Timestamp, orderBy, limit, startAfter, getCountFromServer, addDoc, serverTimestamp, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, Timestamp, orderBy, limit, startAfter, getCountFromServer, addDoc, serverTimestamp, doc, updateDoc, arrayUnion, getDoc, setDoc } from 'firebase/firestore';
 import type { FirebaseUser, UserRole, Event, Invitation } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { randomBytes } from 'crypto';
@@ -110,6 +110,8 @@ interface InvitationPayload {
     role: UserRole;
     eventId?: string;
     sendEmail?: boolean;
+    promocodeId?: string;
+    trackingLinkId?: string;
 }
 
 export async function generateInviteLink(payload: InvitationPayload): Promise<{ success: boolean; inviteLink?: string; error?: string }> {
@@ -157,11 +159,11 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
                 listingName = (eventDoc.data() as Event).name;
             }
         }
-
+        
         const inviteRef = doc(collection(db, 'invitations'));
         const longInviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${token}`;
+        
         const shortId = await createShortLink({ longUrl: longInviteLink, invitationId: inviteRef.id });
-        const shortInviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/l/${shortId}`;
 
         const inviteData: Partial<Invitation> = {
             email: email || null,
@@ -175,14 +177,14 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
             listingName: listingName,
             shortId,
         };
-        
+
         await setDoc(inviteRef, inviteData);
         
         if (sendEmail && email) {
-            await sendInvitationEmail({ to: email, role, inviteLink: shortInviteLink, listingName });
+            await sendInvitationEmail({ to: email, role, inviteLink: `${process.env.NEXT_PUBLIC_APP_URL}/l/${shortId}`, listingName });
         }
         
-        return { success: true, inviteLink: shortInviteLink };
+        return { success: true, inviteLink: `${process.env.NEXT_PUBLIC_APP_URL}/l/${shortId}` };
 
     } catch (error) {
         console.error('Error creating invitation:', error);
