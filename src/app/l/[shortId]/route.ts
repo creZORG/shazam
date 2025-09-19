@@ -1,25 +1,39 @@
 
+
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 import type { ShortLink } from '@/lib/types';
 import { headers } from 'next/headers';
 
-async function trackClick(shortId: string, invitationId: string) {
+async function trackClick(shortId: string, linkData: ShortLink) {
     const headersList = headers();
     const ipAddress = headersList.get('x-forwarded-for') || 'unknown';
     const userAgent = headersList.get('user-agent') || 'unknown';
 
     try {
-        await addDoc(collection(db, 'invitationClicks'), {
-            invitationId,
-            shortId,
-            timestamp: serverTimestamp(),
-            ipAddress,
-            userAgent,
-        });
+        // If it's a tracking link (for a promocode or general campaign), increment its click count
+        if (linkData.trackingLinkId && linkData.promocodeId) {
+            const trackingLinkRef = doc(db, 'promocodes', linkData.promocodeId, 'trackingLinks', linkData.trackingLinkId);
+            await updateDoc(trackingLinkRef, { clicks: increment(1) });
+        } else if (linkData.trackingLinkId) {
+            const trackingLinkRef = doc(db, 'trackingLinks', linkData.trackingLinkId);
+            await updateDoc(trackingLinkRef, { clicks: increment(1) });
+        }
+        
+        // If it's an invitation link, log the click event separately
+        if (linkData.invitationId) {
+             await addDoc(collection(db, 'invitationClicks'), {
+                invitationId: linkData.invitationId,
+                shortId: shortId,
+                timestamp: serverTimestamp(),
+                ipAddress,
+                userAgent,
+            });
+        }
+        
     } catch (error) {
-        console.error("Failed to track invitation click:", error);
+        console.error("Failed to track click:", error);
     }
 }
 
@@ -43,16 +57,23 @@ export async function GET(
     const linkDoc = await getDoc(linkDocRef);
 
     if (linkDoc.exists()) {
-      const { longUrl, invitationId } = linkDoc.data() as ShortLink;
+      const linkData = linkDoc.data() as ShortLink;
       
-      // --- Activity Tracking ---
-      if (invitationId) {
-        trackClick(shortId, invitationId);
+      // Perform activity tracking without awaiting it to avoid blocking the redirect
+      trackClick(shortId, linkData);
+      
+      const response = NextResponse.redirect(new URL(linkData.longUrl, request.url));
+      
+      // Set a cookie to attribute purchase conversions
+      if (linkData.trackingLinkId) {
+        const cookieData = { trackingLinkId: linkData.trackingLinkId, promocodeId: linkData.promocodeId };
+        response.cookies.set('nak_tracker', JSON.stringify(cookieData), {
+          path: '/',
+          maxAge: 60 * 60 * 24, // 24 hours
+        });
       }
-      // --- End Activity Tracking ---
 
-      // Perform a 302 temporary redirect
-      return NextResponse.redirect(new URL(longUrl, request.url));
+      return response;
     } else {
       // If the link doesn't exist, redirect to a 404 page
       return NextResponse.redirect(new URL('/not-found', request.url));

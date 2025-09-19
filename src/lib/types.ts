@@ -363,6 +363,9 @@ export type Promocode = {
 export type TrackingLink = {
     id: string;
     name: string;
+    listingId: string;
+    listingType: string;
+    promocodeId?: string;
     clicks: number;
     purchases: number;
     longUrl: string;
@@ -572,6 +575,7 @@ export type CheckoutFeedback = {
 
 export type ShortLink = {
     longUrl: string;
+    listingId: string;
     invitationId?: string;
     promocodeId?: string;
     trackingLinkId?: string;

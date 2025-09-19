@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Suspense, useEffect, useState, useMemo, useRef, useCallback } from 'react';
@@ -212,11 +213,11 @@ function CheckoutComponent() {
 
   // Effect for handling affiliate data
   useEffect(() => {
-      if (affiliateData?.code && affiliateData.code !== 'N/A_TRACKING_LINK' && affiliateData.listingId === listingId) {
+      if (affiliateData?.code) {
           setPromoCode(affiliateData.code);
           handleApplyPromoCode(affiliateData.code);
       }
-  }, [affiliateData, listingId, handleApplyPromoCode]);
+  }, [affiliateData, handleApplyPromoCode]);
 
 
   const { subtotal, quantityDiscountAmount, promoDiscountAmount, platformFee, processingFee, finalTotal, selectedTickets, hasSelection } = useMemo(() => {

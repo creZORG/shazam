@@ -1,5 +1,6 @@
 
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -99,7 +100,12 @@ export async function createOrderAndInitiatePayment(
         };
         
         if (promocodeId) orderData.promocodeId = promocodeId;
-        if (payload.trackingLinkId) orderData.trackingLinkId = payload.trackingLinkId;
+        
+        // Capture tracking link ID from payload
+        if (payload.trackingLinkId) {
+            orderData.trackingLinkId = payload.trackingLinkId;
+        }
+
         if (eventData?.freeMerch) orderData.freeMerch = eventData.freeMerch;
 
         batch.set(orderRef, orderData);

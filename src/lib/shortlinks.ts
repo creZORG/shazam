@@ -12,6 +12,7 @@ const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 6);
 interface CreateShortLinkPayload {
     longUrl: string;
     listingId: string;
+    shortId?: string; // Optional custom ID
     invitationId?: string;
     promocodeId?: string;
     trackingLinkId?: string;
@@ -20,47 +21,51 @@ interface CreateShortLinkPayload {
 /**
  * Creates a unique short ID and stores the long URL and tracking info in Firestore.
  * @param payload - The data for the short link.
- * @returns The generated short ID.
- * @throws If a unique ID cannot be generated after 5 attempts.
+ * @returns The generated or provided short ID.
+ * @throws If a custom ID is provided and already exists, or if a unique ID cannot be generated.
  */
 export async function createShortLink(payload: CreateShortLinkPayload): Promise<string> {
-    let shortId = nanoid();
-    let attempts = 0;
-    const MAX_ATTEMPTS = 5;
+    let finalShortId: string;
 
-    // Check for uniqueness, retry if a collision occurs
-    while (attempts < MAX_ATTEMPTS) {
-        const checkDoc = await getDoc(doc(db, 'shortLinks', shortId));
-        if (!checkDoc.exists()) {
-            break; // Unique ID found
+    if (payload.shortId) {
+        // If a custom ID is provided, check for its existence
+        const checkDoc = await getDoc(doc(db, 'shortLinks', payload.shortId));
+        if (checkDoc.exists()) {
+            throw new Error(`The custom link path "${payload.shortId}" is already taken.`);
         }
-        shortId = nanoid();
-        attempts++;
+        finalShortId = payload.shortId;
+    } else {
+        // Otherwise, generate a random one and ensure it's unique
+        let attempts = 0;
+        const MAX_ATTEMPTS = 5;
+        let randomId = nanoid();
+
+        while (attempts < MAX_ATTEMPTS) {
+            const checkDoc = await getDoc(doc(db, 'shortLinks', randomId));
+            if (!checkDoc.exists()) {
+                finalShortId = randomId;
+                break;
+            }
+            randomId = nanoid();
+            attempts++;
+        }
+        
+        if (!finalShortId!) {
+            throw new Error("Could not generate a unique short link ID after several attempts.");
+        }
     }
     
-    if (attempts === MAX_ATTEMPTS) {
-        throw new Error("Could not generate a unique short link ID after several attempts.");
-    }
-    
-    const linkData: ShortLink = { 
+    const linkData: Partial<ShortLink> = { 
         longUrl: payload.longUrl,
+        listingId: payload.listingId,
         createdAt: serverTimestamp() 
     };
 
-    if (payload.listingId) {
-        linkData.listingId = payload.listingId;
-    }
-    if (payload.invitationId) {
-        linkData.invitationId = payload.invitationId;
-    }
-    if (payload.promocodeId) {
-        linkData.promocodeId = payload.promocodeId;
-    }
-    if (payload.trackingLinkId) {
-        linkData.trackingLinkId = payload.trackingLinkId;
-    }
+    if (payload.invitationId) linkData.invitationId = payload.invitationId;
+    if (payload.promocodeId) linkData.promocodeId = payload.promocodeId;
+    if (payload.trackingLinkId) linkData.trackingLinkId = payload.trackingLinkId;
 
-    await setDoc(doc(db, 'shortLinks', shortId), linkData);
+    await setDoc(doc(db, 'shortLinks', finalShortId!), linkData);
     
-    return shortId;
+    return finalShortId!;
 }

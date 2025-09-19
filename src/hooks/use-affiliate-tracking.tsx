@@ -1,11 +1,13 @@
 
+
 'use client';
 
 import { useEffect, useState, createContext, useContext, ReactNode } from 'react';
 import { useSearchParams, usePathname } from 'next/navigation';
-import { trackLinkClick } from '@/app/admin/promotions/actions';
+import { getCookie, setCookie } from 'cookies-next';
 
 const AFFILIATE_STORAGE_KEY = 'nak_affiliate_promo_code';
+const TRACKING_COOKIE_KEY = 'nak_tracker';
 const TRACKING_EXPIRY_HOURS = 24;
 
 interface AffiliateData {
@@ -25,41 +27,44 @@ export function AffiliateProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         // This effect runs only once on the client side to initialize data
-        // from either URL params or localStorage.
-        const coupon = searchParams.get('coupon');
-        const trackingLinkId = searchParams.get('linkId');
-        const customSlug = pathname.startsWith('/l/') ? pathname.split('/').pop() : null;
-
-        const source = searchParams.get('utm_source');
-        const medium = searchParams.get('utm_medium');
+        // from either URL params or cookies.
         
-        let channel: AffiliateData['channel'] = 'referral';
-        if (medium === 'cpc' || medium === 'paid') channel = 'ad';
-        if (source === 'facebook' || source === 'instagram' || source === 'twitter') channel = 'organic_social';
-
-        // From a short link click
-        if (customSlug) {
-             const expiry = new Date().getTime() + TRACKING_EXPIRY_HOURS * 60 * 60 * 1000;
-             const data: AffiliateData = { code: coupon, listingId: null, trackingLinkId, expiry, channel };
-             localStorage.setItem(AFFILIATE_STORAGE_KEY, JSON.stringify(data));
-             setAffiliateData(data);
-             // No need to call trackLinkClick here, as the /l/[shortId] route handler does it.
-             return;
+        // 1. Check for `nak_tracker` cookie first, as it's the most reliable source post-redirect.
+        const trackerCookie = getCookie(TRACKING_COOKIE_KEY);
+        if (typeof trackerCookie === 'string') {
+            try {
+                const parsed = JSON.parse(trackerCookie);
+                if (parsed.trackingLinkId) {
+                    const data = { ...parsed, channel: 'referral' }; // Default channel
+                    setAffiliateData(data);
+                    return; // Stop further processing if we have tracker data
+                }
+            } catch (e) {
+                 console.error("Failed to parse tracking cookie", e);
+            }
         }
 
-        // From a direct link with coupon
+
+        // 2. Check for legacy `coupon` URL param for backward compatibility.
+        const coupon = searchParams.get('coupon');
         if (coupon) {
             const listingId = pathname.split('/').pop() || null;
             if (listingId) {
                 const expiry = new Date().getTime() + TRACKING_EXPIRY_HOURS * 60 * 60 * 1000;
-                const data: AffiliateData = { code: coupon, listingId, trackingLinkId, expiry, channel };
+                const source = searchParams.get('utm_source');
+                const medium = searchParams.get('utm_medium');
+                let channel: AffiliateData['channel'] = 'referral';
+                if (medium === 'cpc' || medium === 'paid') channel = 'ad';
+                if (source === 'facebook' || source === 'instagram' || source === 'twitter') channel = 'organic_social';
+
+                const data: AffiliateData = { code: coupon, listingId, expiry, channel };
                 localStorage.setItem(AFFILIATE_STORAGE_KEY, JSON.stringify(data));
                 setAffiliateData(data);
                 return;
             }
         }
         
-        // If no params, try to load from localStorage
+        // 3. If no params, try to load from old localStorage method (for backward compatibility).
         const storedData = localStorage.getItem(AFFILIATE_STORAGE_KEY);
         if (storedData) {
             try {
@@ -88,8 +93,3 @@ export function AffiliateProvider({ children }: { children: ReactNode }) {
 export const useAffiliateData = () => {
     return useContext(AffiliateContext);
 };
-
-// Deprecated component, provider handles logic now.
-export function AffiliateTracker() {
-    return null;
-}
