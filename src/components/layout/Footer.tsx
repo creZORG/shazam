@@ -126,7 +126,6 @@ export function Footer() {
                 &copy; {new Date().getFullYear()} NaksYetu. All rights reserved.
             </p>
             <div className="flex items-center gap-4">
-                <p className="text-sm text-muted-foreground">Built by Mark Allan</p>
                 <a href="https://kihumba.com/clients/projects/naksyetu" target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" size="sm">
                         <Star className="h-4 w-4 mr-2 text-yellow-400 fill-current" />
@@ -138,6 +137,9 @@ export function Footer() {
                 <LifeBuoy className="h-4 w-4" />
                 Help Centre
             </Link>
+        </div>
+        <div className="text-center mt-6">
+            <p className="text-xs text-muted-foreground/50">Built by Mark Allan</p>
         </div>
       </div>
     </footer>
