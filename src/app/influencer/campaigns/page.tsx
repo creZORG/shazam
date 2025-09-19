@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -12,7 +11,7 @@ import type { Promocode } from "@/lib/types";
 import { Loader2, AlertTriangle, FileText, Check, Link as LinkIcon, BarChart, Ticket, Route, Settings, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 function getPromocodeStatus(code: Promocode) {
