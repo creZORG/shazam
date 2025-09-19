@@ -64,11 +64,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </Link>
         </SidebarHeader>
         <SidebarMenu>
-          {adminNavLinks.map((link) => (
+          {adminNavLinks.map((link) => {
+            const finalHref = link.href === '/admin/listings' ? '/admin/events' : link.href;
+            const isActive = pathname.startsWith(finalHref);
+
+             return (
              <SidebarMenuItem key={link.href}>
-                <Link href={link.href.startsWith('/admin/listings') ? '/admin/events' : link.href} legacyBehavior passHref>
+                <Link href={finalHref} legacyBehavior passHref>
                     <SidebarMenuButton
-                    isActive={pathname === link.href || (link.subItems && link.subItems.some(sub => pathname.startsWith(sub.href)))}
+                    isActive={isActive}
                     tooltip={{ children: link.label }}
                     >
                     <link.icon />
@@ -76,7 +80,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     </SidebarMenuButton>
                 </Link>
              </SidebarMenuItem>
-          ))}
+             )
+          })}
         </SidebarMenu>
       </Sidebar>
       <SidebarInset>
