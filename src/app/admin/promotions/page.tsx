@@ -55,36 +55,39 @@ function AllPromotionsPage() {
                 <CardDescription>An overview of all general and promocode-specific tracking links you have created.</CardDescription>
             </CardHeader>
             <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Link Name</TableHead>
-                            <TableHead>Destination</TableHead>
-                            <TableHead>Clicks</TableHead>
-                            <TableHead>Purchases</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {links.map(link => (
-                            <TableRow key={link.id}>
-                                <TableCell className="font-medium">{link.name}</TableCell>
-                                <TableCell className="text-muted-foreground">{link.listingName}</TableCell>
-                                <TableCell>{link.clicks}</TableCell>
-                                <TableCell>{link.purchases}</TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex gap-1 justify-end">
-                                        <Link href={`/admin/promotions/${link.id}?promocodeId=${link.promocodeId || ''}`}>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="h-4 w-4" /></Button>
-                                        </Link>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCopyLink(link.shortId)}><Copy className="h-4 w-4"/></Button>
-                                    </div>
-                                </TableCell>
+                {links.length > 0 ? (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Link Name</TableHead>
+                                <TableHead>Destination</TableHead>
+                                <TableHead>Clicks</TableHead>
+                                <TableHead>Purchases</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-                {links.length === 0 && !loading && <p className="text-sm text-center text-muted-foreground py-8">No tracking links created yet.</p>}
+                        </TableHeader>
+                        <TableBody>
+                            {links.map(link => (
+                                <TableRow key={link.id}>
+                                    <TableCell className="font-medium">{link.name}</TableCell>
+                                    <TableCell className="text-muted-foreground">{link.listingName}</TableCell>
+                                    <TableCell>{link.clicks}</TableCell>
+                                    <TableCell>{link.purchases}</TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex gap-1 justify-end">
+                                            <Link href={`/admin/promotions/${link.id}?promocodeId=${link.promocodeId || ''}`}>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="h-4 w-4" /></Button>
+                                            </Link>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCopyLink(link.shortId)}><Copy className="h-4 w-4"/></Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                ) : (
+                     <p className="text-sm text-center text-muted-foreground py-8">No tracking links created yet.</p>
+                )}
             </CardContent>
         </Card>
     )

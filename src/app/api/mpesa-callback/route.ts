@@ -1,5 +1,4 @@
 
-
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/server-config';
 import { collection, query, where, getDocs, doc, writeBatch, serverTimestamp, increment, getDoc } from 'firebase/firestore';
@@ -121,7 +120,10 @@ export async function POST(request: Request) {
             if(order.trackingLinkId) {
                 const collectionPath = order.promocodeId ? `promocodes/${order.promocodeId}/trackingLinks` : 'trackingLinks';
                 const trackingLinkRef = doc(db, collectionPath, order.trackingLinkId);
-                batch.update(trackingLinkRef, { purchases: increment(1) });
+                const trackingLinkDoc = await getDoc(trackingLinkRef);
+                if (trackingLinkDoc.exists()) {
+                    batch.update(trackingLinkRef, { purchases: increment(1) });
+                }
             }
 
         } else {
