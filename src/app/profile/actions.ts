@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -99,73 +100,64 @@ export async function getUserProfileData() {
 
   try {
     const userDocRef = doc(db, 'users', userId);
-    const ticketsQuery = query(collection(db, 'tickets'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
-    const viewedEventsQuery = query(
-        collection(db, 'userEvents'), 
-        where('uid', '==', userId), 
-        where('action', '==', 'click_event'),
-        orderBy('timestamp', 'desc'),
-        limit(20)
-    );
     
-    const [userDoc, ticketsSnapshot, viewedSnapshot] = await Promise.all([
-      getDoc(userDocRef),
-      getDocs(ticketsQuery),
-      getDocs(viewedEventsQuery)
+    const [userDoc, ticketsSnapshot, viewedEventsSnapshot] = await Promise.all([
+        getDoc(userDocRef),
+        getDocs(query(collection(db, 'tickets'), where('userId', '==', userId), orderBy('createdAt', 'desc'))),
+        getDocs(query(collection(db, 'userEvents'), where('uid', '==', userId), where('action', '==', 'click_event'), orderBy('timestamp', 'desc'), limit(20)))
     ]);
-
+    
     if (!userDoc.exists()) {
       return { success: false, error: 'User not found.' };
     }
-
+    
     const userData = userDoc.data() as FirebaseUser;
     const tickets = ticketsSnapshot.docs.map(doc => serializeData(doc) as Ticket);
-    const viewedEventInteractions = viewedSnapshot.docs.map(doc => serializeData(doc) as UserEvent);
-    
+    const viewedEventInteractions = viewedEventsSnapshot.docs.map(doc => serializeData(doc) as UserEvent);
+
     const purchasedTickets = tickets.filter(t => t.status === 'valid');
     const attendedTickets = tickets.filter(t => t.status === 'used');
-    
-    const bookmarkedItemIds = userData.bookmarkedEvents || [];
-    const viewedEventIds = [...new Set(viewedEventInteractions.map(v => v.eventId))];
-    
+
+    const bookmarkedIds = userData.bookmarkedEvents || [];
+    const viewedIds = [...new Set(viewedEventInteractions.map(v => v.eventId))];
+
     const allListingIds = [...new Set([
         ...purchasedTickets.map(t => t.listingId),
         ...attendedTickets.map(t => t.listingId),
-        ...bookmarkedItemIds,
-        ...viewedEventIds
+        ...bookmarkedIds,
+        ...viewedIds,
     ])];
-    
-    let listings: Record<string, Event | Tour> = {};
+
+    const listings: Record<string, Event | Tour> = {};
+
     if (allListingIds.length > 0) {
-        const batchSize = 30; // Firestore 'in' query limit
+        // Firestore 'in' query has a limit of 30 items. We batch requests to handle more.
+        const batchSize = 30;
         for (let i = 0; i < allListingIds.length; i += batchSize) {
             const batchIds = allListingIds.slice(i, i + batchSize);
+            
             const eventsQuery = query(collection(db, 'events'), where(documentId(), 'in', batchIds));
             const toursQuery = query(collection(db, 'tours'), where(documentId(), 'in', batchIds));
-            
+
             const [eventDocs, tourDocs] = await Promise.all([
                 getDocs(eventsQuery),
                 getDocs(toursQuery)
             ]);
             
             eventDocs.forEach(doc => {
-                if(doc.exists()) {
-                    listings[doc.id] = { ...(serializeData(doc) as Event), type: 'event' };
-                }
+                listings[doc.id] = { ...(serializeData(doc) as Event), type: 'event' };
             });
             tourDocs.forEach(doc => {
-                if(doc.exists()) {
-                    listings[doc.id] = { ...(serializeData(doc) as Tour), type: 'tour' };
-                }
+                listings[doc.id] = { ...(serializeData(doc) as Tour), type: 'tour' };
             });
         }
     }
-    
-    const purchasedWithListings = purchasedTickets.map(ticket => ({ ...ticket, event: listings[ticket.listingId] as Event | Tour | undefined })).filter(t => t.event);
-    const attendedWithListings = attendedTickets.map(ticket => listings[ticket.listingId]).filter(Boolean);
-    const bookmarkedWithListings = bookmarkedItemIds.map(id => listings[id]).filter(Boolean);
-    const viewedWithListings = viewedEventIds.map(id => listings[id]).filter(Boolean);
 
+    const purchasedWithListings = purchasedTickets.map(ticket => ({ ...ticket, event: listings[ticket.listingId] })).filter(t => t.event);
+    const attendedWithListings = attendedTickets.map(ticket => listings[ticket.listingId]).filter(Boolean);
+    const bookmarkedWithListings = bookmarkedIds.map(id => listings[id]).filter(Boolean);
+    const viewedWithListings = viewedIds.map(id => listings[id]).filter(Boolean);
+    
     return {
       success: true,
       data: {
@@ -264,3 +256,6 @@ export async function upgradeToInfluencer(): Promise<{ success: boolean; error?:
         return { success: false, error: 'An unexpected error occurred.' };
     }
 }
+
+
+    
