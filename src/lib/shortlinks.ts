@@ -11,7 +11,10 @@ const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 6);
 
 interface CreateShortLinkPayload {
     longUrl: string;
-    invitationId?: string; // New field to directly link to an invitation
+    listingId: string;
+    invitationId?: string;
+    promocodeId?: string;
+    trackingLinkId?: string;
 }
 
 /**
@@ -21,7 +24,6 @@ interface CreateShortLinkPayload {
  * @throws If a unique ID cannot be generated after 5 attempts.
  */
 export async function createShortLink(payload: CreateShortLinkPayload): Promise<string> {
-    const { longUrl, invitationId } = payload;
     let shortId = nanoid();
     let attempts = 0;
     const MAX_ATTEMPTS = 5;
@@ -41,12 +43,21 @@ export async function createShortLink(payload: CreateShortLinkPayload): Promise<
     }
     
     const linkData: ShortLink = { 
-        longUrl,
+        longUrl: payload.longUrl,
         createdAt: serverTimestamp() 
     };
 
-    if (invitationId) {
-        linkData.invitationId = invitationId;
+    if (payload.listingId) {
+        linkData.listingId = payload.listingId;
+    }
+    if (payload.invitationId) {
+        linkData.invitationId = payload.invitationId;
+    }
+    if (payload.promocodeId) {
+        linkData.promocodeId = payload.promocodeId;
+    }
+    if (payload.trackingLinkId) {
+        linkData.trackingLinkId = payload.trackingLinkId;
     }
 
     await setDoc(doc(db, 'shortLinks', shortId), linkData);

@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -51,27 +52,36 @@ export async function getCampaignDetails(id: string) {
 }
 
 
-export async function createTrackingLink(payload: { promocodeId: string, listingType: string, listingId?: string, name: string }): Promise<{ success: boolean; data?: TrackingLink; error?: string; }> {
+export async function createTrackingLink(payload: { promocodeId?: string, listingType: string, listingId?: string, name: string }): Promise<{ success: boolean; data?: TrackingLink; error?: string; }> {
     const { promocodeId, listingType, listingId, name } = payload;
-    if (!promocodeId || !name) {
-        return { success: false, error: "Promocode ID and link name are required." };
+    if (!name || !listingId) {
+        return { success: false, error: "Listing ID and link name are required." };
     }
     
-    try {
-        const promocodeSnap = await getDoc(doc(db, 'promocodes', promocodeId));
+    let promocodeSnap;
+    let promocode;
+    if (promocodeId) {
+        promocodeSnap = await getDoc(doc(db, 'promocodes', promocodeId));
         if (!promocodeSnap.exists()) {
              return { success: false, error: "Associated campaign not found." };
         }
-        const promocode = promocodeSnap.data();
+        promocode = promocodeSnap.data();
+    }
 
-
-        const linkRef = doc(collection(db, 'promocodes', promocodeId, 'trackingLinks'));
+    try {
+        const collectionRef = promocodeId ? collection(db, 'promocodes', promocodeId, 'trackingLinks') : collection(db, 'trackingLinks');
+        const linkRef = doc(collectionRef);
         
         const destination = listingType === 'all' ? '/events' : `/${listingType}s/${listingId}`;
-        const longUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}${destination}?coupon=${promocode.code}&linkId=${linkRef.id}`;
+        let longUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}${destination}?linkId=${linkRef.id}`;
+        
+        if(promocode) {
+            longUrl += `&coupon=${promocode.code}`;
+        }
         
         const shortId = await createShortLink({
             longUrl,
+            listingId,
             promocodeId: promocodeId,
             trackingLinkId: linkRef.id,
         });
