@@ -64,11 +64,6 @@ export async function acceptInvitation(token: string, uid: string): Promise<{ su
         if (invite.email && userRecord.email !== invite.email) {
             return { success: false, error: 'This invitation is for a different email address.' };
         }
-
-        // IMPORTANT SECURITY CHECK: Do not grant role if email is not verified
-        if (!userRecord.emailVerified) {
-            return { success: false, error: 'You must verify your email address before the role can be assigned. Please check your inbox for a verification link.' };
-        }
         
         const userDocRef = doc(db, 'users', uid);
         const userDoc = await getDoc(userDocRef);
