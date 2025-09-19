@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc, collection, query, where, getDocs, Timestamp, orderBy, addDoc, serverTimestamp, increment, writeBatch, setDoc } from 'firestore';
+import { doc, getDoc, collection, query, where, getDocs, Timestamp, orderBy, addDoc, serverTimestamp, increment, writeBatch, setDoc } from 'firebase/firestore';
 import type { Promocode, TrackingLink, PromocodeClick, Order, ShortLink } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { headers } from 'next/headers';
@@ -69,7 +69,7 @@ export async function createTrackingLink(payload: { promocodeId: string, listing
         const linkRef = doc(collection(db, 'promocodes', promocodeId, 'trackingLinks'));
         
         const destination = listingType === 'all' ? '/events' : `/${listingType}s/${listingId}`;
-        const longUrl = `${destination}?coupon=${promocode.code}&linkId=${linkRef.id}`;
+        const longUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}${destination}?coupon=${promocode.code}&linkId=${linkRef.id}`;
         
         const shortId = await createShortLink(longUrl);
 
