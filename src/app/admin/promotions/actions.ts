@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -63,7 +64,7 @@ export async function getLinkAnalytics(linkId: string, promocodeId?: string) {
         
         // Fetch clicks
         const clicksQuery = query(
-            collection(db, 'promocodeClicks'), 
+            collectionGroup(db, 'promocodeClicks'), 
             where('trackingLinkId', '==', linkId),
             orderBy('timestamp', 'desc')
         );
@@ -104,36 +105,34 @@ export async function getLinkAnalytics(linkId: string, promocodeId?: string) {
 export async function getAllTrackingLinks() {
     noStore();
     try {
-        // 1. Get all general links
-        const generalLinksQuery = query(collection(db, 'trackingLinks'), orderBy('createdAt', 'desc'));
-        
-        // 2. Get all links nested under promocodes
-        const promocodeLinksQuery = query(collectionGroup(db, 'trackingLinks'), orderBy('createdAt', 'desc'));
-        
-        const [generalLinksSnapshot, promocodeLinksSnapshot] = await Promise.all([
-            getDocs(generalLinksQuery),
-            getDocs(promocodeLinksQuery)
-        ]);
-
         const allLinksMap = new Map<string, TrackingLink>();
 
-        // Process general links first
+        // 1. Get all general (non-promocode) links
+        const generalLinksQuery = query(collection(db, 'trackingLinks'));
+        const generalLinksSnapshot = await getDocs(generalLinksQuery);
         generalLinksSnapshot.forEach(doc => {
             allLinksMap.set(doc.id, serializeData(doc) as TrackingLink);
         });
 
-        // Process nested links, they will overwrite if IDs collide (which they shouldn't with Firestore's auto-IDs)
-        promocodeLinksSnapshot.forEach(doc => {
-            if (!allLinksMap.has(doc.id)) {
-                 allLinksMap.set(doc.id, serializeData(doc) as TrackingLink);
-            }
-        });
+        // 2. Get all promocodes, then iterate to get their nested trackingLinks
+        const promocodesQuery = query(collection(db, 'promocodes'));
+        const promocodesSnapshot = await getDocs(promocodesQuery);
 
+        for (const promoDoc of promocodesSnapshot.docs) {
+            const nestedLinksQuery = query(collection(db, 'promocodes', promoDoc.id, 'trackingLinks'));
+            const nestedLinksSnapshot = await getDocs(nestedLinksQuery);
+            nestedLinksSnapshot.forEach(doc => {
+                if (!allLinksMap.has(doc.id)) {
+                    allLinksMap.set(doc.id, serializeData(doc) as TrackingLink);
+                }
+            });
+        }
+        
         const links = Array.from(allLinksMap.values());
         links.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
         // Batch fetch event/tour names to avoid N+1 queries
-        const listingIds = [...new Set(links.map(l => l.listingId))].filter(Boolean);
+        const listingIds = [...new Set(links.map(l => l.listingId))].filter(Boolean) as string[];
         const listingsData: Record<string, string> = {};
 
         if (listingIds.length > 0) {
