@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -74,7 +75,7 @@ function CampaignLinkManager() {
     }, [user?.uid]);
 
     useEffect(() => {
-        if (selectedPromocodeId) {
+        if (selectedPromocodeId && selectedPromocodeId !== 'none') {
             getCampaignDetails(selectedPromocodeId).then(detailsResult => {
                 if (detailsResult.success && detailsResult.data) {
                     setTrackingLinks(detailsResult.data.trackingLinks);
@@ -99,17 +100,11 @@ function CampaignLinkManager() {
             return;
         }
 
-        // If no promocode is selected, we need to handle this.
-        // For now, we'll require one if available, but can be changed.
-        if (!selectedPromocodeId) {
-             toast({ variant: 'destructive', title: 'Error', description: 'Please select a promocode to create a link.'});
-            return;
-        }
-
+        const promocodeForLink = selectedPromocodeId && selectedPromocodeId !== 'none' ? selectedPromocodeId : undefined;
 
         startCreating(async () => {
             const result = await createTrackingLink({
-                promocodeId: selectedPromocodeId,
+                promocodeId: promocodeForLink,
                 listingId: selectedListingData.id,
                 listingType: selectedListingData.type,
                 name: newLinkName,
@@ -162,7 +157,7 @@ function CampaignLinkManager() {
                          <Select onValueChange={setSelectedPromocodeId} value={selectedPromocodeId} disabled={!selectedListing}>
                             <SelectTrigger><SelectValue placeholder="Select a promocode..." /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">None</SelectItem>
+                                <SelectItem value="none">None</SelectItem>
                                 {availablePromocodes.map(p => <SelectItem key={p.id} value={p.id}>{p.code} ({p.influencerName || 'General'})</SelectItem>)}
                             </SelectContent>
                         </Select>
@@ -173,7 +168,7 @@ function CampaignLinkManager() {
                     <Label>3. Create & Track New Link</Label>
                      <div className="flex gap-2">
                         <Input placeholder="Name for this link, e.g., 'Facebook Ad'" value={newLinkName} onChange={e => setNewLinkName(e.target.value)} disabled={!selectedListing} />
-                        <Button onClick={handleCreateLink} disabled={!newLinkName || isCreating || !selectedPromocodeId}>
+                        <Button onClick={handleCreateLink} disabled={!newLinkName || isCreating}>
                             {isCreating ? <Loader2 className="animate-spin" /> : <PlusCircle />}
                             <span className="hidden sm:inline ml-2">Create</span>
                         </Button>
