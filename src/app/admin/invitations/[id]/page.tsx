@@ -1,17 +1,20 @@
 
 'use client';
 
-import { notFound, useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { getInvitationDetails } from './actions';
+import { notFound, useParams, useRouter } from 'next/navigation';
+import { useEffect, useState, useTransition } from 'react';
+import { getInvitationDetails, voidInvitation } from './actions';
 import type { Invitation, UserEvent, AuditLog, PromocodeClick } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Loader2, ArrowLeft, Mail, Shield, Calendar, Clock, CheckCircle, XCircle, MousePointerClick, Globe } from 'lucide-react';
+import { Loader2, ArrowLeft, Mail, Shield, Calendar, Clock, CheckCircle, XCircle, MousePointerClick, Globe, Ban } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 type InvitationWithActivity = Invitation & { activity?: PromocodeClick[] };
 
@@ -40,9 +43,12 @@ function DetailItem({ label, value }: { label: string; value: React.ReactNode })
 
 export default function InvitationDetailsPage() {
     const params = useParams();
+    const router = useRouter();
+    const { toast } = useToast();
     const id = params.id as string;
     const [invitation, setInvitation] = useState<InvitationWithActivity | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isPending, startTransition] = useTransition();
 
     useEffect(() => {
         if (id) {
@@ -57,6 +63,18 @@ export default function InvitationDetailsPage() {
         }
     }, [id]);
 
+    const handleVoidInvite = () => {
+        startTransition(async () => {
+            const result = await voidInvitation(id);
+            if (result.success) {
+                toast({ title: "Invitation Voided", description: "This invitation link is no longer valid." });
+                router.refresh();
+            } else {
+                toast({ variant: 'destructive', title: "Error", description: result.error });
+            }
+        });
+    }
+
     if (loading || !invitation) {
         return <div className="flex justify-center p-20"><Loader2 className="h-12 w-12 animate-spin text-primary"/></div>;
     }
@@ -64,9 +82,10 @@ export default function InvitationDetailsPage() {
     const statusConfig = {
         pending: { icon: Clock, color: 'text-blue-500', label: 'Pending' },
         accepted: { icon: CheckCircle, color: 'text-green-500', label: 'Accepted' },
+        void: { icon: XCircle, color: 'text-red-500', label: 'Void' },
     };
 
-    const StatusIcon = statusConfig[invitation.status].icon;
+    const StatusIcon = statusConfig[invitation.status]?.icon || Clock;
     const totalClicks = invitation.activity?.length || 0;
 
     return (
@@ -92,7 +111,7 @@ export default function InvitationDetailsPage() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <DetailItem label="Status" value={
-                                <Badge variant={invitation.status === 'pending' ? 'secondary' : 'default'} className="capitalize">
+                                <Badge variant={invitation.status === 'pending' ? 'secondary' : invitation.status === 'void' ? 'destructive' : 'default'} className="capitalize">
                                     <StatusIcon className="mr-2" />
                                     {invitation.status}
                                 </Badge>
@@ -112,19 +131,45 @@ export default function InvitationDetailsPage() {
                             </CardHeader>
                             <CardContent className="flex items-center gap-4">
                                 <Avatar>
-                                    <AvatarImage src={invitation.acceptedBy.photoURL} />
-                                    <AvatarFallback>{invitation.acceptedBy.name.charAt(0)}</AvatarFallback>
+                                    <AvatarImage src={(invitation.acceptedBy as any).photoURL} />
+                                    <AvatarFallback>{(invitation.acceptedBy as any).name.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <p className="font-bold">{invitation.acceptedBy.name}</p>
-                                    <p className="text-sm text-muted-foreground">{invitation.acceptedBy.email}</p>
+                                    <p className="font-bold">{(invitation.acceptedBy as any).name}</p>
+                                    <p className="text-sm text-muted-foreground">{(invitation.acceptedBy as any).email}</p>
                                 </div>
                             </CardContent>
                             <CardFooter>
-                                <Link href={`/admin/users/${invitation.acceptedBy.uid}`} className="w-full">
+                                <Link href={`/admin/users/${(invitation.acceptedBy as any).uid}`} className="w-full">
                                     <Button variant="outline" className="w-full">View User Profile</Button>
                                 </Link>
                             </CardFooter>
+                        </Card>
+                    )}
+
+                    {invitation.status === 'pending' && (
+                        <Card>
+                            <CardHeader><CardTitle>Actions</CardTitle></CardHeader>
+                            <CardContent>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" className="w-full" disabled={isPending}>
+                                            {isPending ? <Loader2 className="animate-spin" /> : <Ban className="mr-2" />}
+                                            Void Invitation
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                            <AlertDialogDescription>This will permanently invalidate this invitation link. This action cannot be undone.</AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleVoidInvite}>Confirm Void</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </CardContent>
                         </Card>
                     )}
                 </div>

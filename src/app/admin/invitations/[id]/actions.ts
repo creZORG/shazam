@@ -2,9 +2,12 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc, collection, query, where, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, orderBy, getDocs, Timestamp, updateDoc } from 'firebase/firestore';
 import type { Invitation, FirebaseUser, AuditLog, UserEvent, PromocodeClick, TrackingLink } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
+import { auth } from '@/lib/firebase/server-auth';
+import { cookies } from 'next/headers';
+import { logAdminAction } from '@/services/audit-service';
 
 async function serializeData(doc: any): Promise<any> {
     const data = doc.data();
@@ -81,5 +84,39 @@ export async function getInvitationDetails(invitationId: string): Promise<{ succ
     } catch (error: any) {
         console.error("Error fetching invitation details:", error);
         return { success: false, error: 'Failed to fetch invitation details.' };
+    }
+}
+
+export async function voidInvitation(invitationId: string): Promise<{ success: boolean; error?: string; }> {
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+
+    let decodedClaims;
+    try {
+        if (!auth) throw new Error("Server auth not initialized");
+        decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+    } catch (e) {
+        return { success: false, error: 'Authentication failed.' };
+    }
+
+    try {
+        const inviteRef = doc(db, 'invitations', invitationId);
+        const inviteSnap = await getDoc(inviteRef);
+        if (!inviteSnap.exists()) return { success: false, error: 'Invitation not found.' };
+
+        await updateDoc(inviteRef, { status: 'void' });
+
+        await logAdminAction({
+            adminId: decodedClaims.uid,
+            adminName: decodedClaims.name || 'Admin',
+            action: 'void_invitation',
+            targetType: 'invitation',
+            targetId: invitationId,
+            details: { invitedEmail: inviteSnap.data().email }
+        });
+
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: 'Failed to void invitation.' };
     }
 }

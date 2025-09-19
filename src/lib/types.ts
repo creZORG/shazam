@@ -1,5 +1,4 @@
 
-
 export type EventTicketingType = 'naksyetu' | 'external';
 export type ExternalEventPricing = 'Free' | 'Paid' | 'RSVP' | 'Online';
 
@@ -384,7 +383,7 @@ export type AuditLog = {
     adminId: string;
     adminName: string;
     action: string; // e.g., 'update_event_status', 'update_user_role'
-    targetType: 'event' | 'tour' | 'user' | 'settings' | 'promocode' | 'payout' | 'content' | 'support';
+    targetType: 'event' | 'tour' | 'user' | 'settings' | 'promocode' | 'payout' | 'content' | 'support' | 'invitation';
     targetId: string;
     details: Record<string, any>; // e.g., { from: 'draft', to: 'published', eventName: 'NaxVegas' }
 }
@@ -431,7 +430,7 @@ export type Invitation = {
     role: UserRole;
     token: string;
     expiresAt: any;
-    status: 'pending' | 'accepted';
+    status: 'pending' | 'accepted' | 'void';
     invitedBy: string; // UID of the admin/organizer who sent the invite
     createdAt: any;
     acceptedBy?: {
