@@ -177,10 +177,7 @@ function CampaignLinkManager() {
                     <Label>3. Create & Track New Link</Label>
                      <div className="grid sm:grid-cols-2 gap-4">
                         <Input placeholder="Name for this link, e.g., 'Facebook Ad'" value={newLinkName} onChange={e => setNewLinkName(e.target.value)} disabled={!selectedListing} />
-                         <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground text-sm shrink-0">{host}/l/</span>
-                            <Input placeholder="custom-path" value={customShortId} onChange={e => setCustomShortId(e.target.value)} disabled={!selectedListing} />
-                        </div>
+                        <Input placeholder="Custom path (optional)" value={customShortId} onChange={e => setCustomShortId(e.target.value)} disabled={!selectedListing} />
                     </div>
                      <Button onClick={handleCreateLink} disabled={!newLinkName || isCreating} className="w-full">
                         {isCreating ? <Loader2 className="animate-spin" /> : <PlusCircle />}
