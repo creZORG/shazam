@@ -15,6 +15,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { app, db } from "./config";
+import { sendWelcomeEmail } from "@/services/email";
 
 export const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
@@ -64,6 +65,10 @@ export async function signInWithGoogle(analyticsData: AnalyticsData) {
         role: 'attendee',
         ...analyticsData
       });
+      // Send welcome email to new Google user
+      if (user.email && user.displayName) {
+        await sendWelcomeEmail({ to: user.email, name: user.displayName });
+      }
     } else {
         await setDoc(userDocRef, { lastLogin: serverTimestamp() }, { merge: true });
     }
@@ -95,6 +100,9 @@ export async function signUpWithEmail(email: string, password: string, username:
       role: 'attendee',
       ...analyticsData,
     });
+    
+    // Send welcome email to new email user
+    await sendWelcomeEmail({ to: email, name: username });
     
     const idToken = await user.getIdToken();
     await createSession(idToken);

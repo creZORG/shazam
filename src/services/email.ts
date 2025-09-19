@@ -1,4 +1,5 @@
 
+
 'use server';
 
 interface ZeptoMailPayload {
@@ -165,4 +166,31 @@ export async function sendSupportReplyEmail({ to, ticketId, replyMessage }: Supp
         subject: `Re: Your Support Ticket #${ticketId.substring(0, 6)}...`,
         htmlbody: emailHtml,
     });
+}
+
+interface WelcomeEmailPayload {
+  to: string;
+  name: string;
+}
+
+export async function sendWelcomeEmail({ to, name }: WelcomeEmailPayload) {
+  const exploreUrl = `${process.env.NEXT_PUBLIC_APP_URL}/events`;
+  const emailHtml = `
+    <h1>Welcome to NaksYetu, ${name}!</h1>
+    <p>We're thrilled to have you join the community. NaksYetu is your one-stop platform for the best events, tours, and nightlife in Nakuru.</p>
+    <h2>What's next?</h2>
+    <p>Start by exploring the amazing experiences waiting for you:</p>
+     <p style="text-align: center; margin: 30px 0;">
+      <a href="${exploreUrl}" style="display: inline-block; padding: 12px 24px; background-color: #f97316; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Explore Events</a>
+    </p>
+    <p>If you're an organizer, influencer, or club owner, check out our <a href="${process.env.NEXT_PUBLIC_APP_URL}/partner-with-us">Partners Page</a> to see how you can benefit from our platform.</p>
+    <p>Enjoy the vibes!</p>
+  `;
+
+  return sendZeptoMail({
+    from: { address: "noreply@naksyetu.com", name: "NaksYetu" },
+    to: [{ email_address: { address: to, name: name } }],
+    subject: `Welcome to NaksYetu, ${name}!`,
+    htmlbody: emailHtml,
+  });
 }
