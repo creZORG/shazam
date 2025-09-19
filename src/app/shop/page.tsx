@@ -1,16 +1,38 @@
 
-
-'use client';
-
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getProducts } from "@/app/admin/content/actions";
 import type { Product } from "@/lib/types";
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Loader2, ShoppingBag } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'NaksYetu Shop | Official Merchandise',
+  description: 'Grab your official NaksYetu merchandise. Hoodies, t-shirts, and more, available for pickup at our events.',
+  openGraph: {
+    title: 'NaksYetu Shop | Official Merchandise',
+    description: 'The official place to get your NaksYetu gear.',
+    url: 'https://naksyetu.com/shop',
+    images: [
+      {
+        url: 'https://i.postimg.cc/4yK23PLk/download.png', // A generic brand image
+        width: 1200,
+        height: 630,
+        alt: 'NaksYetu Shop',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'NaksYetu Shop | Official Merchandise',
+    description: 'The official place to get your NaksYetu gear.',
+    images: ['https://i.postimg.cc/4yK23PLk/download.png'],
+  },
+};
+
 
 function ProductCard({ product }: { product: Product }) {
     const hasDiscount = typeof product.discountPrice === 'number' && product.discountPrice < product.price;
@@ -56,21 +78,10 @@ function ProductCard({ product }: { product: Product }) {
     );
 }
 
-
-export default function ShopPage() {
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        getProducts().then(result => {
-            if (result.data) {
-                // Sort client-side since server-side sort was removed
-                const sortedData = result.data.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                setProducts(sortedData);
-            }
-            setLoading(false);
-        });
-    }, []);
+function ShopPageClient({ initialProducts }: { initialProducts: Product[] }) {
+    'use client';
+    const [products, setProducts] = useState<Product[]>(initialProducts);
+    const [loading, setLoading] = useState(false);
 
     return (
         <div className="container mx-auto px-4 py-8 md:py-12">
@@ -94,4 +105,12 @@ export default function ShopPage() {
             )}
         </div>
     );
+}
+
+
+export default async function ShopPage() {
+    const { data: initialProducts } = await getProducts(false); // Fetch only active products
+    const sortedProducts = initialProducts?.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) || [];
+    
+    return <ShopPageClient initialProducts={sortedProducts} />;
 }
