@@ -1,0 +1,17 @@
+# Settings to manage and configure a Firebase App Hosting backend.
+# https://firebase.google.com/docs/app-hosting/configure
+
+runConfig:
+  # Increase this value if you'd like to automatically spin up
+  # more instances in response to increased traffic.
+  maxInstances: 1
+  # Set the instance size to "large" to handle bigger request bodies for image uploads
+  cpu: 1
+  memoryMiB: 1024
+  
+# Add a connector to allow your App Hosting backend to work with Firebase App Check.
+# Your backend will be able to enforce that client requests have valid App Check
+# tokens, and your backend will be able to verify App Check tokens from client
+# requests.
+managedBy:
+  appCheck: true

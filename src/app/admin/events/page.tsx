@@ -1,0 +1,394 @@
+
+'use client';
+
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
+import { getAllEvents, updateEventStatus } from './actions';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+import {
+  Check,
+  X,
+  EyeOff,
+  Archive,
+  Undo,
+  Redo,
+  Clock,
+  FileText,
+  Loader2,
+  Settings,
+} from 'lucide-react';
+import Link from 'next/link';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useEffect, useState, useTransition } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import type { Event } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+const statusConfig: Record<
+  string,
+  {
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    className: string;
+    label: string;
+    icon: React.ElementType;
+  }
+> = {
+  published: {
+    variant: 'default',
+    className: 'bg-green-500/20 text-green-300 border-green-500/30',
+    label: 'Published',
+    icon: Check,
+  },
+  draft: {
+    variant: 'secondary',
+    className: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
+    label: 'Draft',
+    icon: FileText,
+  },
+  'submitted for review': {
+    variant: 'secondary',
+    className: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+    label: 'In Review',
+    icon: Clock,
+  },
+  rejected: {
+    variant: 'destructive',
+    className: 'bg-red-500/20 text-red-300 border-red-500/30',
+    label: 'Rejected',
+    icon: X,
+  },
+  archived: {
+    variant: 'outline',
+    className: 'bg-zinc-500/20 text-zinc-300 border-zinc-500/30',
+    label: 'Archived',
+    icon: Archive,
+  },
+  'taken-down': {
+    variant: 'outline',
+    className: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+    label: 'Taken Down',
+    icon: EyeOff,
+  },
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const config = statusConfig[status] || {
+    variant: 'secondary',
+    className: '',
+    label: status,
+    icon: FileText,
+  };
+  return (
+    <Badge variant={config.variant} className={config.className}>
+      <config.icon className="mr-1 h-3 w-3" />
+      {config.label}
+    </Badge>
+  );
+}
+
+function ActionButton({
+  eventId,
+  targetStatus,
+  onActionComplete,
+  children,
+}: {
+  eventId: string;
+  targetStatus: 'published' | 'rejected' | 'taken-down' | 'archived';
+  onActionComplete: () => void;
+  children: React.ReactNode;
+}) {
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
+
+  const handleAction = async () => {
+    startTransition(async () => {
+      const result = await updateEventStatus(eventId, targetStatus);
+      if (result.success) {
+        toast({
+          title: 'Status Updated!',
+          description: `The event has been ${targetStatus}.`,
+        });
+        onActionComplete();
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Update Failed',
+          description: result.error,
+        });
+      }
+    });
+  };
+
+  let variant: 'outline' | 'destructive' | 'default' | 'secondary' = 'outline';
+  if (targetStatus === 'published') variant = 'default';
+  if (targetStatus === 'rejected') variant = 'destructive';
+
+  return (
+    <Button
+      size="sm"
+      variant={variant}
+      className="w-full"
+      onClick={handleAction}
+      disabled={isPending}
+    >
+      {isPending ? (
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      ) : (
+        children
+      )}
+    </Button>
+  );
+}
+
+function ManageActions({
+  eventId,
+  status,
+  onActionComplete,
+}: {
+  eventId: string;
+  status: string;
+  onActionComplete: () => void;
+}) {
+  switch (status) {
+    case 'submitted for review':
+      return (
+        <div className="grid grid-cols-2 gap-2">
+          <ActionButton
+            eventId={eventId}
+            targetStatus="published"
+            onActionComplete={onActionComplete}
+          >
+            <Check className="mr-2 h-4 w-4" /> Approve
+          </ActionButton>
+          <ActionButton
+            eventId={eventId}
+            targetStatus="rejected"
+            onActionComplete={onActionComplete}
+          >
+            <X className="mr-2 h-4 w-4" /> Reject
+          </ActionButton>
+        </div>
+      );
+    case 'published':
+      return (
+        <ActionButton
+          eventId={eventId}
+          targetStatus="taken-down"
+          onActionComplete={onActionComplete}
+        >
+          <EyeOff className="mr-2 h-4 w-4" /> Take Down
+        </ActionButton>
+      );
+    case 'rejected':
+      return (
+        <ActionButton
+          eventId={eventId}
+          targetStatus="published"
+          onActionComplete={onActionComplete}
+        >
+          <Check className="mr-2 h-4 w-4" /> Re-Approve
+        </ActionButton>
+      );
+    case 'taken-down':
+      return (
+        <ActionButton
+          eventId={eventId}
+          targetStatus="published"
+          onActionComplete={onActionComplete}
+        >
+          <Redo className="mr-2 h-4 w-4" /> Republish
+        </ActionButton>
+      );
+    case 'archived':
+      return (
+        <ActionButton
+          eventId={eventId}
+          targetStatus="published"
+          onActionComplete={onActionComplete}
+        >
+          <Undo className="mr-2 h-4 w-4" /> Unarchive
+        </ActionButton>
+      );
+    default:
+      return null;
+  }
+}
+
+function EventCard({ event, onActionComplete }: { event: Event & { id: string; status: string }, onActionComplete: () => void; }) {
+  return (
+    <Card className="flex flex-col bg-card/50">
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <Link
+            href={`/events/${event.slug || event.id}`}
+            className="font-medium hover:underline pr-4"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <CardTitle>{event.name}</CardTitle>
+          </Link>
+          <StatusBadge status={event.status || 'draft'} />
+        </div>
+        <CardDescription>
+          By {event.organizerName} on{' '}
+          {event.date ? format(new Date(event.date), 'MMM d, yyyy') : 'N/A'}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex-grow space-y-4">
+        <ManageActions
+          eventId={event.id}
+          status={event.status || 'draft'}
+          onActionComplete={onActionComplete}
+        />
+      </CardContent>
+      <CardFooter>
+         <Link href={`/admin/listings/${event.id}?type=event`} className="w-full">
+            <Button variant="outline" className="w-full">
+                <Settings className="mr-2" /> Manage
+            </Button>
+        </Link>
+      </CardFooter>
+    </Card>
+  );
+}
+
+export default function AdminEventsPage() {
+  const [eventsByStatus, setEventsByStatus] = useState<
+    Record<string, (Event & { id: string; status: string })[]>
+  >({
+    all: [],
+    review: [],
+    published: [],
+    'taken-down': [],
+    rejected: [],
+    archived: [],
+  });
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('review');
+
+  const fetchEvents = () => {
+    setLoading(true);
+    getAllEvents().then((result) => {
+      if (result.success && result.data) {
+        const events = result.data;
+        const sortedEvents = [...events].sort((a, b) => {
+            const statusOrder: Record<string, number> = {
+                'submitted for review': 0,
+                'published': 1,
+                'taken-down': 2,
+                'rejected': 3,
+                'archived': 4,
+                'draft': 5,
+            };
+            return (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99);
+        });
+
+        setEventsByStatus({
+          all: sortedEvents,
+          review: sortedEvents.filter(
+            (e) => e.status === 'submitted for review'
+          ),
+          published: sortedEvents.filter((e) => e.status === 'published'),
+          'taken-down': sortedEvents.filter((e) => e.status === 'taken-down'),
+          rejected: sortedEvents.filter((e) => e.status === 'rejected'),
+          archived: sortedEvents.filter((e) => e.status === 'archived'),
+        });
+      }
+      setLoading(false);
+    });
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const tabItems: {
+    value: string;
+    label: string;
+    icon: React.ElementType;
+  }[] = [
+    { value: 'review', label: 'In Review', icon: Clock },
+    { value: 'published', label: 'Published', icon: Check },
+    { value: 'taken-down', label: 'Taken Down', icon: EyeOff },
+    { value: 'rejected', label: 'Rejected', icon: X },
+    { value: 'archived', label: 'Archived', icon: Archive },
+    { value: 'all', label: 'All', icon: FileText },
+  ];
+
+  return (
+    <div className="space-y-8">
+      <CardHeader className="px-0">
+        <CardTitle>Manage Events</CardTitle>
+        <CardDescription>
+          Oversee all events listed on the platform. Approve, reject, or manage
+          published events.
+        </CardDescription>
+      </CardHeader>
+      {loading ? (
+        <div className="flex justify-center p-12">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      ) : (
+        <Tabs defaultValue="review" onValueChange={setActiveTab} className="w-full">
+          <div className="flex justify-center">
+            <TabsList className="p-1.5 h-auto rounded-full bg-background border shadow-md">
+              {tabItems.map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className={cn(
+                    'rounded-full px-3 py-1.5 flex items-center gap-2 transition-all duration-300',
+                    'data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm',
+                    'data-[state=inactive]:text-muted-foreground',
+                    'sm:w-auto',
+                    activeTab === tab.value
+                      ? 'sm:w-auto'
+                      : 'sm:w-10 sm:justify-center'
+                  )}
+                >
+                  <tab.icon className="h-5 w-5 flex-shrink-0" />
+                  <span
+                    className={cn(
+                      'overflow-hidden transition-all duration-300',
+                      'sm:max-w-xs',
+                      activeTab === tab.value ? 'max-w-xs' : 'max-w-0 sm:max-w-0'
+                    )}
+                  >
+                    {tab.label} ({eventsByStatus[tab.value]?.length || 0})
+                  </span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+          {tabItems.map((tab) => (
+            <TabsContent key={tab.value} value={tab.value} className="mt-6">
+              {eventsByStatus[tab.value]?.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {eventsByStatus[tab.value].map((event) => (
+                    <EventCard
+                      key={event.id}
+                      event={event}
+                      onActionComplete={fetchEvents}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-20 text-muted-foreground">
+                  <p>No events in this category.</p>
+                </div>
+              )}
+            </TabsContent>
+          ))}
+        </Tabs>
+      )}
+    </div>
+  );
+}

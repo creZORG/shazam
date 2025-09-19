@@ -1,0 +1,149 @@
+
+'use server';
+
+import { db } from '@/lib/firebase/config';
+import { collection, query, where, getDocs, addDoc, serverTimestamp, getDoc, doc, updateDoc } from 'firebase/firestore';
+import type { FirebaseUser, Promocode } from '@/lib/types';
+import { revalidatePath } from 'next/cache';
+import { logAdminAction } from '@/services/audit-service';
+import { cookies } from 'next/headers';
+import { auth } from '@/lib/firebase/server-auth';
+
+export async function findInfluencerByUsername(username: string): Promise<{ success: boolean; data?: { uid: string, name: string, photoURL?: string }; error?: string; }> {
+    if (!username) {
+        return { success: false, error: 'Username is required.' };
+    }
+
+    try {
+        const usersRef = collection(db, 'users');
+        // This query will find users where the username is >= the search term, and < the search term + a high-unicode character.
+        // It's a common trick for case-insensitive "starts-with" queries in Firestore.
+        const q = query(usersRef, where('name', '>=', username), where('name', '<', username + '\uf8ff'));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return { success: false, error: 'No user found with that username.' };
+        }
+
+        const userDoc = querySnapshot.docs.find(doc => doc.data().name.toLowerCase() === username.toLowerCase());
+
+        if (!userDoc) {
+             return { success: false, error: 'No user found with that exact username (case-insensitive).' };
+        }
+
+        const userData = userDoc.data() as FirebaseUser;
+
+        if (userData.role !== 'influencer' && userData.role !== 'admin' && userData.role !== 'super-admin') {
+            return { success: false, error: 'This user is not an influencer.' };
+        }
+        
+        return {
+            success: true,
+            data: {
+                uid: userDoc.id,
+                name: userData.name,
+                photoURL: userData.profilePicture,
+            }
+        };
+
+    } catch (error) {
+        console.error("Error finding influencer:", error);
+        return { success: false, error: 'A server error occurred while searching for the influencer.' };
+    }
+}
+
+
+export async function createPromocode(data: Omit<Promocode, 'id' | 'usageCount' | 'revenueGenerated' | 'isActive' | 'createdAt' | 'updatedAt'>) {
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+
+    let decodedClaims;
+    try {
+        if (!auth) throw new Error("Server auth not initialized");
+        decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+    } catch (e) {
+        return { success: false, error: 'Authentication failed.' };
+    }
+    
+    try {
+        const newCode: Omit<Promocode, 'id'> = {
+            ...data,
+            influencerStatus: data.influencerId ? 'pending' : undefined,
+            commissionType: data.influencerId ? data.commissionType : undefined,
+            commissionValue: data.influencerId ? data.commissionValue : undefined,
+            isActive: true,
+            usageCount: 0,
+            revenueGenerated: 0,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        }
+
+        const docRef = await addDoc(collection(db, 'promocodes'), newCode);
+        
+        await logAdminAction({
+            adminId: decodedClaims.uid,
+            adminName: decodedClaims.name || 'Admin/Organizer',
+            action: 'create_promocode',
+            targetType: 'promocode',
+            targetId: docRef.id,
+            details: { code: data.code, listingName: data.listingName, influencerId: data.influencerId || 'N/A' }
+        });
+
+        revalidatePath('/organizer/promocodes');
+        if (data.influencerId) {
+            revalidatePath(`/influencer/campaigns`);
+        }
+
+        return { success: true };
+
+    } catch (error) {
+        console.error("Error creating promocode:", error);
+        return { success: false, error: 'Failed to create the promocode.' };
+    }
+}
+
+
+export async function getPromocodesByOrganizer(organizerId: string) {
+    if (!organizerId) return { success: false, error: 'Organizer ID is required.' };
+
+    try {
+        const q = query(collection(db, 'promocodes'), where('organizerId', '==', organizerId));
+        const snapshot = await getDocs(q);
+        const promocodes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Promocode));
+        
+        const influencerIds = [...new Set(promocodes.map(p => p.influencerId).filter(Boolean))] as string[];
+        const influencers: Record<string, string> = {};
+
+        if (influencerIds.length > 0) {
+            // Firestore 'in' queries are limited to 30 items.
+            // If you expect more influencers, you'll need to batch this.
+            const influencerQuery = query(collection(db, 'users'), where('__name__', 'in', influencerIds));
+            const usersSnapshot = await getDocs(influencerQuery);
+            usersSnapshot.forEach(doc => {
+                influencers[doc.id] = doc.data().name || 'Unnamed Influencer';
+            });
+        }
+
+        const data = promocodes.map(p => {
+            const revenue = p.revenueGenerated || 0;
+            let payout = 0;
+            if (p.commissionType === 'fixed' && p.commissionValue) {
+                payout = p.usageCount * p.commissionValue;
+            } else if (p.commissionType === 'percentage' && p.commissionValue) { // percentage
+                payout = revenue * (p.commissionValue / 100);
+            }
+
+            return {
+                ...p,
+                influencerName: p.influencerId ? (influencers[p.influencerId] || 'Unknown') : 'N/A',
+                revenueGenerated: revenue,
+                influencerPayout: payout,
+            };
+        });
+
+        return { success: true, data };
+    } catch (error) {
+        console.error("Error fetching promocodes:", error);
+        return { success: false, error: 'Failed to fetch promocodes.' };
+    }
+}
