@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc, collection, query, where, orderBy, getDocs, Timestamp } from 'firestore';
+import { doc, getDoc, collection, query, where, orderBy, getDocs, Timestamp } from 'firebase/firestore';
 import type { Invitation, FirebaseUser, AuditLog, UserEvent, PromocodeClick, TrackingLink } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 
@@ -66,7 +66,14 @@ export async function getInvitationDetails(invitationId: string): Promise<{ succ
                 orderBy('timestamp', 'desc')
             );
             const activitySnapshot = await getDocs(activityQuery);
-            activity = activitySnapshot.docs.map(doc => serializeData(doc) as PromocodeClick);
+            activity = activitySnapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data,
+                    timestamp: (data.timestamp as Timestamp)?.toDate()?.toISOString() || new Date().toISOString(),
+                } as PromocodeClick
+            });
         }
 
         return { success: true, data: { ...inviteData, activity } };
