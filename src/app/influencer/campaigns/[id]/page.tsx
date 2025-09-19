@@ -8,7 +8,7 @@ import type { Promocode, TrackingLink } from '@/lib/types';
 import { createTrackingLink, getCampaignDetails } from './actions';
 import { getPromocodeById } from '@/app/organizer/promocodes/[id]/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, ArrowLeft, Tag, Users, Link as LinkIcon, Copy, PlusCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, Tag, Users, Link as LinkIcon, Copy, PlusCircle, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -45,12 +45,14 @@ const newLinkSchema = z.object({
   name: z.string().min(3, "Link name must be at least 3 characters."),
 });
 
-function ManageLinks({ campaign, initialLinks }: { campaign: Promocode, initialLinks: TrackingLink[] }) {
+function ManageLinks({ campaign, initialLinks, status }: { campaign: Promocode, initialLinks: TrackingLink[], status: string }) {
     const { toast } = useToast();
     const [links, setLinks] = useState(initialLinks);
     const [isPending, startTransition] = useTransition();
     const [host, setHost] = useState('');
     const [protocol, setProtocol] = useState('');
+
+    const isInactive = status === 'expired' || status === 'void' || status === 'limit_reached';
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -96,14 +98,24 @@ function ManageLinks({ campaign, initialLinks }: { campaign: Promocode, initialL
                 <CardDescription>Create unique links for different platforms to track your performance.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-end gap-2">
-                        <FormField control={form.control} name="name" render={({field}) => (
-                             <FormItem className="flex-grow"><FormLabel>Link Name</FormLabel><FormControl><Input placeholder="e.g., Instagram Story" {...field} /></FormControl><FormMessage /></FormItem>
-                        )} />
-                        <Button type="submit" disabled={isPending}>{isPending ? <Loader2 className="animate-spin" /> : <PlusCircle />}<span className="hidden sm:inline ml-2">Create Link</span></Button>
-                    </form>
-                </Form>
+                {isInactive ? (
+                    <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Campaign Inactive</AlertTitle>
+                        <AlertDescription>
+                            This campaign is no longer active, so you cannot create new tracking links.
+                        </AlertDescription>
+                    </Alert>
+                ) : (
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-end gap-2">
+                            <FormField control={form.control} name="name" render={({field}) => (
+                                <FormItem className="flex-grow"><FormLabel>Link Name</FormLabel><FormControl><Input placeholder="e.g., Instagram Story" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <Button type="submit" disabled={isPending}>{isPending ? <Loader2 className="animate-spin" /> : <PlusCircle />}<span className="hidden sm:inline ml-2">Create Link</span></Button>
+                        </form>
+                    </Form>
+                )}
                 
                  <Table>
                     <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Short Link</TableHead><TableHead>Clicks</TableHead><TableHead>Purchases</TableHead></TableRow></TableHeader>
@@ -207,7 +219,7 @@ export default function CampaignManagementPage() {
                 </CardContent>
             </Card>
             
-            <ManageLinks campaign={promocode} initialLinks={trackingLinks} />
+            <ManageLinks campaign={promocode} initialLinks={trackingLinks} status={status} />
         </div>
     );
 }
