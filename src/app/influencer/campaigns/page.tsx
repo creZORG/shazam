@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -70,7 +71,7 @@ function CampaignCard({ campaign }: { campaign: Promocode }) {
                     <h4 className="text-sm font-semibold mb-1">Your Commission</h4>
                     <p className="text-lg font-bold text-primary">{commissionText}</p>
                 </div>
-                 {isAccepted && !isInactive && (
+                 {(isAccepted || isInactive) && (
                      <div className="space-y-3">
                         <h4 className="text-sm font-semibold">Actions</h4>
                          <Link href={`/influencer/campaigns/${campaign.id}`} className="w-full">
