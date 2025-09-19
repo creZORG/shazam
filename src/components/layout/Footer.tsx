@@ -129,7 +129,7 @@ export function Footer() {
                 <a href="https://kihumba.com/clients/projects/naksyetu" target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" size="sm">
                         <Star className="h-4 w-4 mr-2 text-yellow-400 fill-current" />
-                        Rate Project
+                        Rate NaksYetu
                     </Button>
                 </a>
             </div>
