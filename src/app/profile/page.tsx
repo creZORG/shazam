@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Eye, Bookmark, Ticket, CheckCircle, ArrowRight, Star, Loader2 } from 'lucide-react';
 import { EventCard } from '@/components/events/EventCard';
 import { TourCard } from '@/components/tours/TourCard';
@@ -18,7 +19,8 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 type ActiveView = 'purchased' | 'attended' | 'bookmarked' | 'viewed';
 type Listing = Event | Tour;
@@ -160,6 +162,13 @@ export default function ProfilePage() {
     );
   }
 
+    const tabItems = [
+        { value: "purchased", icon: Ticket, label: "My Tickets" },
+        { value: "attended", icon: Star, label: "Attended & Rate" },
+        { value: "bookmarked", icon: Bookmark, label: "Bookmarked" },
+        { value: "viewed", icon: Eye, label: "Recently Viewed" },
+    ];
+
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <Card className="max-w-4xl mx-auto mb-12">
@@ -212,18 +221,27 @@ export default function ProfilePage() {
           </Card>
       )}
 
-        <div className="mb-8">
-            <Select onValueChange={(value: ActiveView) => setActiveView(value)} defaultValue={activeView}>
-                <SelectTrigger className="w-full md:w-72 mx-auto">
-                    <SelectValue placeholder="Select a view" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="purchased">My Tickets</SelectItem>
-                    <SelectItem value="attended">Attended & Rate</SelectItem>
-                    <SelectItem value="bookmarked">Bookmarked</SelectItem>
-                    <SelectItem value="viewed">Recently Viewed</SelectItem>
-                </SelectContent>
-            </Select>
+        <div className="sticky top-14 z-40 bg-background/95 backdrop-blur-sm py-4 -mx-4 px-4 mb-8 border-b">
+             <div className="flex justify-center">
+                 <Tabs value={activeView} onValueChange={(v) => setActiveView(v as ActiveView)} className="w-auto">
+                    <TabsList className="p-1.5 h-auto rounded-full bg-muted border shadow-md">
+                        {tabItems.map(tab => (
+                             <TabsTrigger 
+                                key={tab.value}
+                                value={tab.value} 
+                                className={cn(
+                                    "rounded-full px-3 py-1.5 flex items-center gap-2 transition-all duration-300",
+                                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm",
+                                    "data-[state=inactive]:text-muted-foreground"
+                                )}
+                            >
+                               <tab.icon className="h-5 w-5 flex-shrink-0" />
+                               <span>{tab.label}</span>
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
+                 </Tabs>
+             </div>
         </div>
 
       <div className="mt-8">

@@ -141,17 +141,21 @@ export async function toggleBookmark(eventId: string, userId: string) {
   try {
     const userDoc = await getDoc(userDocRef);
     if (!userDoc.exists()) {
-      return { success: false, error: "User not found." };
+      // This case should ideally not happen if the user is authenticated
+      await setDoc(userDocRef, { bookmarkedEvents: [eventId] }, { merge: true });
+      revalidatePath('/profile');
+      return { success: true, isBookmarked: true };
     }
 
     const userData = userDoc.data() as FirebaseUser;
-    const isBookmarked = userData.bookmarkedEvents?.includes(eventId);
+    const isBookmarked = userData.bookmarkedEvents?.includes(eventId) || false;
 
     if (isBookmarked) {
       await updateDoc(userDocRef, {
         bookmarkedEvents: arrayRemove(eventId),
       });
     } else {
+      // This handles both cases where the field exists or doesn't exist
       await updateDoc(userDocRef, {
         bookmarkedEvents: arrayUnion(eventId),
       });
