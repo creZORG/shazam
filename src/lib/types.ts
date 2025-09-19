@@ -433,7 +433,11 @@ export type Invitation = {
     status: 'pending' | 'accepted';
     invitedBy: string; // UID of the admin/organizer who sent the invite
     createdAt: any;
-    acceptedBy?: string;
+    acceptedBy?: {
+      uid: string;
+      name: string;
+      email: string;
+    };
     eventId?: string; // Optional: for event-specific roles like verifier
     listingName?: string; // Optional: name of the event
 };

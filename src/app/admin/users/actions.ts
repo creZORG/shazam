@@ -4,7 +4,7 @@
 
 import { db } from '@/lib/firebase/config';
 import { collection, getDocs, query, where, Timestamp, orderBy, limit, startAfter, getCountFromServer, addDoc, serverTimestamp, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
-import type { FirebaseUser, UserRole, Event } from '@/lib/types';
+import type { FirebaseUser, UserRole, Event, Invitation } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { randomBytes } from 'crypto';
 import { auth } from '@/lib/firebase/server-auth';
@@ -14,16 +14,16 @@ import { createShortLink } from '@/lib/shortlinks';
 
 type UserWithId = FirebaseUser & { id: string };
 
-function serializeUser(doc: any): UserWithId {
+function serializeDoc(doc: any): any {
     const data = doc.data();
-    if (data.createdAt && data.createdAt instanceof Timestamp) {
-        data.createdAt = data.createdAt.toDate().toISOString();
+    for (const key in data) {
+        if (data[key] instanceof Timestamp) {
+            data[key] = data[key].toDate().toISOString();
+        }
     }
-     if (data.lastLogin && data.lastLogin instanceof Timestamp) {
-        data.lastLogin = data.lastLogin.toDate().toISOString();
-    }
-    return { id: doc.id, ...data } as UserWithId;
+    return { id: doc.id, ...data };
 }
+
 
 export async function getUsersByRole(role: string, page: number = 1, pageSize: number = 25) {
   noStore(); 
@@ -47,7 +47,7 @@ export async function getUsersByRole(role: string, page: number = 1, pageSize: n
     }
 
     const usersSnapshot = await getDocs(q);
-    const users = usersSnapshot.docs.map(serializeUser);
+    const users = usersSnapshot.docs.map(serializeDoc);
 
     return { 
         success: true, 
@@ -71,7 +71,7 @@ export async function getAllNonAttendeeUsers() {
         for (const role of rolesToFetch) {
              const q = query(collection(db, 'users'), where('role', '==', role), orderBy('createdAt', 'desc'));
              const snapshot = await getDocs(q);
-             usersByRole[role] = snapshot.docs.map(serializeUser);
+             usersByRole[role] = snapshot.docs.map(serializeDoc as (doc: any) => UserWithId);
         }
 
         return { success: true, data: usersByRole };
@@ -96,7 +96,7 @@ export async function findUserByUsername(username: string): Promise<{ success: b
         }
         
         const userDoc = querySnapshot.docs[0];
-        const user = serializeUser(userDoc);
+        const user = serializeDoc(userDoc) as UserWithId;
         
         return { success: true, data: user };
     } catch (error) {
@@ -158,6 +158,11 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
             }
         }
 
+        const longInviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${token}`;
+        
+        const shortId = await createShortLink(longInviteLink);
+        const shortInviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/l/${shortId}`;
+
         await addDoc(collection(db, 'invitations'), {
             email: email || null,
             role,
@@ -168,15 +173,8 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
             createdAt: serverTimestamp(),
             eventId: eventId || null,
             listingName: listingName || null,
+            shortId,
         });
-        
-        const headersList = headers();
-        const host = headersList.get('host') || 'localhost:9002';
-        const protocol = host.includes('localhost') ? 'http' : 'https';
-        const longInviteLink = `${protocol}://${host}/invite/${token}`;
-        
-        const shortId = await createShortLink(longInviteLink);
-        const shortInviteLink = `${protocol}://${host}/l/${shortId}`;
         
         if (sendEmail && email) {
             await sendInvitationEmail({ to: email, role, inviteLink: shortInviteLink, listingName });
@@ -212,7 +210,7 @@ export async function getVerifiersForEvent(eventId: string): Promise<{ success: 
             where('assignedEvents', 'array-contains', eventId)
         );
         const snapshot = await getDocs(q);
-        const verifiers = snapshot.docs.map(doc => serializeUser(doc as any));
+        const verifiers = snapshot.docs.map(serializeDoc as (doc: any) => FirebaseUser);
         return { success: true, data: verifiers };
     } catch (error) {
         console.error("Error fetching verifiers for event:", error);
@@ -220,3 +218,14 @@ export async function getVerifiersForEvent(eventId: string): Promise<{ success: 
     }
 }
 
+export async function getInvitations(): Promise<{ success: boolean, data?: Invitation[], error?: string }> {
+    noStore();
+    try {
+        const q = query(collection(db, 'invitations'), orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        const data = snapshot.docs.map(doc => serializeDoc(doc) as Invitation);
+        return { success: true, data };
+    } catch (error: any) {
+        return { success: false, error: `Failed to fetch invitations: ${error.message}` };
+    }
+}

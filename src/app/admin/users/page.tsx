@@ -1,16 +1,15 @@
 
-
 'use client';
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getAllNonAttendeeUsers, generateInviteLink, getPublishedEventsForSelect } from "./actions";
+import { getAllNonAttendeeUsers, generateInviteLink, getPublishedEventsForSelect, getInvitations } from "./actions";
 import { UsersTable } from "./_components/UsersTable";
 import { UserSearch } from "./_components/UserSearch";
 import { useEffect, useState, useCallback, useTransition } from "react";
-import type { FirebaseUser, UserRole, Event } from "@/lib/types";
+import type { FirebaseUser, UserRole, Invitation } from "@/lib/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Send, Copy, Users, Briefcase, Percent, Shield, Ticket, Code, Building2 } from "lucide-react";
+import { Loader2, Send, Copy, Users, Briefcase, Percent, Shield, Ticket, Code, Building2, LinkIcon, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +18,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 
 type UserWithId = FirebaseUser & { id: string };
 const STAFF_ROLES: UserRole[] = ['organizer', 'influencer', 'verifier', 'admin', 'club', 'developer'];
@@ -128,6 +132,72 @@ function InviteUserForm() {
     );
 }
 
+function InvitationHistory() {
+    const { toast } = useToast();
+    const [invitations, setInvitations] = useState<Invitation[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        setLoading(true);
+        getInvitations().then(res => {
+            if (res.success && res.data) {
+                setInvitations(res.data);
+            }
+            setLoading(false);
+        })
+    }, []);
+    
+    const handleCopyLink = (token: string) => {
+        const url = `${window.location.origin}/invite/${token}`;
+        navigator.clipboard.writeText(url);
+        toast({ title: 'Invite Link Copied!' });
+    }
+
+    if (loading) {
+        return <div className="flex justify-center p-12"><Loader2 className="animate-spin" /></div>
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Invitation History</CardTitle>
+                <CardDescription>A log of all invitations sent from this panel.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Invited Email</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Created</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {invitations.map(invite => (
+                            <TableRow key={invite.id}>
+                                <TableCell className="font-medium">{invite.email || 'Generic Link'}</TableCell>
+                                <TableCell className="capitalize">{invite.role}</TableCell>
+                                <TableCell>
+                                    <Badge variant={invite.status === 'pending' ? 'secondary' : 'default'} className="capitalize">{invite.status}</Badge>
+                                </TableCell>
+                                <TableCell>{formatDistanceToNow(new Date(invite.createdAt), { addSuffix: true })}</TableCell>
+                                <TableCell className="text-right flex justify-end gap-2">
+                                     <Button variant="ghost" size="icon" onClick={() => handleCopyLink(invite.token)}><LinkIcon className="h-4 w-4" /></Button>
+                                     <Link href={`/admin/invitations/${invite.id}`}>
+                                        <Button variant="outline" size="sm"><Info className="h-4 w-4" /></Button>
+                                     </Link>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function AdminUsersPage() {
   const [usersByRole, setUsersByRole] = useState<Record<string, UserWithId[]> | null>({});
   const [error, setError] = useState<string | null>(null);
@@ -157,19 +227,20 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-8">
         <InviteUserForm />
-        <Card>
-            <CardHeader>
-                <CardTitle>Manage Users</CardTitle>
-                <CardDescription>View, edit, or suspend staff and partner accounts.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Tabs defaultValue="browse" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="browse">Browse by Role</TabsTrigger>
-                        <TabsTrigger value="search">Search by Username</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="browse" className="space-y-4 pt-4">
+        <Tabs defaultValue="browse" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+                <TabsTrigger value="browse">Browse Staff</TabsTrigger>
+                <TabsTrigger value="search">Search by Username</TabsTrigger>
+                <TabsTrigger value="invites">Invitation History</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="browse" className="space-y-4 pt-4">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Manage Staff Accounts</CardTitle>
+                        <CardDescription>View, edit, or suspend staff and partner accounts.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
                         <Tabs defaultValue="organizer">
                              <TabsList>
                                 {roleTabs.map(tab => (
@@ -186,14 +257,24 @@ export default function AdminUsersPage() {
                                  </TabsContent>
                             ))}
                         </Tabs>
-                    </TabsContent>
-                    
-                    <TabsContent value="search">
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            
+            <TabsContent value="search">
+                <Card>
+                     <CardHeader>
+                        <CardTitle>Find Specific User</CardTitle>
+                    </CardHeader>
+                    <CardContent>
                         <UserSearch />
-                    </TabsContent>
-                </Tabs>
-            </CardContent>
-        </Card>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="invites">
+                <InvitationHistory />
+            </TabsContent>
+        </Tabs>
     </div>
   );
 }
