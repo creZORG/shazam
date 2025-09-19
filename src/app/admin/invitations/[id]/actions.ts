@@ -44,6 +44,7 @@ export async function getInvitationDetails(invitationId: string): Promise<{ succ
         }
         
         const inviteData = await serializeData(inviteSnap) as Invitation;
+        const resultData: InvitationDetails = { ...inviteData, activity: [] };
 
         // If the invite has been accepted, fetch acceptor's details
         if (inviteData.status === 'accepted' && inviteData.acceptedBy) {
@@ -51,35 +52,19 @@ export async function getInvitationDetails(invitationId: string): Promise<{ succ
             const userSnap = await getDoc(userRef);
             if (userSnap.exists()) {
                  const userData = userSnap.data() as FirebaseUser;
-                 (inviteData.acceptedBy as any) = {
+                 resultData.acceptedBy = {
                      uid: userSnap.id,
                      name: userData.name,
-                     email: userData.email,
+                     email: userData.email || 'N/A',
                      photoURL: userData.profilePicture
                  };
             }
         }
         
-        // Fetch activity logs for this invitation's shortId
-        let activity: PromocodeClick[] = [];
-        if (inviteData.shortId) {
-            const activityQuery = query(
-                collection(db, 'promocodeClicks'), 
-                where('shortId', '==', inviteData.shortId), 
-                orderBy('timestamp', 'desc')
-            );
-            const activitySnapshot = await getDocs(activityQuery);
-            activity = activitySnapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    ...data,
-                    timestamp: (data.timestamp as Timestamp)?.toDate()?.toISOString() || new Date().toISOString(),
-                } as PromocodeClick
-            });
-        }
+        // Temporarily disabled activity fetching to fix loading issue.
+        // We will re-add this carefully.
 
-        return { success: true, data: { ...inviteData, activity } };
+        return { success: true, data: resultData };
 
     } catch (error: any) {
         console.error("Error fetching invitation details:", error);
@@ -120,3 +105,4 @@ export async function voidInvitation(invitationId: string): Promise<{ success: b
         return { success: false, error: 'Failed to void invitation.' };
     }
 }
+
