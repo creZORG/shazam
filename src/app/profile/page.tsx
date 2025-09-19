@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -6,11 +7,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Eye, Bookmark, Ticket, CheckCircle, ArrowRight, Star, Loader2 } from 'lucide-react';
 import { EventCard } from '@/components/events/EventCard';
+import { TourCard } from '@/components/tours/TourCard';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { useEffect, useState, useTransition } from 'react';
-import type { Event, Ticket as TicketType } from '@/lib/types';
+import type { Event, Ticket as TicketType, Tour } from '@/lib/types';
 import { getUserProfileData, rateEvent, upgradeToInfluencer } from './actions';
 import { StarRating } from '@/components/ui/star-rating';
 import { useToast } from '@/hooks/use-toast';
@@ -62,7 +64,7 @@ export default function ProfilePage() {
   const [profileData, setProfileData] = useState<{
       purchased: (TicketType & { event?: Event })[],
       attended: Event[],
-      bookmarked: Event[],
+      bookmarked: (Event | Tour)[],
       viewed: Event[],
   }>({ purchased: [], attended: [], bookmarked: [], viewed: [] });
   const [isUpgrading, startUpgradeTransition] = useTransition();
@@ -74,7 +76,7 @@ export default function ProfilePage() {
       setLoading(true);
       getUserProfileData().then(result => {
         if (result.success && result.data) {
-          setProfileData(result.data);
+          setProfileData(result.data as any);
         }
         setLoading(false);
       });
@@ -125,7 +127,7 @@ export default function ProfilePage() {
         case 'bookmarked':
             return profileData.bookmarked.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {profileData.bookmarked.map(event => <EventCard key={event.id} event={event} />)}
+                    {profileData.bookmarked.map(item => 'venue' in item ? <EventCard key={item.id} event={item} /> : <TourCard key={item.id} tour={item} /> )}
                 </div>
             ) : <p className="text-muted-foreground text-center py-8">You haven't bookmarked any events.</p>;
 

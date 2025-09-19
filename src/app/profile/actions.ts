@@ -20,7 +20,7 @@ import {
 } from 'firebase/firestore';
 import { cookies } from 'next/headers';
 import { auth } from '@/lib/firebase/server-auth';
-import type { FirebaseUser, Ticket, Event, UserEvent, Order } from '@/lib/types';
+import type { FirebaseUser, Ticket, Event, UserEvent, Order, Tour } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 
 async function getUserIdFromSession(): Promise<string | null> {
@@ -125,42 +125,53 @@ export async function getUserProfileData() {
     const purchasedTickets = tickets.filter(t => t.status === 'valid');
     const attendedTickets = tickets.filter(t => t.status === 'used');
     
-    const bookmarkedEventIds = userData.bookmarkedEvents || [];
+    const bookmarkedItemIds = userData.bookmarkedEvents || [];
     const viewedEventIds = [...new Set(viewedEventInteractions.map(v => v.eventId))];
     
-    const eventIds = [...new Set([
+    const allListingIds = [...new Set([
         ...purchasedTickets.map(t => t.listingId),
         ...attendedTickets.map(t => t.listingId),
-        ...bookmarkedEventIds,
+        ...bookmarkedItemIds,
         ...viewedEventIds
     ])];
     
-    let events: Record<string, Event> = {};
-    if (eventIds.length > 0) {
+    let listings: Record<string, Event | Tour> = {};
+    if (allListingIds.length > 0) {
         const batchSize = 30; // Firestore 'in' query limit
-        for (let i = 0; i < eventIds.length; i += batchSize) {
-            const batchIds = eventIds.slice(i, i + batchSize);
+        for (let i = 0; i < allListingIds.length; i += batchSize) {
+            const batchIds = allListingIds.slice(i, i + batchSize);
             const eventsQuery = query(collection(db, 'events'), where('__name__', 'in', batchIds));
-            const eventDocs = await getDocs(eventsQuery);
+            const toursQuery = query(collection(db, 'tours'), where('__name__', 'in', batchIds));
+            
+            const [eventDocs, tourDocs] = await Promise.all([
+                getDocs(eventsQuery),
+                getDocs(toursQuery)
+            ]);
+            
             eventDocs.forEach(doc => {
                 if(doc.exists()) {
-                    events[doc.id] = serializeData(doc) as Event;
+                    listings[doc.id] = serializeData(doc) as Event;
+                }
+            });
+            tourDocs.forEach(doc => {
+                if(doc.exists()) {
+                    listings[doc.id] = serializeData(doc) as Tour;
                 }
             });
         }
     }
     
-    const purchasedWithEvents = purchasedTickets.map(ticket => ({ ...ticket, event: events[ticket.listingId] })).filter(t => t.event);
-    const attendedWithEvents = attendedTickets.map(ticket => events[ticket.listingId]).filter(Boolean);
-    const bookmarkedWithEvents = bookmarkedEventIds.map(id => events[id]).filter(Boolean);
-    const viewedWithEvents = viewedEventIds.map(id => events[id]).filter(Boolean);
+    const purchasedWithEvents = purchasedTickets.map(ticket => ({ ...ticket, event: listings[ticket.listingId] as Event })).filter(t => t.event);
+    const attendedWithEvents = attendedTickets.map(ticket => listings[ticket.listingId] as Event).filter(Boolean);
+    const bookmarkedWithListings = bookmarkedItemIds.map(id => listings[id]).filter(Boolean);
+    const viewedWithEvents = viewedEventIds.map(id => listings[id] as Event).filter(Boolean);
 
     return {
       success: true,
       data: {
         purchased: purchasedWithEvents,
         attended: attendedWithEvents,
-        bookmarked: bookmarkedWithEvents,
+        bookmarked: bookmarkedWithListings,
         viewed: viewedWithEvents,
       },
     };
