@@ -15,21 +15,28 @@ export async function getCampaignDetails(id: string) {
     noStore();
     try {
         const promocodeRef = doc(db, 'promocodes', id);
-        const trackingLinksQuery = query(collection(db, 'promocodes', id, 'trackingLinks'), orderBy('createdAt', 'desc'));
+        let trackingLinksQuery;
+
+        if (id) {
+             trackingLinksQuery = query(collection(db, 'promocodes', id, 'trackingLinks'), orderBy('createdAt', 'desc'));
+        } else {
+            // This case might be for general tracking links not tied to a specific promocode
+             trackingLinksQuery = query(collection(db, 'trackingLinks'), orderBy('createdAt', 'desc'));
+        }
 
         const [promocodeSnap, trackingLinksSnapshot] = await Promise.all([
-            getDoc(promocodeRef),
+            id ? getDoc(promocodeRef) : Promise.resolve(null),
             getDocs(trackingLinksQuery)
         ]);
 
-        if (!promocodeSnap.exists()) {
+        if (id && !promocodeSnap?.exists()) {
             return { success: false, error: 'Campaign not found.' };
         }
         
-        const campaign = { id: promocodeSnap.id, ...promocodeSnap.data() } as Promocode;
+        const campaign = id ? ({ id: promocodeSnap.id, ...promocodeSnap.data() } as Promocode) : null;
         const trackingLinks = trackingLinksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TrackingLink));
         
-        if (campaign.influencerId) {
+        if (campaign && campaign.influencerId) {
             const userDocRef = doc(db, 'users', campaign.influencerId);
             const userDoc = await getDoc(userDocRef);
             if (userDoc.exists()) {
@@ -52,8 +59,8 @@ export async function getCampaignDetails(id: string) {
 }
 
 
-export async function createTrackingLink(payload: { promocodeId?: string, listingType: string, listingId?: string, name: string }): Promise<{ success: boolean; data?: TrackingLink; error?: string; }> {
-    const { promocodeId, listingType, listingId, name } = payload;
+export async function createTrackingLink(payload: { promocodeId?: string, listingType: string, listingId?: string, name: string, shortId?: string }): Promise<{ success: boolean; data?: TrackingLink; error?: string; }> {
+    const { promocodeId, listingType, listingId, name, shortId } = payload;
     if (!name || !listingId) {
         return { success: false, error: "Listing ID and link name are required." };
     }
@@ -79,24 +86,29 @@ export async function createTrackingLink(payload: { promocodeId?: string, listin
             longUrl += `&coupon=${promocode.code}`;
         }
         
-        const shortId = await createShortLink({
+        const finalShortId = await createShortLink({
             longUrl,
             listingId,
             promocodeId: promocodeId,
             trackingLinkId: linkRef.id,
+            shortId: shortId,
         });
 
         const newLink: Omit<TrackingLink, 'id'> = {
             name,
+            listingId,
+            listingType,
             clicks: 0,
             purchases: 0,
             longUrl,
-            shortId,
+            shortId: finalShortId,
             createdAt: serverTimestamp(),
         };
+        if (promocodeId) newLink.promocodeId = promocodeId;
+
         await setDoc(linkRef, newLink);
         
-        return { success: true, data: { ...newLink, id: linkRef.id, shortId: shortId, createdAt: new Date().toISOString() } as TrackingLink };
+        return { success: true, data: { ...newLink, id: linkRef.id, shortId: finalShortId, createdAt: new Date().toISOString() } as TrackingLink };
     } catch (e: any) {
         return { success: false, error: e.message };
     }

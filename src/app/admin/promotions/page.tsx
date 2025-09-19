@@ -9,7 +9,7 @@ import { useState, useEffect, useMemo, useTransition } from "react";
 import { getPromocodesByOrganizer } from "@/app/organizer/promocodes/actions";
 import { getPublishedEvents, getPublishedTours } from "./actions";
 import type { Promocode, Event, Tour, TrackingLink } from "@/lib/types";
-import { QrCode, Download, Link as LinkIcon, PlusCircle, Copy, BarChart, Ticket, Loader2 } from "lucide-react";
+import { QrCode, Download, Link as LinkIcon, PlusCircle, Copy, BarChart, Ticket, Loader2, Eye } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createTrackingLink, getCampaignDetails } from "@/app/influencer/campaigns/[id]/actions";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogTrigger, DialogFooter, DialogClose, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Link from 'next/link';
 
 
 type Listing = { id: string; name: string; type: 'event' | 'tour' };
@@ -29,10 +30,11 @@ function CampaignLinkManager() {
     const [listings, setListings] = useState<Listing[]>([]);
     const [promocodes, setPromocodes] = useState<Promocode[]>([]);
     const [selectedListing, setSelectedListing] = useState<string>('');
-    const [selectedPromocodeId, setSelectedPromocodeId] = useState<string>('');
+    const [selectedPromocodeId, setSelectedPromocodeId] = useState<string>('none');
     const [trackingLinks, setTrackingLinks] = useState<TrackingLink[]>([]);
     
     const [newLinkName, setNewLinkName] = useState('');
+    const [customShortId, setCustomShortId] = useState('');
     const [isCreating, startCreating] = useTransition();
     const [host, setHost] = useState('');
     const [protocol, setProtocol] = useState('');
@@ -66,7 +68,7 @@ function CampaignLinkManager() {
 
     useEffect(() => {
         if(user?.uid) {
-            getPromocodesByOrganizer(user.uid).then(res => { // Fetch all promocodes created by the admin/organizer
+            getPromocodesByOrganizer(user.uid).then(res => { 
                 if (res.success && res.data) {
                     setPromocodes(res.data);
                 }
@@ -89,7 +91,6 @@ function CampaignLinkManager() {
 
     const availablePromocodes = useMemo(() => {
         if (!selectedListingData) return [];
-        // Filter codes that are for this specific listing OR are sitewide
         return promocodes.filter(p => p.listingId === selectedListingData.id || p.listingType === 'all');
     }, [selectedListingData, promocodes]);
 
@@ -108,10 +109,12 @@ function CampaignLinkManager() {
                 listingId: selectedListingData.id,
                 listingType: selectedListingData.type,
                 name: newLinkName,
+                shortId: customShortId || undefined,
             });
              if (result.success && result.data) {
                 setTrackingLinks(prev => [result.data!, ...prev]);
                 setNewLinkName('');
+                setCustomShortId('');
                 toast({ title: "Tracking Link Created!" });
             } else {
                  toast({ variant: 'destructive', title: "Error", description: result.error });
@@ -166,13 +169,17 @@ function CampaignLinkManager() {
 
                 <div className="p-4 border rounded-lg space-y-4">
                     <Label>3. Create & Track New Link</Label>
-                     <div className="flex gap-2">
+                     <div className="grid sm:grid-cols-2 gap-2">
                         <Input placeholder="Name for this link, e.g., 'Facebook Ad'" value={newLinkName} onChange={e => setNewLinkName(e.target.value)} disabled={!selectedListing} />
-                        <Button onClick={handleCreateLink} disabled={!newLinkName || isCreating}>
-                            {isCreating ? <Loader2 className="animate-spin" /> : <PlusCircle />}
-                            <span className="hidden sm:inline ml-2">Create</span>
-                        </Button>
+                         <div className="relative">
+                            <Input placeholder="Custom path (optional)" value={customShortId} onChange={e => setCustomShortId(e.target.value)} disabled={!selectedListing} className="pl-16" />
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">{host}/l/</span>
+                        </div>
                     </div>
+                     <Button onClick={handleCreateLink} disabled={!newLinkName || isCreating} className="w-full">
+                        {isCreating ? <Loader2 className="animate-spin" /> : <PlusCircle />}
+                        <span className="ml-2">Create Link</span>
+                    </Button>
                 </div>
                 
                 <div>
@@ -196,6 +203,9 @@ function CampaignLinkManager() {
                                             <TableCell>{link.purchases}</TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex gap-1 justify-end">
+                                                    <Link href={`/admin/promotions/${link.id}?promocodeId=${selectedPromocodeId}`}>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="h-4 w-4" /></Button>
+                                                    </Link>
                                                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCopyLink(link.shortId)}><Copy className="h-4 w-4"/></Button>
                                                     <Dialog>
                                                         <DialogTrigger asChild>
@@ -225,7 +235,7 @@ function CampaignLinkManager() {
                                     ))}
                                 </TableBody>
                            </Table>
-                           {trackingLinks.length === 0 && <p className="text-sm text-center text-muted-foreground py-8">Select a promocode to see its tracking links.</p>}
+                           {trackingLinks.length === 0 && <p className="text-sm text-center text-muted-foreground py-8">Select a listing and promocode to see its tracking links.</p>}
                         </CardContent>
                     </Card>
                 </div>

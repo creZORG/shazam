@@ -375,7 +375,7 @@ export type TrackingLink = {
 
 export type PromocodeClick = {
     id?: string;
-    promocodeId: string;
+    promocodeId?: string;
     trackingLinkId: string;
     shortId: string;
     timestamp: any;

@@ -119,9 +119,8 @@ export async function POST(request: Request) {
             
             // Increment tracking link purchases
             if(order.trackingLinkId) {
-                const trackingLinkRef = order.promocodeId
-                    ? doc(db, 'promocodes', order.promocodeId, 'trackingLinks', order.trackingLinkId)
-                    : doc(db, 'trackingLinks', order.trackingLinkId);
+                const collectionPath = order.promocodeId ? `promocodes/${order.promocodeId}/trackingLinks` : 'trackingLinks';
+                const trackingLinkRef = doc(db, collectionPath, order.trackingLinkId);
                 batch.update(trackingLinkRef, { purchases: increment(1) });
             }
 
