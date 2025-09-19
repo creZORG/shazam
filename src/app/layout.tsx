@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import { AuthProvider } from '@/hooks/use-auth';
 import { AppProviders } from './providers';
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -41,6 +42,7 @@ export default function RootLayout({
             </AppProviders>
           </AuthProvider>
           <Toaster />
+          <Analytics />
       </body>
     </html>
   );
