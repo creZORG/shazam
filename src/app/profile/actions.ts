@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -74,7 +73,7 @@ export async function getTicketDetails(orderId: string) {
         const eventIds = [...new Set(tickets.map(t => t.listingId))];
         let events: Record<string, Event> = {};
         if (eventIds.length > 0) {
-            const eventsQuery = query(collection(db, 'events'), where('__name__', 'in', eventIds));
+            const eventsQuery = query(collection(db, 'events'), where(documentId(), 'in', eventIds));
             const eventDocs = await getDocs(eventsQuery);
             eventDocs.forEach(doc => {
                 events[doc.id] = serializeData(doc) as Event;
@@ -126,13 +125,12 @@ export async function getUserProfileData() {
         ...attendedTickets.map(t => t.listingId),
         ...bookmarkedIds,
         ...viewedIds,
-    ])];
+    ])].filter(Boolean);
 
     const listings: Record<string, Event | Tour> = {};
 
     if (allListingIds.length > 0) {
-        // Firestore 'in' query has a limit of 30 items. We batch requests to handle more.
-        const batchSize = 30;
+        const batchSize = 30; // Firestore 'in' query limit
         for (let i = 0; i < allListingIds.length; i += batchSize) {
             const batchIds = allListingIds.slice(i, i + batchSize);
             
@@ -256,6 +254,3 @@ export async function upgradeToInfluencer(): Promise<{ success: boolean; error?:
         return { success: false, error: 'An unexpected error occurred.' };
     }
 }
-
-
-    

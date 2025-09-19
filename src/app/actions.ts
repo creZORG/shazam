@@ -3,7 +3,7 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { collection, query, getDocs, doc, getDoc, where, orderBy, Timestamp, addDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, writeBatch } from "firebase/firestore";
+import { collection, query, getDocs, doc, getDoc, where, orderBy, Timestamp, addDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp, writeBatch, setDoc } from "firebase/firestore";
 import type { Event, Tour, NightlifeEvent, Organizer, UserEvent, FirebaseUser, SiteSettings, Order, StaffNote } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import { auth } from '@/lib/firebase/server-auth';
@@ -162,8 +162,9 @@ export async function toggleBookmark(eventId: string, userId: string) {
     }
     
     // Revalidate pages where bookmark status is visible
-    revalidatePath('/events');
     revalidatePath('/profile');
+    revalidatePath('/events');
+    revalidatePath('/tours');
 
 
     return { success: true, isBookmarked: !isBookmarked };

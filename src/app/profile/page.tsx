@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -141,7 +140,7 @@ export default function ProfilePage() {
 
         case 'bookmarked':
             return profileData.bookmarked.length > 0 ? renderGrid(profileData.bookmarked)
-             : <p className="text-muted-foreground text-center py-8">You haven't bookmarked any items yet.</p>;
+             : <p className="text-muted-foreground text-center py-8">You haven't bookmarked any events.</p>;
 
         case 'viewed':
              return profileData.viewed.length > 0 ? renderGrid(profileData.viewed)

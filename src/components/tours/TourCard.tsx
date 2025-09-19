@@ -70,6 +70,7 @@ export function TourCard({ tour }: TourCardProps) {
 
     const newBookmarkState = !isBookmarked;
     setIsBookmarked(newBookmarkState); // Optimistic UI update
+    handleInteraction('bookmark_event');
     
     const result = await toggleBookmark(tour.id, user.uid);
 
