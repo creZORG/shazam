@@ -49,7 +49,8 @@ export async function getLinkAnalytics(linkId: string, promocodeId?: string) {
     if (!linkId) return { success: false, error: 'Link ID is required.' };
 
     try {
-        const collectionPath = promocodeId 
+        const hasValidPromocodeId = promocodeId && promocodeId.trim() !== '';
+        const collectionPath = hasValidPromocodeId
             ? `promocodes/${promocodeId}/trackingLinks` 
             : 'trackingLinks';
         
@@ -64,7 +65,7 @@ export async function getLinkAnalytics(linkId: string, promocodeId?: string) {
         
         // Fetch clicks
         const clicksQuery = query(
-            collectionGroup(db, 'promocodeClicks'), 
+            collection(db, 'promocodeClicks'), 
             where('trackingLinkId', '==', linkId),
             orderBy('timestamp', 'desc')
         );
