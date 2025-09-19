@@ -3,7 +3,7 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Eye, Bookmark, Ticket, CheckCircle, ArrowRight, Star, Loader2 } from 'lucide-react';
 import { EventCard } from '@/components/events/EventCard';
 import { TourCard } from '@/components/tours/TourCard';
@@ -18,8 +18,9 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
-type ActiveTab = 'purchased' | 'attended' | 'bookmarked' | 'viewed';
+type ActiveView = 'purchased' | 'attended' | 'bookmarked' | 'viewed';
 type Listing = Event | Tour;
 
 function AttendedEventCard({ item }: { item: Listing }) {
@@ -61,7 +62,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('purchased');
+  const [activeView, setActiveView] = useState<ActiveView>('purchased');
   const [profileData, setProfileData] = useState<{
       purchased: (TicketType & { event?: Listing })[],
       attended: Listing[],
@@ -97,15 +98,8 @@ export default function ProfilePage() {
         }
     });
   }
-
-  const navLinks: { id: ActiveTab; label: string; icon: React.ElementType }[] = [
-    { id: 'purchased', label: 'My Tickets', icon: Ticket },
-    { id: 'attended', label: 'Attended & Rate', icon: CheckCircle },
-    { id: 'bookmarked', label: 'Bookmarked', icon: Bookmark },
-    { id: 'viewed', label: 'Viewed', icon: Eye },
-  ];
   
-  const renderTabContent = () => {
+  const renderContent = () => {
     if (loading) {
       return <div className="flex justify-center py-12"><Loader2 className="animate-spin h-8 w-8" /></div>;
     }
@@ -124,12 +118,12 @@ export default function ProfilePage() {
         </div>
     );
 
-    switch(activeTab) {
+    switch(activeView) {
         case 'purchased':
             return profileData.purchased.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {profileData.purchased.map(ticket => ticket.event && (
-                        (ticket.event as Event).type === 'event' 
+                        (ticket.event as Listing).type === 'event' 
                             ? <EventCard key={ticket.id} event={ticket.event as Event} />
                             : <TourCard key={ticket.id} tour={ticket.event as Tour} />
                     ))}
@@ -218,32 +212,22 @@ export default function ProfilePage() {
           </Card>
       )}
 
-        <div className="sticky top-14 z-40 flex justify-center py-2 bg-background/80 backdrop-blur-sm -mx-4 px-4">
-            <div className="bg-muted p-1 rounded-full shadow-lg">
-                <nav className="flex items-center space-x-1 text-sm font-medium">
-                    {navLinks.map((link) => {
-                         const isActive = activeTab === link.id;
-                         return (
-                            <Button
-                                key={link.id}
-                                variant={isActive ? 'default' : 'ghost'}
-                                onClick={() => setActiveTab(link.id)}
-                                className={cn(
-                                    "transition-colors flex items-center gap-2 rounded-full px-3 py-1.5",
-                                    isActive && "shadow"
-                                )}
-                            >
-                                <link.icon className="h-5 w-5" />
-                                <span className={cn(!isActive && "hidden md:inline")}>{link.label}</span>
-                            </Button>
-                         )
-                    })}
-                </nav>
-            </div>
+        <div className="mb-8">
+            <Select onValueChange={(value: ActiveView) => setActiveView(value)} defaultValue={activeView}>
+                <SelectTrigger className="w-full md:w-72 mx-auto">
+                    <SelectValue placeholder="Select a view" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="purchased">My Tickets</SelectItem>
+                    <SelectItem value="attended">Attended & Rate</SelectItem>
+                    <SelectItem value="bookmarked">Bookmarked</SelectItem>
+                    <SelectItem value="viewed">Recently Viewed</SelectItem>
+                </SelectContent>
+            </Select>
         </div>
 
       <div className="mt-8">
-        {renderTabContent()}
+        {renderContent()}
       </div>
     </div>
   );
