@@ -62,13 +62,19 @@ export async function getInvitationDetails(invitationId: string): Promise<{ succ
         }
         
         // Fetch click activity
-        const activityQuery = query(
-            collection(db, 'promocodeClicks'),
-            where('shortId', '==', inviteData.shortId),
-            orderBy('timestamp', 'desc')
-        );
-        const activitySnapshot = await getDocs(activityQuery);
-        resultData.activity = activitySnapshot.docs.map(d => serializeData(d) as PromocodeClick);
+        if (inviteData.shortId) {
+            const activityQuery = query(
+                collection(db, 'promocodeClicks'),
+                where('shortId', '==', inviteData.shortId)
+            );
+            const activitySnapshot = await getDocs(activityQuery);
+            const activities = await Promise.all(activitySnapshot.docs.map(d => serializeData(d)));
+            
+            // Sort in code to avoid complex-query index issues
+            activities.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+            resultData.activity = activities as PromocodeClick[];
+        }
 
 
         return { success: true, data: resultData };
