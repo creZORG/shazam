@@ -107,6 +107,7 @@ export async function POST(request: Request) {
                 });
             }
             
+            // Increment promocode usage and revenue
             if (order.promocodeId) {
                 const promocodeRef = doc(db, 'promocodes', order.promocodeId);
                 batch.update(promocodeRef, {
@@ -114,6 +115,13 @@ export async function POST(request: Request) {
                     revenueGenerated: increment(order.total),
                 });
             }
+            
+            // Increment tracking link purchases
+            if(order.trackingLinkId && order.promocodeId) {
+                const trackingLinkRef = doc(db, 'promocodes', order.promocodeId, 'trackingLinks', order.trackingLinkId);
+                batch.update(trackingLinkRef, { purchases: increment(1) });
+            }
+
         } else {
             // This is a failed transaction
             const orderRef = doc(db, 'orders', transaction.orderId);
