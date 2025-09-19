@@ -42,11 +42,18 @@ export async function createShortLink(payload: CreateShortLinkPayload): Promise<
     
     const linkData: ShortLink = { 
         longUrl,
-        promocodeId,
-        trackingLinkId,
         createdAt: serverTimestamp() 
     };
+
+    if (promocodeId) {
+        linkData.promocodeId = promocodeId;
+    }
+    if (trackingLinkId) {
+        linkData.trackingLinkId = trackingLinkId;
+    }
+
     await setDoc(doc(db, 'shortLinks', shortId), linkData);
     
     return shortId;
 }
+
