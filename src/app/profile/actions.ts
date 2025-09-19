@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -150,12 +151,12 @@ export async function getUserProfileData() {
             
             eventDocs.forEach(doc => {
                 if(doc.exists()) {
-                    listings[doc.id] = serializeData(doc) as Event;
+                    listings[doc.id] = { ...serializeData(doc), type: 'event' } as Event;
                 }
             });
             tourDocs.forEach(doc => {
                 if(doc.exists()) {
-                    listings[doc.id] = serializeData(doc) as Tour;
+                    listings[doc.id] = { ...serializeData(doc), type: 'tour' } as Tour;
                 }
             });
         }
