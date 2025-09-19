@@ -110,10 +110,12 @@ interface InvitationPayload {
     role: UserRole;
     eventId?: string;
     sendEmail?: boolean;
+    promocodeId?: string;
+    trackingLinkId?: string;
 }
 
 export async function generateInviteLink(payload: InvitationPayload): Promise<{ success: boolean; inviteLink?: string; error?: string }> {
-    const { email, role, eventId, sendEmail = false } = payload;
+    const { email, role, eventId, sendEmail = false, promocodeId, trackingLinkId } = payload;
     
     if (sendEmail && !email) {
         return { success: false, error: "Email is required to send an invitation." };
@@ -160,7 +162,7 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
 
         const longInviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${token}`;
         
-        const shortId = await createShortLink(longInviteLink);
+        const shortId = await createShortLink({ longUrl: longInviteLink, promocodeId, trackingLinkId });
         const shortInviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/l/${shortId}`;
 
         await addDoc(collection(db, 'invitations'), {
@@ -174,6 +176,8 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
             eventId: eventId || null,
             listingName: listingName || null,
             shortId,
+            promocodeId,
+            trackingLinkId
         });
         
         if (sendEmail && email) {
@@ -229,4 +233,3 @@ export async function getInvitations(): Promise<{ success: boolean, data?: Invit
         return { success: false, error: `Failed to fetch invitations: ${error.message}` };
     }
 }
-

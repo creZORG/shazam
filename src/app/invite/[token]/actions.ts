@@ -27,6 +27,10 @@ export async function getInvitationDetails(token: string): Promise<{ success: bo
             return { success: false, error: 'This invitation has already been used.' };
         }
         
+        if (inviteData.status === 'void') {
+            return { success: false, error: 'This invitation has been voided by the sender.' };
+        }
+
         const expiresAt = (inviteData.expiresAt as Timestamp).toDate();
         if (expiresAt < new Date()) {
             return { success: false, error: 'This invitation has expired.' };

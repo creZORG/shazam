@@ -445,6 +445,8 @@ export type Invitation = {
     eventId?: string; // Optional: for event-specific roles like verifier
     listingName?: string; // Optional: name of the event
     shortId: string;
+    promocodeId?: string;
+    activity?: PromocodeClick[];
 };
 
 export type TeamMember = {
@@ -562,5 +564,7 @@ export type CheckoutFeedback = {
 
 export type ShortLink = {
     longUrl: string;
+    promocodeId?: string;
+    trackingLinkId?: string;
     createdAt: any;
 }

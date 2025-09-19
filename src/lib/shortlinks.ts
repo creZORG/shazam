@@ -8,13 +8,20 @@ import type { ShortLink } from './types';
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 6);
 
+interface CreateShortLinkPayload {
+    longUrl: string;
+    promocodeId?: string;
+    trackingLinkId?: string;
+}
+
 /**
- * Creates a unique short ID and stores the long URL in Firestore.
- * @param longUrl - The original URL to shorten.
+ * Creates a unique short ID and stores the long URL and tracking info in Firestore.
+ * @param payload - The data for the short link.
  * @returns The generated short ID.
  * @throws If a unique ID cannot be generated after 5 attempts.
  */
-export async function createShortLink(longUrl: string): Promise<string> {
+export async function createShortLink(payload: CreateShortLinkPayload): Promise<string> {
+    const { longUrl, promocodeId, trackingLinkId } = payload;
     let shortId = nanoid();
     let attempts = 0;
     const MAX_ATTEMPTS = 5;
@@ -33,7 +40,12 @@ export async function createShortLink(longUrl: string): Promise<string> {
         throw new Error("Could not generate a unique short link ID after several attempts.");
     }
     
-    const linkData: ShortLink = { longUrl, createdAt: serverTimestamp() };
+    const linkData: ShortLink = { 
+        longUrl,
+        promocodeId,
+        trackingLinkId,
+        createdAt: serverTimestamp() 
+    };
     await setDoc(doc(db, 'shortLinks', shortId), linkData);
     
     return shortId;
