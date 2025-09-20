@@ -1,4 +1,5 @@
 
+
 export type EventTicketingType = 'naksyetu' | 'external';
 export type ExternalEventPricing = 'Free' | 'Paid' | 'RSVP' | 'Online';
 
@@ -336,6 +337,7 @@ export type SiteSettings = {
     processingFee: number;
     processingFeePayer: 'customer' | 'organizer';
     influencerCut: number;
+    requireStaffVerification?: boolean;
     logoBriefUrl?: string;
     logoLongUrl?: string;
     homepage?: {

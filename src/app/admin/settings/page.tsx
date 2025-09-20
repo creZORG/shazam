@@ -44,6 +44,7 @@ const settingsSchema = z.object({
     processingFee: z.coerce.number().min(0, "Processing fee cannot be negative."),
     processingFeePayer: z.enum(['customer', 'organizer']),
     influencerCut: z.coerce.number().min(0, "Influencer cut cannot be negative.").max(100, "Cannot exceed 100%."),
+    requireStaffVerification: z.boolean().optional(),
     logoBriefUrl: z.string().url().optional(),
     logoLongUrl: z.string().url().optional(),
     homepage: z.object({
@@ -342,12 +343,29 @@ export default function AdminSettingsPage() {
                         </div>
                     </div>
 
-                    <div className="p-6 border rounded-lg space-y-4">
+                     <div className="p-6 border rounded-lg space-y-4">
                         <div className="space-y-1">
-                            <h3 className="text-xl font-semibold">API Keys & Integrations</h3>
-                            <p className="text-sm text-muted-foreground">Manage keys for third-party services like payment gateways.</p>
+                            <h3 className="text-xl font-semibold">Security Settings</h3>
+                            <p className="text-sm text-muted-foreground">Manage security features for staff accounts.</p>
                         </div>
-                        <Button variant="outline">Manage Keys</Button>
+                        <FormField
+                            control={form.control}
+                            name="requireStaffVerification"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                        <FormLabel>Require Staff Email Verification</FormLabel>
+                                        <FormDescription>If enabled, staff members (organizers, verifiers, etc.) will need to verify their email with a one-time code upon login.</FormDescription>
+                                    </div>
+                                    <FormControl>
+                                        <Switch
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
                     </div>
 
                     <div className="p-6 border rounded-lg flex items-center justify-between">
@@ -368,4 +386,3 @@ export default function AdminSettingsPage() {
     </Form>
   );
 }
-

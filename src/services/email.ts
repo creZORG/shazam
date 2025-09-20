@@ -195,3 +195,26 @@ export async function sendWelcomeEmail({ to, name }: WelcomeEmailPayload) {
     htmlbody: emailHtml,
   });
 }
+
+interface OtpEmailPayload {
+  to: string;
+  otp: string;
+}
+
+export async function sendOtpEmail({ to, otp }: OtpEmailPayload) {
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+        <h2>Your NaksYetu Verification Code</h2>
+        <p>Please use the following code to complete your login. This code is valid for 10 minutes.</p>
+        <p style="font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0; padding: 10px; background-color: #f2f2f2; border-radius: 5px;">${otp}</p>
+        <p>If you did not request this code, please ignore this email.</p>
+    </div>
+  `;
+
+  return sendZeptoMail({
+    from: { address: "security@naksyetu.com", name: "NaksYetu Security" },
+    to: [{ email_address: { address: to, name: to } }],
+    subject: "Your NaksYetu Verification Code",
+    htmlbody: emailHtml,
+  });
+}
