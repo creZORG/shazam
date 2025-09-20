@@ -8,7 +8,7 @@ import type { Invitation, UserRole } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, AlertCircle, CheckCircle, Mail, User as UserIcon, Info } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle, Mail, User as UserIcon, Info, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +16,7 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 
 const createAccountSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters."),
@@ -96,6 +97,9 @@ export default function AcceptInvitePage() {
         });
     };
 
+    const stepNumber = !user ? 1 : 2;
+    const stepText = `Step ${stepNumber} of 2: ${stepNumber === 1 ? 'Create Your Account' : 'Confirm Invitation'}`;
+
     const renderContent = () => {
         if (loading || authLoading) {
             return <div className="flex items-center justify-center p-12"><Loader2 className="animate-spin h-8 w-8" /></div>;
@@ -112,7 +116,6 @@ export default function AcceptInvitePage() {
             );
         }
         
-        const stepDescription = user ? "Step 2 of 2: Confirm your action" : "Step 1 of 2: Create or log into your account";
 
         if (!user && invite?.email) {
             return (
@@ -182,9 +185,6 @@ export default function AcceptInvitePage() {
             </CardFooter>
         );
     };
-    
-    const stepNumber = !user ? 1 : 2;
-    const stepText = `Step ${stepNumber} of 2: ${stepNumber === 1 ? 'Create Your Account' : 'Confirm Invitation'}`;
 
     return (
         <div className="container mx-auto flex items-center justify-center min-h-[calc(100vh-200px)]">
