@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { notFound, useParams, useRouter } from 'next/navigation';
@@ -9,7 +8,7 @@ import type { Invitation, UserRole } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, AlertCircle, CheckCircle, Mail } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle, Mail, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,6 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 
 const createAccountSchema = z.object({
+  name: z.string().min(3, "Name must be at least 3 characters."),
   password: z.string().min(6, "Password must be at least 6 characters."),
   confirmPassword: z.string()
 }).refine(data => data.password === data.confirmPassword, {
@@ -38,7 +38,7 @@ export default function AcceptInvitePage() {
 
     const form = useForm<z.infer<typeof createAccountSchema>>({
         resolver: zodResolver(createAccountSchema),
-        defaultValues: { password: '', confirmPassword: '' }
+        defaultValues: { name: '', password: '', confirmPassword: '' }
     });
 
     useEffect(() => {
@@ -46,13 +46,16 @@ export default function AcceptInvitePage() {
             getInvitationDetails(token as string).then(result => {
                 if (result.success && result.data) {
                     setInvite(result.data);
+                    if (result.data.email) {
+                        form.setValue('name', result.data.email.split('@')[0]);
+                    }
                 } else {
                     setError(result.error || 'Failed to validate invitation.');
                 }
                 setLoading(false);
             });
         }
-    }, [token]);
+    }, [token, form]);
     
     const getRedirectUrl = (role: UserRole) => {
         switch (role) {
@@ -72,7 +75,7 @@ export default function AcceptInvitePage() {
             const result = await acceptInvitation(token as string, user.uid);
             if (result.success) {
                 const redirectUrl = getRedirectUrl(invite.role);
-                window.location.href = redirectUrl; // Force reload to ensure role update is reflected
+                window.location.href = redirectUrl; 
             } else {
                 setError(result.error || 'Failed to accept invitation.');
             }
@@ -84,9 +87,7 @@ export default function AcceptInvitePage() {
 
         startCreating(async () => {
             try {
-                await signUpWithEmail(invite.email!, values.password, invite.email!.split('@')[0], { userAgent: navigator.userAgent, referrer: document.referrer });
-                // The onAuthStateChanged listener in useAuth will handle the session.
-                // Upon accepting, the user will be redirected.
+                await signUpWithEmail(invite.email!, values.password, values.name, { userAgent: navigator.userAgent, referrer: document.referrer });
                 handleAccept();
             } catch (err: any) {
                 setError(err.message || 'An unknown error occurred during sign-up.');
@@ -111,17 +112,19 @@ export default function AcceptInvitePage() {
         }
 
         if (!user && invite?.email) {
-            // Not logged in, and it's an email-specific invite -> Show create account form
             return (
                  <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleCreateAccount)} className="space-y-4">
-                        <FormField control={form.control} name="email" render={() => (
+                         <FormField control={form.control} name="email" render={() => (
                              <FormItem>
                                 <FormLabel>Email</FormLabel>
                                 <FormControl>
                                     <Input value={invite.email!} disabled />
                                 </FormControl>
                              </FormItem>
+                        )}/>
+                        <FormField control={form.control} name="name" render={({field}) => (
+                            <FormItem><FormLabel>Your Name</FormLabel><FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl><FormMessage/></FormItem>
                         )}/>
                         <FormField control={form.control} name="password" render={({field}) => (
                             <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage/></FormItem>
@@ -140,7 +143,6 @@ export default function AcceptInvitePage() {
         }
 
         if (!user) {
-             // Not logged in, generic invite
             return (
                 <div className="text-center flex flex-col items-center gap-4">
                     <p className="font-semibold text-xl">Please log in to accept</p>
@@ -166,7 +168,7 @@ export default function AcceptInvitePage() {
                     {isAccepting ? <Loader2 className="animate-spin mr-2"/> : <CheckCircle className="mr-2"/>}
                     Accept Invitation
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">By accepting, your account role will be updated to <span className="font-semibold capitalize">{invite?.role}</span>. You will be redirected to a guide to help you get started.</p>
+                <p className="text-xs text-muted-foreground text-center">By accepting, your account role will be updated. You will be redirected to a helpful guide to get you started.</p>
             </CardFooter>
         );
     };
@@ -175,11 +177,11 @@ export default function AcceptInvitePage() {
         <div className="container mx-auto flex items-center justify-center min-h-[calc(100vh-200px)]">
             <Card className="max-w-md w-full">
                 <CardHeader className="text-center">
-                    <Mail className="mx-auto h-12 w-12 text-primary" />
-                    <CardTitle className="text-2xl mt-4">You're Invited, {invite?.email?.split('@')[0] || 'Guest'}!</CardTitle>
+                    <UserIcon className="mx-auto h-12 w-12 text-primary" />
+                    <CardTitle className="text-2xl mt-4">Welcome, {invite?.email?.split('@')[0] || 'Guest'}!</CardTitle>
                     {invite && !error && (
                          <CardDescription>
-                            You have been invited to join NaksYetu as a <span className="font-bold capitalize text-primary">{invite.role}</span>
+                            You have been invited to join NaksYetu as a <span className="font-bold capitalize text-primary">{invite.role.replace('-', ' ')}</span>
                             {invite.listingName && ` for the event "${invite.listingName}"`}.
                         </CardDescription>
                     )}

@@ -89,22 +89,22 @@ interface InviteEmailPayload {
 
 const getRoleBasedTemplate = ({ role, inviteLink, listingName, name }: Omit<InviteEmailPayload, 'to'>) => {
     const isNightlife = role === 'club';
-    const primaryColor = isNightlife ? `hsla(var(--night-primary), 1)` : `hsla(var(--primary), 1)`;
-    const accentColor = isNightlife ? `hsla(var(--night-accent), 1)` : `hsla(var(--accent), 1)`;
+    const primaryColor = isNightlife ? `hsla(260, 100%, 60%, 1)` : `hsla(340, 82%, 52%, 1)`;
+    const accentColor = isNightlife ? `hsla(320, 100%, 55%, 1)` : `hsla(25, 95%, 53%, 1)`;
     const forEventText = listingName ? ` for the event: <strong>${listingName}</strong>` : '';
-    const roleText = role.charAt(0).toUpperCase() + role.slice(1);
+    const roleText = role.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
 
     return `
     <!DOCTYPE html>
     <html>
     <head>
         <style>
-            body { font-family: Arial, sans-serif; background-color: hsl(var(--background)); color: hsl(var(--foreground)); margin: 0; padding: 20px; }
-            .container { max-width: 600px; margin: auto; background-color: hsl(var(--card)); border-radius: 8px; overflow: hidden; border: 1px solid hsl(var(--border)); }
+            body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; margin: 0; padding: 20px; }
+            .container { max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
             .header { padding: 40px; text-align: center; background-image: linear-gradient(to right, ${primaryColor}, ${accentColor}); color: white; }
             .content { padding: 30px; }
             .button { display: inline-block; padding: 12px 24px; background-image: linear-gradient(to right, ${primaryColor}, ${accentColor}); color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
-            .footer { padding: 20px; text-align: center; font-size: 12px; color: hsl(var(--muted-foreground)); }
+            .footer { padding: 20px; text-align: center; font-size: 12px; color: #777; }
         </style>
     </head>
     <body>
@@ -116,7 +116,7 @@ const getRoleBasedTemplate = ({ role, inviteLink, listingName, name }: Omit<Invi
                 <h2>Join NaksYetu as a ${roleText}</h2>
                 <p>Hello ${name || ''},</p>
                 <p>You have been invited to join the NaksYetu platform with the role of <strong>${roleText}</strong>${forEventText}.</p>
-                <p>To accept your invitation and create your account, please click the button below. This link is valid for the next 24 hours. Once you accept, you will be directed to a helpful guide to get you started.</p>
+                <p>To accept your invitation and create your account, please click the button below. This link is valid for the next 24 hours. Once you accept, you will be redirected to a helpful guide to get you started.</p>
                 <p style="text-align: center; margin: 30px 0;">
                     <a href="${inviteLink}" class="button">Accept Invitation</a>
                 </p>
