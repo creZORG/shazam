@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -26,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useOtpVerification } from '@/hooks/use-otp-verification';
 
 type PayoutStatus = PayoutRequest['status'];
 
@@ -43,10 +43,12 @@ function StatusBadge({ status }: { status: PayoutStatus }) {
 
 function PayoutRequestModal({ availableBalance, fullName, mpesaNumber }: { availableBalance: number, fullName: string, mpesaNumber: string }) {
     const { toast } = useToast();
+    const { requestVerification } = useOtpVerification();
+    const { user } = useAuth();
     const [amount, setAmount] = useState('');
     const [isPending, startTransition] = useTransition();
 
-    const handleRequest = () => {
+    const handleRequest = async () => {
         const numAmount = parseFloat(amount);
         if (isNaN(numAmount) || numAmount <= 0) {
             toast({ variant: 'destructive', title: 'Invalid amount', description: 'Please enter a valid amount to withdraw.'});
@@ -54,6 +56,18 @@ function PayoutRequestModal({ availableBalance, fullName, mpesaNumber }: { avail
         }
         if (numAmount > availableBalance) {
              toast({ variant: 'destructive', title: 'Insufficient funds', description: `You can only withdraw up to Ksh ${availableBalance}.`});
+            return;
+        }
+        
+        if (!user?.email) {
+            toast({ variant: 'destructive', title: 'Authentication Error', description: 'User email not found.' });
+            return;
+        }
+        
+        // Request OTP verification before proceeding
+        const isVerified = await requestVerification(user.email, 'payout_request');
+        if (!isVerified) {
+            toast({ variant: 'destructive', title: 'Verification Cancelled', description: 'Payout request was not submitted.'});
             return;
         }
 
