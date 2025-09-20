@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, MailCheck, ShieldCheck, HelpCircle, LogOut } from 'lucide-react';
-import { Logo } from '../icons/Logo';
 import { useAuth } from '@/hooks/use-auth';
 import Link from 'next/link';
 
@@ -82,6 +81,14 @@ export function OtpVerificationModal({
     });
   };
 
+  useEffect(() => {
+    if (isOpen) {
+        handleSendOtp(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+
   const handleVerifyOtp = async () => {
     if (!identifier || otp.length !== 6) return;
 
@@ -96,13 +103,6 @@ export function OtpVerificationModal({
     });
   };
   
-  useEffect(() => {
-    if (isOpen) {
-      handleSendOtp(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
-
   const onModalOpenChange = (open: boolean) => {
     if (!open && isDismissible) {
       onClose(false);
@@ -146,14 +146,14 @@ export function OtpVerificationModal({
             </p>
           )}
         </div>
-        <DialogFooter className="flex-col gap-2">
+        <DialogFooter className="flex-col gap-4">
            <Button onClick={handleVerifyOtp} disabled={isActionInProgress || otp.length !== 6} className="w-full bg-gradient-to-r from-pink-500 to-orange-500">
                 {isVerifying ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
                 <span className="ml-2">Verify & Continue</span>
             </Button>
             <Button variant="link" size="sm" onClick={() => handleSendOtp(true)} disabled={isActionInProgress}>
-                {isSending ? <Loader2 className="animate-spin" /> : <MailCheck />}
-                <span className="ml-2">Resend Code</span>
+                {isSending ? <Loader2 className="animate-spin mr-2" /> : <MailCheck className="mr-2" />}
+                Resend Code
             </Button>
           
           {!isDismissible && (
@@ -163,10 +163,10 @@ export function OtpVerificationModal({
               </p>
               <div className="flex w-full items-center justify-center gap-4 mt-2">
                    <Button variant="ghost" size="sm" asChild>
-                      <Link href="/support"><HelpCircle/> Support</Link>
+                      <Link href="/support"><HelpCircle className="mr-2" /> Support</Link>
                   </Button>
                   <Button variant="destructive" size="sm" onClick={signOut}>
-                      <LogOut/> Sign Out
+                      <LogOut className="mr-2" /> Sign Out
                   </Button>
               </div>
             </div>

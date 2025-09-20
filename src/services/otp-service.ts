@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, Timestamp, writeBatch, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, Timestamp, writeBatch, orderBy, limit, updateDoc } from 'firebase/firestore';
 import { createHash, randomInt } from 'crypto';
 
 const OTP_LIFESPAN_MINUTES = 10;
@@ -24,7 +24,12 @@ function hashOtp(code: string): string {
     return createHash('sha256').update(code).digest('hex');
 }
 
-export async function checkRateLimit(identifier: string, ip: string): Promise<{ success: boolean; error?: string }> {
+/**
+ * Checks for an existing valid OTP or if rate limits have been exceeded.
+ * @param identifier The user's email or phone.
+ * @returns An object indicating if a new OTP can be generated, or providing details of an existing one.
+ */
+async function checkOtpStatus(identifier: string): Promise<{ canGenerate: boolean; error?: string; existingOtp?: { code: string; expiresAt: Date } }> {
     const now = Timestamp.now();
     const windowStart = Timestamp.fromMillis(now.toMillis() - RATE_LIMIT_WINDOW_MINUTES * 60 * 1000);
     const intervalStart = Timestamp.fromMillis(now.toMillis() - MIN_REQUEST_INTERVAL_SECONDS * 1000);
@@ -35,29 +40,36 @@ export async function checkRateLimit(identifier: string, ip: string): Promise<{ 
         where('createdAt', '>=', windowStart),
         orderBy('createdAt', 'desc')
     );
-    
-    const recentOtpsSnapshot = await getDocs(q);
-    const recentOtps = recentOtpsSnapshot.docs.map(doc => doc.data());
 
-    // Check for total requests in the window
+    const recentOtpsSnapshot = await getDocs(q);
+    const recentOtps = recentOtpsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as OtpDocument }));
+
+    // Rule 1: Check for total requests in the time window
     if (recentOtps.length >= MAX_REQUESTS_PER_WINDOW) {
-        return { success: false, error: `Too many requests. Please try again in ${RATE_LIMIT_WINDOW_MINUTES} minutes.` };
+        return { canGenerate: false, error: `Too many requests. Please try again in ${RATE_LIMIT_WINDOW_MINUTES} minutes.` };
     }
 
-    // Check for requests in the last minute
     if (recentOtps.length > 0) {
-        const lastOtpTime = recentOtps[0].createdAt as Timestamp;
-        if (lastOtpTime > intervalStart) {
-            const secondsLeft = Math.ceil(MIN_REQUEST_INTERVAL_SECONDS - (now.seconds - lastOtpTime.seconds));
-            return { success: false, error: `Please wait ${secondsLeft} seconds before requesting a new code.` };
+        const lastOtp = recentOtps[0];
+        
+        // Rule 2: Check for requests too close together
+        if ((lastOtp.createdAt as Timestamp) > intervalStart) {
+            const secondsLeft = Math.ceil(MIN_REQUEST_INTERVAL_SECONDS - (now.seconds - (lastOtp.createdAt as Timestamp).seconds));
+            return { canGenerate: false, error: `Please wait ${secondsLeft} seconds before requesting a new code.` };
         }
     }
-
-    return { success: true };
+    
+    return { canGenerate: true };
 }
 
 
-export async function generateOtp(identifier: string, type: OtpDocument['type'] = 'generic', ipAddress: string): Promise<{ code: string, expiresAt: Date }> {
+export async function generateOtp(identifier: string, type: OtpDocument['type'] = 'generic', ipAddress: string): Promise<{ code: string, expiresAt: Date, error?: string }> {
+    const { canGenerate, error } = await checkOtpStatus(identifier);
+
+    if (!canGenerate) {
+        return { code: '', expiresAt: new Date(), error: error };
+    }
+
     const code = randomInt(100000, 1000000).toString();
     const hashedCode = hashOtp(code);
 
@@ -78,7 +90,7 @@ export async function generateOtp(identifier: string, type: OtpDocument['type'] 
         createdAt: serverTimestamp(),
     });
 
-    return { code, expiresAt };
+    return { code, expiresAt, error: undefined };
 }
 
 
@@ -95,6 +107,8 @@ export async function validateOtp(
         where('hashedCode', '==', hashedCode),
         where('expiresAt', '>=', now),
         where('used', '==', false),
+        orderBy('expiresAt', 'desc'),
+        limit(1)
     );
 
     const snapshot = await getDocs(q);

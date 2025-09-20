@@ -17,11 +17,13 @@ export async function sendVerificationOtp(email: string): Promise<{ success: boo
   }
   const ip = headers().get('x-forwarded-for') ?? '127.0.0.1';
 
-  // Rate limit checks would go here in a real implementation.
-  // For now, we will simulate success.
-
   try {
-    const { code, expiresAt } = await generateOtp(email, 'generic', ip);
+    const { code, expiresAt, error: generationError } = await generateOtp(email, 'generic', ip);
+    
+    if (generationError) {
+        return { success: false, error: generationError };
+    }
+    
     await sendOtpEmail({ to: email, otp: code });
     return { success: true, expiresAt: expiresAt.getTime() };
   } catch (error) {
