@@ -204,8 +204,13 @@ const getTransactionsTool = ai.defineTool(
             q = query(q, where('status', '==', input.status));
         }
 
-        const snapshot = await getDocs(query(q, orderBy('createdAt', 'desc'), limit(20)));
-        return snapshot.docs.map(doc => serializeData(doc));
+        const snapshot = await getDocs(query(q, limit(20)));
+        const transactions = snapshot.docs.map(doc => serializeData(doc));
+        
+        // Sort in-memory to avoid composite index requirement
+        transactions.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+        return transactions;
     }
 );
 
