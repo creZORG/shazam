@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,7 @@ export function ChatBubble({ user }: { user: FirebaseUser }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -42,6 +44,10 @@ export function ChatBubble({ user }: { user: FirebaseUser }) {
                 role: user.role
               }
             });
+
+            if (response.navigationPath) {
+                router.push(response.navigationPath);
+            }
 
             const assistantMessage: ChatMessage = { role: 'assistant', content: response.answer };
             setMessages(prev => [...prev, assistantMessage]);
