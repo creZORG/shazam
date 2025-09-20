@@ -60,11 +60,6 @@ export async function acceptInvitation(token: string, uid: string): Promise<{ su
         if (!auth) throw new Error("Server auth not initialized");
         const userRecord = await auth.getUser(uid);
         
-        // If invite is email-specific, verify the email matches
-        if (invite.email && userRecord.email !== invite.email) {
-            return { success: false, error: 'This invitation is for a different email address.' };
-        }
-        
         const userDocRef = doc(db, 'users', uid);
         const userDoc = await getDoc(userDocRef);
         const userData = userDoc.exists() ? userDoc.data() as FirebaseUser : null;

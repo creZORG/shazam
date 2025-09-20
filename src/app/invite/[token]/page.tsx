@@ -2,10 +2,10 @@
 
 'use client';
 
-import { notFound, useParams } from 'next/navigation';
+import { notFound, useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
 import { getInvitationDetails, acceptInvitation } from './actions';
-import type { Invitation } from '@/lib/types';
+import type { Invitation, UserRole } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ const createAccountSchema = z.object({
 export default function AcceptInvitePage() {
     const { token } = useParams();
     const { user, loading: authLoading, signUpWithEmail } = useAuth();
+    const router = useRouter();
     const [invite, setInvite] = useState<Invitation | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -53,13 +54,25 @@ export default function AcceptInvitePage() {
         }
     }, [token]);
     
+    const getRedirectUrl = (role: UserRole) => {
+        switch (role) {
+            case 'organizer': return '/organizer/guide';
+            case 'influencer': return '/influencer/guide';
+            case 'verifier': return '/verify/guide';
+            case 'admin':
+            case 'super-admin': return '/admin/guide';
+            case 'club': return '/club';
+            default: return '/profile';
+        }
+    }
+
     const handleAccept = () => {
-        if (!user) return;
+        if (!user || !invite) return;
         startAccepting(async () => {
             const result = await acceptInvitation(token as string, user.uid);
             if (result.success) {
-                // Force a reload to update user role from useAuth hook
-                window.location.href = '/profile';
+                const redirectUrl = getRedirectUrl(invite.role);
+                window.location.href = redirectUrl; // Force reload to ensure role update is reflected
             } else {
                 setError(result.error || 'Failed to accept invitation.');
             }
@@ -72,8 +85,9 @@ export default function AcceptInvitePage() {
         startCreating(async () => {
             try {
                 await signUpWithEmail(invite.email!, values.password, invite.email!.split('@')[0], { userAgent: navigator.userAgent, referrer: document.referrer });
-                // The onAuthStateChanged listener in useAuth will handle the redirect after successful sign-up and login.
-                // The `acceptInvitation` logic will run on their first authenticated page load if they came via invite.
+                // The onAuthStateChanged listener in useAuth will handle the session.
+                // Upon accepting, the user will be redirected.
+                handleAccept();
             } catch (err: any) {
                 setError(err.message || 'An unknown error occurred during sign-up.');
             }
@@ -152,7 +166,7 @@ export default function AcceptInvitePage() {
                     {isAccepting ? <Loader2 className="animate-spin mr-2"/> : <CheckCircle className="mr-2"/>}
                     Accept Invitation
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">By accepting, your account role will be updated to <span className="font-semibold capitalize">{invite?.role}</span>.</p>
+                <p className="text-xs text-muted-foreground text-center">By accepting, your account role will be updated to <span className="font-semibold capitalize">{invite?.role}</span>. You will be redirected to a guide to help you get started.</p>
             </CardFooter>
         );
     };
@@ -162,7 +176,7 @@ export default function AcceptInvitePage() {
             <Card className="max-w-md w-full">
                 <CardHeader className="text-center">
                     <Mail className="mx-auto h-12 w-12 text-primary" />
-                    <CardTitle className="text-2xl mt-4">You're Invited!</CardTitle>
+                    <CardTitle className="text-2xl mt-4">You're Invited, {invite?.email?.split('@')[0] || 'Guest'}!</CardTitle>
                     {invite && !error && (
                          <CardDescription>
                             You have been invited to join NaksYetu as a <span className="font-bold capitalize text-primary">{invite.role}</span>
