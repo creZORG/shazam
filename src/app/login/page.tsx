@@ -35,6 +35,9 @@ const forgotPasswordSchema = z.object({
     email: z.string().email({ message: "Invalid email address." }),
 });
 
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 60 * 1000; // 1 minute
+
 export default function LoginPage() {
   const { user, signInWithGoogle, signUpWithEmail, signInWithEmail, resetPassword } = useAuth();
   const router = useRouter();
@@ -48,6 +51,8 @@ export default function LoginPage() {
   const [showResetForm, setShowResetForm] = useState(false);
   const [analyticsData, setAnalyticsData] = useState({ userAgent: '', referrer: '' });
   const [isSuspended, setIsSuspended] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [isLockedOut, setIsLockedOut] = useState(false);
 
   useEffect(() => {
     if (searchParams.get('reason') === 'suspended') {
@@ -103,6 +108,11 @@ export default function LoginPage() {
   };
 
   const onSignInSubmit = async (values: z.infer<typeof signInSchema>) => {
+    if (isLockedOut) {
+        setError("Too many failed login attempts. Please wait a minute before trying again.");
+        return;
+    }
+
     setIsLoading(true);
     setError(null);
     setIsSuspended(false);
@@ -113,9 +123,19 @@ export default function LoginPage() {
         setIsLoading(false);
         return;
       }
+      setLoginAttempts(0); // Reset on success
       router.push("/profile");
     } catch (error: any) {
       setError("Invalid login credentials. Please try again.");
+      const newAttemptCount = loginAttempts + 1;
+      setLoginAttempts(newAttemptCount);
+      if (newAttemptCount >= MAX_LOGIN_ATTEMPTS) {
+          setIsLockedOut(true);
+          setTimeout(() => {
+              setIsLockedOut(false);
+              setLoginAttempts(0);
+          }, LOCKOUT_DURATION_MS);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -141,15 +161,17 @@ export default function LoginPage() {
     setIsSuspended(false);
     try {
       await resetPassword(values.email);
+    } catch (error: any) {
+      // Intentionally do not set an error message to prevent user enumeration
+      console.error("Password reset error:", error);
+    } finally {
+      // Always show success to prevent enumeration
       toast({
-        title: "Password Reset Email Sent",
-        description: "Please check your inbox to reset your password.",
+        title: "Password Reset Requested",
+        description: "If an account with this email exists, a password reset link has been sent.",
       });
       setShowResetForm(false);
       forgotPasswordForm.reset();
-    } catch (error: any) {
-      setError("Failed to send password reset email. Please check the email address and try again.");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -245,7 +267,7 @@ export default function LoginPage() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent text-white" disabled={isLoading}>
+                  <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent text-white" disabled={isLoading || isLockedOut}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Sign In
                   </Button>
