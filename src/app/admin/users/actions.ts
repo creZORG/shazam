@@ -176,12 +176,18 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
         if (listingName) {
             inviteData.listingName = listingName;
         }
+        
+        const headersList = headers();
+        const host = headersList.get('host') || process.env.NEXT_PUBLIC_APP_URL || '';
+        const protocol = headersList.get('x-forwarded-proto') || 'https';
+        const baseUrl = `${protocol}://${host}`;
 
-        const longInviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${token}`;
+
+        const longInviteLink = `${baseUrl}/invite/${token}`;
         const shortId = await createShortLink({ 
             longUrl: longInviteLink, 
             invitationId: inviteRef.id,
-            listingId: eventId || null, // Ensure listingId is null, not undefined
+            listingId: eventId || null,
         });
 
         inviteData.shortId = shortId;
@@ -189,10 +195,10 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
         await setDoc(inviteRef, inviteData, { merge: true });
 
         if (sendEmail && email) {
-            await sendInvitationEmail({ to: email, role, inviteLink: `${process.env.NEXT_PUBLIC_APP_URL}/l/${shortId}`, listingName });
+            await sendInvitationEmail({ to: email, role, inviteLink: `${baseUrl}/l/${shortId}`, listingName });
         }
         
-        return { success: true, inviteLink: `${process.env.NEXT_PUBLIC_APP_URL}/l/${shortId}` };
+        return { success: true, inviteLink: `${baseUrl}/l/${shortId}` };
 
     } catch (error) {
         console.error('Error creating invitation:', error);

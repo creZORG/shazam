@@ -174,7 +174,8 @@ interface WelcomeEmailPayload {
 }
 
 export async function sendWelcomeEmail({ to, name }: WelcomeEmailPayload) {
-  const exploreUrl = `${process.env.NEXT_PUBLIC_APP_URL}/events`;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://naksyetu.com";
+  const exploreUrl = `${appUrl}/events`;
   const emailHtml = `
     <h1>Welcome to NaksYetu, ${name}!</h1>
     <p>We're thrilled to have you join the community. NaksYetu is your one-stop platform for the best events, tours, and nightlife in Nakuru.</p>
@@ -183,7 +184,7 @@ export async function sendWelcomeEmail({ to, name }: WelcomeEmailPayload) {
      <p style="text-align: center; margin: 30px 0;">
       <a href="${exploreUrl}" style="display: inline-block; padding: 12px 24px; background-color: #f97316; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Explore Events</a>
     </p>
-    <p>If you're an organizer, influencer, or club owner, check out our <a href="${process.env.NEXT_PUBLIC_APP_URL}/partner-with-us">Partners Page</a> to see how you can benefit from our platform.</p>
+    <p>If you're an organizer, influencer, or club owner, check out our <a href="${appUrl}/partner-with-us">Partners Page</a> to see how you can benefit from our platform.</p>
     <p>Enjoy the vibes!</p>
   `;
 

@@ -79,8 +79,13 @@ export async function createTrackingLink(payload: { promocodeId?: string | null,
         const collectionRef = promocodeId ? collection(db, 'promocodes', promocodeId, 'trackingLinks') : collection(db, 'trackingLinks');
         const linkRef = doc(collectionRef);
         
+        const headersList = headers();
+        const host = headersList.get('host') || process.env.NEXT_PUBLIC_APP_URL || '';
+        const protocol = headersList.get('x-forwarded-proto') || 'https';
+        const baseUrl = `${protocol}://${host}`;
+
         const destination = listingType === 'all' ? '/events' : `/${listingType}s/${listingId}`;
-        let longUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}${destination}?linkId=${linkRef.id}`;
+        let longUrl = `${baseUrl}${destination}?linkId=${linkRef.id}`;
         
         if(promocode) {
             longUrl += `&coupon=${promocode.code}`;
