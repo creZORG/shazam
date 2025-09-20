@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { createPromocode, getUserCoupons } from '@/app/organizer/promocodes/actions';
+import { createPromocode } from '@/app/organizer/promocodes/actions';
 import { useAuth } from '@/hooks/use-auth';
 import { Gift, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -23,10 +23,8 @@ export function NewUserCouponModal() {
   const [welcomeCoupon, setWelcomeCoupon] = useState<Promocode | null>(null);
 
   useEffect(() => {
-    // Show for any first-time visitor
     const hasSeen = localStorage.getItem(NEW_USER_COUPON_FLAG);
     if (!hasSeen) {
-      // Check for a system-wide welcome coupon
       getPromocodeById('NAKSYETU_WELCOME_GIFT').then(result => {
         if (result.success && result.data) {
           setWelcomeCoupon(result.data);
@@ -43,13 +41,12 @@ export function NewUserCouponModal() {
     if (!user || !welcomeCoupon) return;
     setIsClaiming(true);
     
-    // We create a coupon specifically for this user based on the welcome gift template.
     const result = await createPromocode({
       ...welcomeCoupon,
-      organizerId: 'NAKSYETU_SYSTEM', // A system-level organizer ID
-      userId: user.uid, // Assign the coupon to the specific user
+      organizerId: 'NAKSYETU_SYSTEM',
+      userId: user.uid,
       code: `NEWUSER-${user.uid.substring(0, 5)}`,
-      usageLimit: 1, // One-time use
+      usageLimit: 1, 
     });
 
     if (result.success) {

@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect, useMemo, useTransition } from "react";
 import { getPromocodesByOrganizer } from "@/app/organizer/promocodes/actions";
-import { getPublishedEvents, getPublishedTours } from "../actions";
+import { getPublishedEvents, getPublishedTours, getWelcomeGiftAnalytics } from "../actions";
 import type { Promocode, Event, Tour, TrackingLink } from "@/lib/types";
-import { QrCode, Download, Link as LinkIcon, PlusCircle, Copy, BarChart, Ticket, Loader2, Eye, Gift } from "lucide-react";
+import { QrCode, Download, Link as LinkIcon, PlusCircle, Copy, BarChart, Ticket, Loader2, Eye, Gift, Users, DollarSign } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,14 +18,39 @@ import { createPromocode } from "@/app/organizer/promocodes/actions";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogTrigger, DialogFooter, DialogClose, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Link from 'next/link';
+import { useRouter } from "next/navigation";
 
 
 type Listing = { id: string; name: string; type: 'event' | 'tour' };
+type AnalyticsData = Awaited<ReturnType<typeof getWelcomeGiftAnalytics>>['data'];
+
+function WelcomeGiftAnalytics({ data }: { data: AnalyticsData }) {
+    if (!data) return null;
+    return (
+        <CardContent>
+            <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <p className="text-2xl font-bold">{data.claimed}</p>
+                    <p className="text-sm text-muted-foreground">Claimed</p>
+                </div>
+                <div>
+                    <p className="text-2xl font-bold">{data.used}</p>
+                    <p className="text-sm text-muted-foreground">Used</p>
+                </div>
+                <div>
+                    <p className="text-2xl font-bold">Ksh {data.revenue.toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">Revenue</p>
+                </div>
+            </div>
+        </CardContent>
+    );
+}
 
 function WelcomeGiftForm() {
     const { toast } = useToast();
     const [isSaving, startSaving] = useTransition();
     const [listings, setListings] = useState<Listing[]>([]);
+    const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
     
     // State for the form
     const [discountValue, setDiscountValue] = useState(15);
@@ -33,6 +58,9 @@ function WelcomeGiftForm() {
     const [listingId, setListingId] = useState('all');
 
      useEffect(() => {
+        getWelcomeGiftAnalytics().then(res => {
+            if (res.success) setAnalytics(res.data || null)
+        });
         Promise.all([
             getPublishedEvents(),
             getPublishedTours()
@@ -56,8 +84,8 @@ function WelcomeGiftForm() {
                 code: 'NAKSYETU_WELCOME_GIFT',
                 discountType: 'percentage',
                 discountValue: discountValue,
-                usageLimit: 1,
-                expiresAt: new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString(),
+                usageLimit: 999999, // Effectively infinite for a template
+                expiresAt: null, // User-specific coupon will have expiry
                 listingType: listingId === 'all' ? 'all' : (selectedListing?.type || 'all'),
                 listingId: listingId === 'all' ? undefined : listingId,
                 listingName: listingId === 'all' ? 'All Listings' : (selectedListing?.name || 'All Listings'),
@@ -84,7 +112,7 @@ function WelcomeGiftForm() {
                         <Input type="number" value={discountValue} onChange={e => setDiscountValue(Number(e.target.value))} placeholder="e.g., 15" />
                     </div>
                      <div className="space-y-2">
-                        <Label>Expires in (days)</Label>
+                        <Label>Expires in (days for user)</Label>
                         <Input type="number" value={expiresInDays} onChange={e => setExpiresInDays(Number(e.target.value))} placeholder="e.g., 30" />
                     </div>
                 </div>
@@ -103,137 +131,101 @@ function WelcomeGiftForm() {
                     Save Welcome Gift
                 </Button>
             </CardContent>
+            {analytics && <WelcomeGiftAnalytics data={analytics} />}
         </Card>
     );
 }
 
-
-export default function CreateCampaignLinkPage() {
-    const { user } = useAuth();
+function GeneralCouponForm() {
     const { toast } = useToast();
-    
+    const router = useRouter();
+    const [isSaving, startSaving] = useTransition();
     const [listings, setListings] = useState<Listing[]>([]);
-    const [promocodes, setPromocodes] = useState<Promocode[]>([]);
-    const [selectedListing, setSelectedListing] = useState<string>('');
-    const [selectedPromocodeId, setSelectedPromocodeId] = useState<string>('none');
     
-    const [newLinkName, setNewLinkName] = useState('');
-    const [customShortId, setCustomShortId] = useState('');
-    const [isCreating, startCreating] = useTransition();
-
-    useEffect(() => {
-        Promise.all([
-            getPublishedEvents(),
-            getPublishedTours()
-        ]).then(([eventsRes, toursRes]) => {
+    const form = useForm({
+        defaultValues: {
+            code: "",
+            discountType: "percentage" as "percentage" | "fixed",
+            discountValue: 10,
+            usageLimit: 1,
+            expiresAt: undefined as Date | undefined,
+            listingId: "all",
+        }
+    });
+    
+     useEffect(() => {
+        Promise.all([getPublishedEvents(), getPublishedTours()]).then(([eventsRes, toursRes]) => {
             const fetchedListings: Listing[] = [];
-            if(eventsRes.success && eventsRes.data) {
-                fetchedListings.push(...eventsRes.data.map(e => ({ ...e, type: 'event' as const })));
-            }
-            if(toursRes.success && toursRes.data) {
-                fetchedListings.push(...toursRes.data.map(t => ({ ...t, type: 'tour' as const })));
-            }
+            if(eventsRes.success && eventsRes.data) fetchedListings.push(...eventsRes.data.map(e => ({ ...e, type: 'event' as const })));
+            if(toursRes.success && toursRes.data) fetchedListings.push(...toursRes.data.map(t => ({ ...t, type: 'tour' as const })));
             setListings(fetchedListings);
         });
     }, []);
-    
-    const selectedListingData = useMemo(() => {
-        return listings.find(l => l.id === selectedListing);
-    }, [selectedListing, listings]);
 
-    useEffect(() => {
-        if(user?.uid) {
-            getPromocodesByOrganizer(user.uid).then(res => { 
-                if (res.success && res.data) {
-                    setPromocodes(res.data);
-                }
-            })
-        }
-    }, [user?.uid]);
-
-    const availablePromocodes = useMemo(() => {
-        if (!selectedListingData) return [];
-        return promocodes.filter(p => p.listingId === selectedListingData.id || p.listingType === 'all');
-    }, [selectedListingData, promocodes]);
-
-    
-    const handleCreateLink = () => {
-        if (!selectedListingData || !newLinkName) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Please select a listing and provide a link name.'});
-            return;
-        }
-
-        const promocodeForLink = selectedPromocodeId && selectedPromocodeId !== 'none' ? selectedPromocodeId : undefined;
-
-        startCreating(async () => {
-            const result = await createTrackingLink({
-                promocodeId: promocodeForLink,
-                listingId: selectedListingData.id,
-                listingType: selectedListingData.type,
-                name: newLinkName,
-                shortId: customShortId || undefined,
+    const onSubmit = (values: any) => {
+        startSaving(async () => {
+            const selectedListing = listings.find(l => l.id === values.listingId);
+            const result = await createPromocode({
+                organizerId: 'NAKSYETU_SYSTEM',
+                code: values.code.toUpperCase(),
+                discountType: values.discountType,
+                discountValue: values.discountValue,
+                usageLimit: values.usageLimit,
+                expiresAt: values.expiresAt ? values.expiresAt.toISOString() : null,
+                listingType: values.listingId === 'all' ? 'all' : selectedListing?.type || 'all',
+                listingId: values.listingId === 'all' ? undefined : values.listingId,
+                listingName: values.listingId === 'all' ? 'All Listings' : selectedListing?.name || 'All Listings',
             });
-             if (result.success && result.data) {
-                setNewLinkName('');
-                setCustomShortId('');
-                toast({ title: "Tracking Link Created!", description: "You can view it on the main Promotions page." });
+            if (result.success) {
+                toast({ title: "General Coupon Created!" });
+                router.push('/admin/promotions');
             } else {
-                 toast({ variant: 'destructive', title: "Error", description: result.error });
+                toast({ variant: 'destructive', title: "Creation Failed", description: result.error });
             }
         });
     };
 
     return (
-         <div className="space-y-8">
-            <h1 className="text-3xl font-bold">Create New Tracking Link</h1>
-            <div className="grid lg:grid-cols-2 gap-8 items-start">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Campaign Link Manager</CardTitle>
-                        <CardDescription>Create unique, trackable short links and QR codes for your marketing campaigns.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-8">
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <Label>1. Select Listing (Event or Tour)</Label>
-                                 <Select onValueChange={setSelectedListing} value={selectedListing}>
-                                    <SelectTrigger><SelectValue placeholder="Choose a listing..." /></SelectTrigger>
-                                    <SelectContent>
-                                        {listings.map(l => <SelectItem key={l.id} value={l.id}>{l.name} ({l.type})</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                             <div className="space-y-2">
-                                <Label>2. Attach Promocode (Optional)</Label>
-                                 <Select onValueChange={setSelectedPromocodeId} value={selectedPromocodeId} disabled={!selectedListing}>
-                                    <SelectTrigger><SelectValue placeholder="Select a promocode..." /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">None (General Link)</SelectItem>
-                                        {availablePromocodes.map(p => <SelectItem key={p.id} value={p.id}>{p.code} ({p.influencerName || 'General'})</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>Create General Coupon</CardTitle>
+                <CardDescription>Create a public coupon code that any user can apply at checkout.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <FormField control={form.control} name="code" render={({ field }) => (<FormItem><Label>Coupon Code</Label><FormControl><Input placeholder="e.g., HOLIDAY20" {...field} /></FormControl></FormItem>)} />
+                            <FormField control={form.control} name="usageLimit" render={({ field }) => (<FormItem><Label>Total Usage Limit</Label><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
                         </div>
+                        <div className="grid sm:grid-cols-2 gap-4">
+                             <FormField control={form.control} name="discountType" render={({ field }) => (<FormItem><Label>Discount Type</Label><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="percentage">Percentage (%)</SelectItem><SelectItem value="fixed">Fixed (Ksh)</SelectItem></SelectContent></Select></FormItem>)} />
+                            <FormField control={form.control} name="discountValue" render={({ field }) => (<FormItem><Label>Discount Value</Label><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
+                        </div>
+                         <FormField control={form.control} name="listingId" render={({ field }) => (<FormItem><Label>Applies To</Label><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="all">All Listings</SelectItem>{listings.map(l => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}</SelectContent></Select></FormItem>)} />
+                        <Button type="submit" disabled={isSaving} className="w-full">
+                            {isSaving && <Loader2 className="animate-spin mr-2" />} Create General Coupon
+                        </Button>
+                    </form>
+                </Form>
+            </CardContent>
+        </Card>
+    )
+}
 
-                        <div className="p-4 border rounded-lg space-y-4">
-                            <Label>3. Create & Track New Link</Label>
-                             <div className="grid sm:grid-cols-2 gap-4">
-                                <Input placeholder="Name for this link, e.g., 'Facebook Ad'" value={newLinkName} onChange={e => setNewLinkName(e.target.value)} disabled={!selectedListing} />
-                                <Input placeholder="Custom path (optional)" value={customShortId} onChange={e => setCustomShortId(e.target.value)} disabled={!selectedListing} />
-                            </div>
-                             <Button onClick={handleCreateLink} disabled={!newLinkName || isCreating} className="w-full">
-                                {isCreating ? <Loader2 className="animate-spin" /> : <PlusCircle />}
-                                <span className="ml-2">Create Link</span>
-                            </Button>
-                        </div>
-                    </CardContent>
-                    <CardFooter>
-                        <Link href="/admin/promotions">
-                            <Button variant="outline">View All Links</Button>
-                        </Link>
-                    </CardFooter>
-                </Card>
+
+export default function CreateCampaignLinkPage() {
+    return (
+         <div className="space-y-8">
+            <div className="flex justify-between items-center">
+                 <h1 className="text-3xl font-bold">Promotions</h1>
+                  <Link href="/admin/promotions">
+                    <Button variant="outline">View All Links & Codes</Button>
+                </Link>
+            </div>
+            <div className="grid lg:grid-cols-2 gap-8 items-start">
                 <WelcomeGiftForm />
+                <GeneralCouponForm />
             </div>
         </div>
     )

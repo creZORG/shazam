@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, Timestamp, orderBy, doc, collectionGroup, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, orderBy, doc, collectionGroup, getDoc, getCountFromServer } from 'firebase/firestore';
 import type { Event, Tour, TrackingLink, PromocodeClick, Promocode } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { subDays, startOfDay, format } from 'date-fns';
@@ -161,5 +161,33 @@ export async function getAllTrackingLinks() {
     } catch (e: any) {
         console.error("Error fetching all tracking links:", e);
         return { success: false, error: 'Failed to fetch tracking links.' };
+    }
+}
+
+
+export async function getWelcomeGiftAnalytics() {
+    noStore();
+    try {
+        const templateQuery = query(collection(db, 'promocodes'), where('code', '==', 'NAKSYETU_WELCOME_GIFT'));
+        const templateSnapshot = await getDocs(templateQuery);
+        if (templateSnapshot.empty) {
+            return { success: true, data: { claimed: 0, used: 0, revenue: 0 } };
+        }
+
+        const userCouponsQuery = query(collection(db, 'promocodes'), where('code', '>=', 'NEWUSER-'), where('code', '<=', 'NEWUSER-\uf8ff'));
+        
+        const [totalClaimedSnapshot, usedCouponsSnapshot] = await Promise.all([
+            getCountFromServer(userCouponsQuery),
+            getDocs(query(userCouponsQuery, where('usageCount', '>', 0)))
+        ]);
+
+        const claimed = totalClaimedSnapshot.data().count;
+        const used = usedCouponsSnapshot.size;
+        const revenue = usedCouponsSnapshot.docs.reduce((sum, doc) => sum + (doc.data().revenueGenerated || 0), 0);
+
+        return { success: true, data: { claimed, used, revenue } };
+    } catch (e: any) {
+        console.error("Error fetching welcome gift analytics", e);
+        return { success: false, error: e.message };
     }
 }
