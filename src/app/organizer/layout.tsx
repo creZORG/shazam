@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { updateOrganizerProfile } from "./actions";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, PlusCircle, Ticket, UserCircle, Loader2, Percent, BarChart2, CheckSquare } from "lucide-react";
+import { LayoutDashboard, PlusCircle, Ticket, UserCircle, Loader2, Percent, BarChart2, CheckSquare, BookOpen } from "lucide-react";
 import { SidebarProvider, Sidebar, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarHeader, SidebarTrigger } from "@/components/ui/sidebar";
 import { Logo } from "@/components/icons/Logo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -29,6 +29,7 @@ const organizerNavLinks = [
   { href: "/organizer/events/create", label: "Create New", icon: PlusCircle },
   { href: "/organizer/attendance", label: "Attendance", icon: CheckSquare },
   { href: "/organizer/promocodes", label: "Promocodes", icon: Percent },
+  { href: "/organizer/guide", label: "Guide", icon: BookOpen },
   { href: "/organizer/profile", label: "Profile", icon: UserCircle },
 ];
 

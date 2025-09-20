@@ -1,5 +1,4 @@
 
-
 'use server';
 
 interface ZeptoMailPayload {
@@ -82,12 +81,13 @@ export async function sendTicketEmail(payload: TicketEmailPayload) {
 
 interface InviteEmailPayload {
   to: string;
+  name?: string;
   role: string;
   inviteLink: string;
   listingName?: string;
 }
 
-const getRoleBasedTemplate = ({ role, inviteLink, listingName }: Omit<InviteEmailPayload, 'to'>) => {
+const getRoleBasedTemplate = ({ role, inviteLink, listingName, name }: Omit<InviteEmailPayload, 'to'>) => {
     const isNightlife = role === 'club';
     const primaryColor = isNightlife ? `hsla(var(--night-primary), 1)` : `hsla(var(--primary), 1)`;
     const accentColor = isNightlife ? `hsla(var(--night-accent), 1)` : `hsla(var(--accent), 1)`;
@@ -114,9 +114,9 @@ const getRoleBasedTemplate = ({ role, inviteLink, listingName }: Omit<InviteEmai
             </div>
             <div class="content">
                 <h2>Join NaksYetu as a ${roleText}</h2>
-                <p>Hello,</p>
+                <p>Hello ${name || ''},</p>
                 <p>You have been invited to join the NaksYetu platform with the role of <strong>${roleText}</strong>${forEventText}.</p>
-                <p>To accept your invitation and create your account, please click the button below. This link is valid for the next 24 hours.</p>
+                <p>To accept your invitation and create your account, please click the button below. This link is valid for the next 24 hours. Once you accept, you will be directed to a helpful guide to get you started.</p>
                 <p style="text-align: center; margin: 30px 0;">
                     <a href="${inviteLink}" class="button">Accept Invitation</a>
                 </p>
@@ -133,12 +133,12 @@ const getRoleBasedTemplate = ({ role, inviteLink, listingName }: Omit<InviteEmai
 };
 
 
-export async function sendInvitationEmail({ to, role, inviteLink, listingName }: InviteEmailPayload) {
-   const emailHtml = getRoleBasedTemplate({ role, inviteLink, listingName });
+export async function sendInvitationEmail({ to, name, role, inviteLink, listingName }: InviteEmailPayload) {
+   const emailHtml = getRoleBasedTemplate({ name, role, inviteLink, listingName });
 
    return sendZeptoMail({
         from: { address: "noreply@naksyetu.com", name: "NaksYetu" },
-        to: [{ email_address: { address: to, name: to } }],
+        to: [{ email_address: { address: to, name: name || to } }],
         subject: `You have been invited to become a ${role} on NaksYetu`,
         htmlbody: emailHtml,
    });

@@ -131,18 +131,24 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
     }
 
     try {
+        let nameForEmail: string | undefined;
         if (email) {
             const usersRef = collection(db, 'users');
             const q = query(usersRef, where('email', '==', email));
             const userSnapshot = await getDocs(q);
             
             if (!userSnapshot.empty) {
-                const userRole = userSnapshot.docs[0].data().role;
+                const userDoc = userSnapshot.docs[0];
+                const userData = userDoc.data();
+                nameForEmail = userData.name;
+                const userRole = userData.role;
                 if (role === 'verifier' && userRole === 'verifier' && eventId) {
                     // This is a common use case, we can proceed.
                 } else if (userRole !== 'attendee') {
                      return { success: false, error: `A user with this email already exists with the role '${userRole}'. You can change their role directly in the admin panel.` };
                 }
+            } else {
+                nameForEmail = email.split('@')[0];
             }
         }
 
@@ -178,8 +184,8 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
         }
         
         const headersList = headers();
-        const host = headersList.get('host') || process.env.NEXT_PUBLIC_APP_URL || '';
-        const protocol = headersList.get('x-forwarded-proto') || 'https';
+        const host = headersList.get('host') || 'naksyetu.com';
+        const protocol = host.includes('localhost') ? 'http' : 'https';
         const baseUrl = `${protocol}://${host}`;
 
 
@@ -195,7 +201,7 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
         await setDoc(inviteRef, inviteData, { merge: true });
 
         if (sendEmail && email) {
-            await sendInvitationEmail({ to: email, role, inviteLink: `${baseUrl}/l/${shortId}`, listingName });
+            await sendInvitationEmail({ to: email, name: nameForEmail, role, inviteLink: `${baseUrl}/l/${shortId}`, listingName });
         }
         
         return { success: true, inviteLink: `${baseUrl}/l/${shortId}` };

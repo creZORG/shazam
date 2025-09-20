@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname, notFound } from "next/navigation";
 import { SidebarProvider, Sidebar, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarHeader, SidebarTrigger } from "@/components/ui/sidebar";
-import { LayoutDashboard, Ticket, Users, Handshake, Building, DollarSign, Settings, Shield, Mountain, BarChart, CreditCard, FileText, Loader2, List, Code, MessageSquare, Megaphone, ShoppingBag } from "lucide-react";
+import { LayoutDashboard, Ticket, Users, Handshake, Building, DollarSign, Settings, Shield, Mountain, BarChart, CreditCard, FileText, Loader2, List, Code, MessageSquare, Megaphone, ShoppingBag, BookOpen } from "lucide-react";
 import { ReactNode } from "react";
 import { Logo } from "@/components/icons/Logo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -29,6 +29,7 @@ const allAdminNavLinks = [
   { href: "/admin/communication", label: "Communication", icon: MessageSquare, roles: ['admin', 'super-admin'] },
   { href: "/admin/users", label: "Users", icon: Users, roles: ['super-admin'] },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart, roles: ['admin', 'super-admin'] },
+  { href: "/admin/guide", label: "Guide", icon: BookOpen, roles: ['admin', 'super-admin']},
   { href: "/admin/settings", label: "System Settings", icon: Settings, roles: ['super-admin'] },
   { href: "/admin/security", label: "Security & Audit", icon: Shield, roles: ['super-admin'] },
   { href: "/developer", label: "Developer", icon: Code, roles: ['developer', 'super-admin'] }

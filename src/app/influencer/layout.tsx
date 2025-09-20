@@ -6,7 +6,7 @@ import { usePathname, notFound } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, LayoutDashboard, Megaphone, DollarSign, User, Loader2 } from "lucide-react";
+import { AlertCircle, LayoutDashboard, Megaphone, DollarSign, User, Loader2, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/icons/Logo";
@@ -19,6 +19,7 @@ const influencerNavLinks = [
   { href: "/influencer", label: "Overview", icon: LayoutDashboard },
   { href: "/influencer/campaigns", label: "Campaigns", icon: Megaphone },
   { href: "/influencer/payouts",label: "Payouts", icon: DollarSign },
+  { href: "/influencer/guide", label: "Guide", icon: BookOpen },
   { href: "/influencer/profile", label: "Profile", icon: User },
 ];
 

@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { usePathname, notFound } from "next/navigation";
 import { SidebarProvider, Sidebar, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarHeader, SidebarTrigger } from "@/components/ui/sidebar";
-import { QrCode, CalendarDays, Loader2 } from "lucide-react";
+import { QrCode, CalendarDays, Loader2, BookOpen } from "lucide-react";
 import { ReactNode } from "react";
 import { Logo } from "@/components/icons/Logo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -14,6 +14,7 @@ import { NotificationCenter } from "@/components/layout/NotificationCenter";
 
 const verificationNavLinks = [
   { href: "/verify", label: "Dashboard", icon: CalendarDays },
+  { href: "/verify/guide", label: "Guide", icon: BookOpen },
 ];
 
 export default function VerifyLayout({ children }: { children: ReactNode }) {
