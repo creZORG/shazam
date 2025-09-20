@@ -13,6 +13,7 @@ const MIN_REQUEST_INTERVAL_SECONDS = 60; // Must wait 60 seconds between request
 interface OtpDocument {
     identifier: string; // e.g., email or phone number
     hashedCode: string;
+    code: string; // Storing the code temporarily for re-sending
     type: 'generic'; // Simplified type
     createdAt: any;
     expiresAt: any;
@@ -44,6 +45,18 @@ async function checkOtpStatus(identifier: string): Promise<{ canGenerate: boolea
     const recentOtpsSnapshot = await getDocs(q);
     const recentOtps = recentOtpsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as OtpDocument }));
 
+    // Check for an existing, valid, unused OTP first
+    const validExistingOtp = recentOtps.find(otp => (otp.expiresAt as Timestamp).toDate() > now.toDate() && !otp.used);
+    if (validExistingOtp && validExistingOtp.code) {
+        return {
+            canGenerate: false, // Don't generate a new one
+            existingOtp: {
+                code: validExistingOtp.code,
+                expiresAt: (validExistingOtp.expiresAt as Timestamp).toDate()
+            }
+        };
+    }
+
     // Rule 1: Check for total requests in the time window
     if (recentOtps.length >= MAX_REQUESTS_PER_WINDOW) {
         return { canGenerate: false, error: `Too many requests. Please try again in ${RATE_LIMIT_WINDOW_MINUTES} minutes.` };
@@ -53,7 +66,7 @@ async function checkOtpStatus(identifier: string): Promise<{ canGenerate: boolea
         const lastOtp = recentOtps[0];
         
         // Rule 2: Check for requests too close together
-        if ((lastOtp.createdAt as Timestamp) > intervalStart) {
+        if ((lastOtp.createdAt as Timestamp).seconds > intervalStart.seconds) {
             const secondsLeft = Math.ceil(MIN_REQUEST_INTERVAL_SECONDS - (now.seconds - (lastOtp.createdAt as Timestamp).seconds));
             return { canGenerate: false, error: `Please wait ${secondsLeft} seconds before requesting a new code.` };
         }
@@ -64,7 +77,13 @@ async function checkOtpStatus(identifier: string): Promise<{ canGenerate: boolea
 
 
 export async function generateOtp(identifier: string, type: OtpDocument['type'] = 'generic', ipAddress: string): Promise<{ code: string, expiresAt: Date, error?: string }> {
-    const { canGenerate, error } = await checkOtpStatus(identifier);
+    const { canGenerate, error, existingOtp } = await checkOtpStatus(identifier);
+
+    if (existingOtp) {
+        // If a valid OTP already exists, return it instead of creating a new one.
+        // The calling function will handle re-sending the email.
+        return { ...existingOtp, error: undefined };
+    }
 
     if (!canGenerate) {
         return { code: '', expiresAt: new Date(), error: error };
@@ -79,6 +98,7 @@ export async function generateOtp(identifier: string, type: OtpDocument['type'] 
     const otpPayload: Omit<OtpDocument, 'createdAt'> = {
         identifier,
         hashedCode,
+        code, // Store the plaintext code
         type,
         expiresAt: Timestamp.fromDate(expiresAt),
         used: false,

@@ -24,7 +24,9 @@ export async function sendVerificationOtp(email: string): Promise<{ success: boo
         return { success: false, error: generationError };
     }
     
+    // This is the crucial part: ensure the email is sent whether the code is new or re-used.
     await sendOtpEmail({ to: email, otp: code });
+
     return { success: true, expiresAt: expiresAt.getTime() };
   } catch (error) {
     console.error('Error sending OTP:', error);
