@@ -19,6 +19,8 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Dialog, DialogContent, DialogTrigger, DialogFooter, DialogClose, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 
 
 type Listing = { id: string; name: string; type: 'event' | 'tour' };
