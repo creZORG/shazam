@@ -117,7 +117,7 @@ export function OtpVerificationModal({
         className="max-w-md"
       >
         <DialogHeader className="text-center items-center">
-          <div className="h-14 w-14 rounded-full flex items-center justify-center bg-gradient-to-r from-primary to-accent">
+          <div className="h-14 w-14 rounded-full flex items-center justify-center bg-gradient-to-r from-pink-500 to-orange-500">
             <ShieldCheck className="h-8 w-8 text-white" />
           </div>
           <DialogTitle className="text-2xl pt-4">{title}</DialogTitle>
@@ -144,14 +144,14 @@ export function OtpVerificationModal({
           )}
         </div>
         <DialogFooter className="flex-col gap-4">
-          <Button onClick={handleVerifyOtp} disabled={isVerifying || otp.length !== 6} className="w-full">
-            {isVerifying ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
-            <span className="ml-2">Verify & Continue</span>
-          </Button>
-          <Button variant="link" size="sm" onClick={() => handleSendOtp(true)} disabled={isSending}>
-            {isSending ? <Loader2 className="animate-spin" /> : <MailCheck />}
-            <span className="ml-2">Resend Code</span>
-          </Button>
+           <Button onClick={handleVerifyOtp} disabled={isVerifying || otp.length !== 6} className="w-full bg-gradient-to-r from-pink-500 to-orange-500">
+                {isVerifying ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
+                <span className="ml-2">Verify & Continue</span>
+            </Button>
+            <Button variant="link" size="sm" onClick={() => handleSendOtp(true)} disabled={isSending}>
+                {isSending ? <Loader2 className="animate-spin" /> : <MailCheck />}
+                <span className="ml-2">Resend Code</span>
+            </Button>
           
           {!isDismissible && (
             <>
