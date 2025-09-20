@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { sendVerificationOtp, verifyUserOtp } from '@/app/actions/verification';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -64,11 +64,12 @@ export function OtpVerificationModal({
   };
   
   // Send OTP automatically when the modal opens
-  useState(() => {
+  useEffect(() => {
     if (isOpen) {
       handleSendOtp(false);
     }
-  });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose(false)}>
