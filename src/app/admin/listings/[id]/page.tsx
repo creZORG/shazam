@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { ArrowLeft, User, Ticket, Calendar, BarChart2, DollarSign, Users, Percent, Eye, Settings, UserCheck, Shield, Check, X, Archive, Redo, PlusCircle, Loader2, EyeOff, Download, Minus, Gift } from 'lucide-react';
+import { ArrowLeft, User, Ticket, Calendar, BarChart2, DollarSign, Users, Percent, Eye, Settings, UserCheck, Shield, Check, X, Archive, Redo, PlusCircle, Loader2, EyeOff, Download, Minus, Gift, Image as ImageIcon, UploadCloud } from 'lucide-react';
 import type { Ticket as TicketType, FirebaseUser, Event, Tour, VerificationScan, TicketDefinition, Product } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -27,13 +27,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { assignVerifierByAdmin, getVerifierStatsForEvent } from '@/app/admin/verifiers/actions';
 import { cn } from '@/lib/utils';
 import { useDebounce } from 'use-debounce';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Image from "next/image";
+import { useDropzone } from "react-dropzone";
+import { updateEventGallery } from './actions';
 
 
 type ListingWithId = (Event | Tour) & { id: string };
@@ -543,6 +546,12 @@ export default function ListingManagementPage({ params, searchParams }: { params
     const { listing, stats, attendees, organizer } = listingData;
     const listingDate = (listing as Event).date || (listing as Tour).startDate;
 
+    const isPast = new Date(listingDate) < new Date();
+
+    const handleGalleryUpdate = (urls: string[]) => {
+        setListingData(prev => prev ? ({ ...prev, listing: { ...prev.listing, gallery: urls } as ListingWithId }) : null);
+    }
+
     const tabItems = [
       { value: "overview", icon: BarChart2, label: "Overview" },
       { value: "attendees", icon: Users, label: `Attendees (${attendees.length})` },
@@ -636,6 +645,19 @@ export default function ListingManagementPage({ params, searchParams }: { params
                                 <Progress value={stats.attendance.rate} />
                              </CardContent>
                         </Card>
+                         {isPast && (
+                            <Dialog>
+                                <Card>
+                                    <CardHeader><CardTitle>Event Gallery</CardTitle><CardDescription>Manage the photos displayed on the public event page now that the event is over.</CardDescription></CardHeader>
+                                    <CardFooter>
+                                        <DialogTrigger asChild>
+                                            <Button variant="outline" className="w-full"><ImageIcon className="mr-2" /> Manage Gallery</Button>
+                                        </DialogTrigger>
+                                    </CardFooter>
+                                </Card>
+                                <GalleryManagementModal listing={listing} onGalleryUpdate={handleGalleryUpdate} />
+                            </Dialog>
+                        )}
                     </div>
 
                     <FreeMerchManager listing={listing} />
@@ -657,3 +679,5 @@ export default function ListingManagementPage({ params, searchParams }: { params
         </div>
     )
 }
+
+    
