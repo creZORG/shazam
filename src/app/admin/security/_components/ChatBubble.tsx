@@ -10,13 +10,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { MessageCircle, Send, X, Sparkles, Loader2 } from 'lucide-react';
 import { queryAdminData } from '@/ai/flows/audit-log-flow';
+import type { FirebaseUser } from '@/lib/types';
 
 type ChatMessage = {
   role: 'user' | 'assistant' | 'system';
   content: string;
 };
 
-export function ChatBubble() {
+export function ChatBubble({ user }: { user: FirebaseUser }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -32,7 +33,15 @@ export function ChatBubble() {
     startTransition(async () => {
         try {
             const history = messages.map(msg => ({ role: msg.role, content: [{text: msg.content}]}));
-            const response = await queryAdminData({ question: input, history });
+            const response = await queryAdminData({ 
+              question: input, 
+              history,
+              currentUser: {
+                uid: user.uid,
+                name: user.name,
+                role: user.role
+              }
+            });
 
             const assistantMessage: ChatMessage = { role: 'assistant', content: response.answer };
             setMessages(prev => [...prev, assistantMessage]);

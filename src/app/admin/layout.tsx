@@ -105,7 +105,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <main className="p-4 sm:p-6 lg:p-8">
             {children}
         </main>
-        {dbUser.role === 'super-admin' && <ChatBubble />}
+        {dbUser.role === 'super-admin' && <ChatBubble user={dbUser} />}
       </SidebarInset>
     </SidebarProvider>
   );

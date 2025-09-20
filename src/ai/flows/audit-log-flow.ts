@@ -12,7 +12,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, orderBy, limit, Timestamp, doc, getDoc } from 'firebase/firestore';
-import type { AuditLog, Event, FirebaseUser, Transaction, Order } from '@/lib/types';
+import type { AuditLog, Event, FirebaseUser, Transaction, Order, UserRole } from '@/lib/types';
 import { getAdminDashboardData } from '@/app/admin/actions';
 
 function serializeData(doc: any) {
@@ -214,6 +214,11 @@ const getTransactionsTool = ai.defineTool(
 const AdminQueryInputSchema = z.object({
   question: z.string().describe("The user's question about platform data."),
   history: z.array(z.any()).optional().describe("The conversation history."),
+  currentUser: z.object({
+      uid: z.string(),
+      name: z.string(),
+      role: z.string()
+  }).describe("Information about the user who is asking the question.")
 });
 export type AdminQueryInput = z.infer<typeof AdminQueryInputSchema>;
 
@@ -226,9 +231,16 @@ export type AdminQueryOutput = z.infer<typeof AdminQueryOutputSchema>;
 const adminAssistantPrompt = ai.definePrompt({
     name: 'adminAssistantPrompt',
     tools: [getLogsTool, getDateRangeTool, getDashboardStatsTool, getUsersTool, getEventsTool, getTransactionsTool],
-    input: { schema: z.object({ question: z.string(), history: z.array(z.any()) }) },
+    input: { schema: AdminQueryInputSchema },
     output: { schema: AdminQueryOutputSchema },
     system: `You are the NaksYetu AI, a specialized assistant for the NaksYetu platform, created by Mark Allan. Your expertise covers two main areas: data analysis and procedural guidance. You have READ-ONLY access to the database via your tools. You CANNOT perform actions, but you MUST know and explain HOW they are performed within the platform.
+
+    **Current User Information:**
+    The user asking the question is:
+    - Name: {{{currentUser.name}}}
+    - Role: {{{currentUser.role}}}
+    - User ID: {{{currentUser.uid}}}
+    When asked "Who am I?" or similar questions, use this information to respond.
 
     **Core Persona:**
     - **Expert Guide**: You are the single source of truth for "how-to" questions about any part of the NaksYetu platform for any user role.
@@ -309,7 +321,8 @@ const adminAssistantFlow = ai.defineFlow(
     async (input) => {
         const { output } = await adminAssistantPrompt({
             question: input.question,
-            history: input.history || []
+            history: input.history || [],
+            currentUser: input.currentUser,
         });
         return output!;
     }
