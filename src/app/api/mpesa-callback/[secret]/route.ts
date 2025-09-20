@@ -37,7 +37,17 @@ export async function POST(request: Request, { params }: { params: { secret: str
 
         const transactionDoc = querySnapshot.docs[0];
         const transaction = transactionDoc.data() as Transaction;
-
+        
+        // --- VULNERABILITY FIX: IDEMPOTENCY CHECKS ---
+        // 1. Primary check on the associated Order to ensure it hasn't been completed already.
+        const orderRef = doc(db, 'orders', transaction.orderId);
+        const orderDoc = await orderRef.get();
+        if (orderDoc.exists() && orderDoc.data().status === 'completed') {
+            console.warn(`Order ${transaction.orderId} already completed. Ignoring callback for transaction ${transactionDoc.id}.`);
+            return NextResponse.json({ message: 'Order already processed.' });
+        }
+        
+        // 2. Secondary check on the transaction itself.
         if (transaction.status === 'completed' || transaction.status === 'failed') {
             console.warn(`Transaction ${transactionDoc.id} already processed with status: ${transaction.status}`);
             return NextResponse.json({ message: 'Transaction already processed' });
@@ -64,10 +74,8 @@ export async function POST(request: Request, { params }: { params: { secret: str
             batch.update(transactionRef, updatePayload);
 
             // Determine if it's a regular order or a merch order
-            const orderRef = doc(db, 'orders', transaction.orderId);
             const merchOrderRef = doc(db, 'merchOrders', transaction.orderId);
             
-            const orderDoc = await getDoc(orderRef);
             const merchOrderDoc = await getDoc(merchOrderRef);
 
             if (orderDoc.exists()) {
@@ -144,14 +152,11 @@ export async function POST(request: Request, { params }: { params: { secret: str
 
         } else {
             // This is a failed transaction
-            const orderRef = doc(db, 'orders', transaction.orderId);
-            const merchOrderRef = doc(db, 'merchOrders', transaction.orderId);
-            const orderDoc = await getDoc(orderRef);
-
             if (orderDoc.exists()) {
                  batch.update(orderRef, { status: 'failed', updatedAt: serverTimestamp() });
             } else {
                 // It might be a merch order, mark it as failed too if it exists.
+                const merchOrderRef = doc(db, 'merchOrders', transaction.orderId);
                 const merchOrderDoc = await getDoc(merchOrderRef);
                 if (merchOrderDoc.exists()) {
                      batch.update(merchOrderRef, { status: 'failed', updatedAt: serverTimestamp() });
