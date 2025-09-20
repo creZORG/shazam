@@ -41,16 +41,23 @@ export async function POST(request: Request) {
         const transactionRef = doc(db, 'transactions', transactionDoc.id);
 
         if (resultCode === 0) {
+            // Success
             const updatePayload: any = {
                 status: 'completed',
                 mpesaCallbackData: stkCallback,
                 updatedAt: serverTimestamp(),
                 failReason: null,
             };
+            
+            // Destructure and save all available metadata fields
             if (stkCallback.CallbackMetadata) {
                 const metadataItem = (name: string) => stkCallback.CallbackMetadata.Item.find((item: any) => item.Name === name)?.Value;
+                
                 updatePayload.mpesaConfirmationCode = metadataItem('MpesaReceiptNumber');
+                updatePayload.mpesaTransactionDate = metadataItem('TransactionDate'); // YYYYMMDDHHMMSS format
+                updatePayload.mpesaPayerPhoneNumber = metadataItem('PhoneNumber');
             }
+
             batch.update(transactionRef, updatePayload);
 
             const orderRef = doc(db, 'orders', transaction.orderId);
