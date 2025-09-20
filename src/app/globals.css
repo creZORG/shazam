@@ -107,6 +107,20 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 240 5.9% 90%;
   }
+
+  .theme-holiday {
+    --primary: 350 78% 44%; /* Deep Red */
+    --accent: 140 60% 35%; /* Forest Green */
+    --primary-foreground: 0 0% 100%;
+    --accent-foreground: 0 0% 100%;
+  }
+
+  html.dark .theme-holiday {
+    --primary: 350 85% 55%; /* Brighter Red */
+    --accent: 140 65% 45%; /* Brighter Green */
+    --primary-foreground: 0 0% 100%;
+    --accent-foreground: 0 0% 100%;
+  }
 }
 
 @layer base {

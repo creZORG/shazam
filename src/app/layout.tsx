@@ -14,6 +14,7 @@ import { AppProviders } from './providers';
 import { Analytics } from "@vercel/analytics/next"
 import { useEffect } from 'react';
 import { getSettings } from './admin/settings/actions';
+import { SeasonalBanner } from '@/components/layout/SeasonalBanner';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -28,6 +29,7 @@ export default function RootLayout({
   const showMainLayout = !isAdminPage;
 
   useEffect(() => {
+    // Favicon logic
     getSettings().then(({ settings }) => {
       const faviconUrl = settings?.logoBriefUrl || 'https://i.postimg.cc/Vk16XVjR/here.png';
       let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
@@ -38,6 +40,14 @@ export default function RootLayout({
       }
       link.href = faviconUrl;
     });
+
+    // Seasonal Theme logic
+    const currentMonth = new Date().getMonth(); // 0-indexed (0 = January, 11 = December)
+    if (currentMonth === 11) { // It's December
+      document.documentElement.classList.add('theme-holiday');
+    } else {
+      document.documentElement.classList.remove('theme-holiday');
+    }
   }, []);
 
   return (
@@ -47,6 +57,7 @@ export default function RootLayout({
             <AppProviders>
               {showMainLayout ? (
                 <div className="flex flex-col min-h-screen">
+                  <SeasonalBanner />
                   <Header />
                   <main className="flex-grow">{children}</main>
                   <Footer />
