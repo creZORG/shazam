@@ -4,12 +4,14 @@
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { createPromocode } from '@/app/organizer/promocodes/actions';
+import { createPromocode, getUserCoupons } from '@/app/organizer/promocodes/actions';
 import { useAuth } from '@/hooks/use-auth';
 import { Gift, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import Link from 'next/link';
+import type { Promocode } from '@/lib/types';
+import { getPromocodeById } from '@/app/organizer/promocodes/[id]/actions';
 
 const NEW_USER_COUPON_FLAG = 'has_seen_new_user_coupon';
 
@@ -18,40 +20,42 @@ export function NewUserCouponModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const { toast } = useToast();
+  const [welcomeCoupon, setWelcomeCoupon] = useState<Promocode | null>(null);
 
   useEffect(() => {
     // Show for any first-time visitor
     const hasSeen = localStorage.getItem(NEW_USER_COUPON_FLAG);
     if (!hasSeen) {
-      // Delay showing the modal slightly to not be too intrusive
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-      }, 3000);
-      return () => clearTimeout(timer);
+      // Check for a system-wide welcome coupon
+      getPromocodeById('NAKSYETU_WELCOME_GIFT').then(result => {
+        if (result.success && result.data) {
+          setWelcomeCoupon(result.data);
+          const timer = setTimeout(() => {
+            setIsOpen(true);
+          }, 3000);
+          return () => clearTimeout(timer);
+        }
+      });
     }
   }, []);
 
   const handleClaimCoupon = async () => {
-    if (!user) return;
+    if (!user || !welcomeCoupon) return;
     setIsClaiming(true);
     
-    // We create a coupon specifically for this user.
+    // We create a coupon specifically for this user based on the welcome gift template.
     const result = await createPromocode({
+      ...welcomeCoupon,
       organizerId: 'NAKSYETU_SYSTEM', // A system-level organizer ID
       userId: user.uid, // Assign the coupon to the specific user
-      listingType: 'all',
-      listingName: 'All Events',
       code: `NEWUSER-${user.uid.substring(0, 5)}`,
-      discountType: 'percentage',
-      discountValue: 15,
       usageLimit: 1, // One-time use
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
     });
 
     if (result.success) {
         toast({
             title: "Coupon Claimed!",
-            description: "A 15% discount has been applied to your account for your next purchase. You can view it in your profile."
+            description: `A ${welcomeCoupon.discountValue}% discount has been applied to your account for your next purchase. You can view it in your profile.`
         });
         localStorage.setItem(NEW_USER_COUPON_FLAG, 'true');
         setIsOpen(false);
@@ -73,7 +77,7 @@ export function NewUserCouponModal() {
       }
   }
 
-  if (!isOpen) {
+  if (!isOpen || !welcomeCoupon) {
     return null;
   }
 
@@ -81,7 +85,7 @@ export function NewUserCouponModal() {
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="p-0 overflow-hidden">
         <div className="relative h-32 w-full">
-            <Image src="https://img.ltwebstatic.com/images3_ccc/2024/03/27/d3/17115267680e016ed8c30f24eb9aaa5b9b714085ce.png" alt="Gift" layout="fill" objectFit="cover" />
+            <Image src="https://img.ltwebstatic.com/images3_ccc/2024/03/27/d3/17115267680e016ed8c30f24eb9aaa5b9b714085ce.png" alt="Gift" fill className="object-cover" />
         </div>
         <DialogHeader className="items-center text-center pt-8 px-6">
           <div className="h-16 w-16 mb-4 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-accent -mt-20 bg-background border-4 border-background">
@@ -92,7 +96,7 @@ export function NewUserCouponModal() {
         </DialogHeader>
         <div className="py-6 text-center px-6">
             <p className="text-sm text-muted-foreground">NEW USER ONLY</p>
-            <p className="text-6xl font-extrabold text-primary">15% OFF</p>
+            <p className="text-6xl font-extrabold text-primary">{welcomeCoupon.discountValue}% OFF</p>
             <p className="text-muted-foreground">Your first ticket purchase</p>
         </div>
         <div className="px-6 pb-8">
