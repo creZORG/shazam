@@ -8,13 +8,14 @@ import type { Invitation, UserRole } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, AlertCircle, CheckCircle, Mail, User as UserIcon } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle, Mail, User as UserIcon, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const createAccountSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters."),
@@ -88,7 +89,7 @@ export default function AcceptInvitePage() {
         startCreating(async () => {
             try {
                 await signUpWithEmail(invite.email!, values.password, values.name, { userAgent: navigator.userAgent, referrer: document.referrer });
-                handleAccept();
+                // The onAuthStateChanged listener in useAuth will handle the rest
             } catch (err: any) {
                 setError(err.message || 'An unknown error occurred during sign-up.');
             }
@@ -110,11 +111,20 @@ export default function AcceptInvitePage() {
                 </div>
             );
         }
+        
+        const stepDescription = user ? "Step 2 of 2: Confirm your action" : "Step 1 of 2: Create or log into your account";
 
         if (!user && invite?.email) {
             return (
                  <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleCreateAccount)} className="space-y-4">
+                         <Alert>
+                            <Info className="h-4 w-4" />
+                            <AlertTitle>This invite is just for you!</AlertTitle>
+                            <AlertDescription>
+                                This invitation was sent to <strong>{invite.email}</strong>, so the email field cannot be changed.
+                            </AlertDescription>
+                        </Alert>
                          <FormField control={form.control} name="email" render={() => (
                              <FormItem>
                                 <FormLabel>Email</FormLabel>
@@ -133,7 +143,7 @@ export default function AcceptInvitePage() {
                             <FormItem><FormLabel>Confirm Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage/></FormItem>
                         )}/>
                         <Button type="submit" disabled={isCreating} className="w-full">
-                            {isCreating && <Loader2 className="animate-spin mr-2" />}
+                            {isCreating ? <Loader2 className="animate-spin mr-2" /> : <ArrowRight className="mr-2" />}
                             Create Account & Accept
                         </Button>
                          <p className="text-xs text-muted-foreground text-center">Already have an account? <Link href={`/login?email=${invite?.email || ''}`} className="underline">Sign In</Link></p>
@@ -172,11 +182,19 @@ export default function AcceptInvitePage() {
             </CardFooter>
         );
     };
+    
+    const stepNumber = !user ? 1 : 2;
+    const stepText = `Step ${stepNumber} of 2: ${stepNumber === 1 ? 'Create Your Account' : 'Confirm Invitation'}`;
 
     return (
         <div className="container mx-auto flex items-center justify-center min-h-[calc(100vh-200px)]">
-            <Card className="max-w-md w-full">
+            <Card className="max-w-lg w-full">
                 <CardHeader className="text-center">
+                    {!error && (
+                         <div className="mb-4">
+                            <Badge variant="secondary">{stepText}</Badge>
+                        </div>
+                    )}
                     <UserIcon className="mx-auto h-12 w-12 text-primary" />
                     <CardTitle className="text-2xl mt-4">Welcome, {invite?.email?.split('@')[0] || 'Guest'}!</CardTitle>
                     {invite && !error && (
