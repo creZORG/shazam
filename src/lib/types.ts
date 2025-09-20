@@ -338,6 +338,7 @@ export type SiteSettings = {
     processingFeePayer: 'customer' | 'organizer';
     influencerCut: number;
     requireStaffVerification?: boolean;
+    enableHolidayTheme?: boolean;
     logoBriefUrl?: string;
     logoLongUrl?: string;
     homepage?: {
@@ -353,6 +354,7 @@ export type Promocode = {
     listingName: string; // Will be "All Events" for sitewide
     listingType: 'event' | 'tour' | 'all';
     influencerId?: string;
+    userId?: string; // For user-specific coupons
     code: string;
     discountType: 'percentage' | 'fixed';
     discountValue: number;

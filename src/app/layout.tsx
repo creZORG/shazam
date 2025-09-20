@@ -12,7 +12,7 @@ import { usePathname } from 'next/navigation';
 import { AuthProvider } from '@/hooks/use-auth';
 import { AppProviders } from './providers';
 import { Analytics } from "@vercel/analytics/next"
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { getSettings } from './admin/settings/actions';
 import { SeasonalBanner } from '@/components/layout/SeasonalBanner';
 
@@ -27,6 +27,8 @@ export default function RootLayout({
   const isAdminPage = pathname.startsWith('/admin') || pathname.startsWith('/organizer') || pathname.startsWith('/influencer') || pathname.startsWith('/verify') || pathname.startsWith('/developer');
 
   const showMainLayout = !isAdminPage;
+  
+  const [themeForced, setThemeForced] = useState(false);
 
   useEffect(() => {
     // Favicon logic
@@ -39,16 +41,18 @@ export default function RootLayout({
         document.getElementsByTagName('head')[0].appendChild(link);
       }
       link.href = faviconUrl;
+      
+      // Seasonal Theme logic
+      const isDecember = new Date().getMonth() === 11;
+      if (settings?.enableHolidayTheme || (settings?.enableHolidayTheme === undefined && isDecember)) {
+        document.documentElement.classList.add('theme-holiday');
+        setThemeForced(true);
+      } else {
+        document.documentElement.classList.remove('theme-holiday');
+        setThemeForced(false);
+      }
     });
-
-    // Seasonal Theme logic
-    const currentMonth = new Date().getMonth(); // 0-indexed (0 = January, 11 = December)
-    if (currentMonth === 11) { // It's December
-      document.documentElement.classList.add('theme-holiday');
-    } else {
-      document.documentElement.classList.remove('theme-holiday');
-    }
-  }, []);
+  }, [pathname]); // Re-check on path change to update if settings change
 
   return (
     <html lang="en" suppressHydrationWarning>

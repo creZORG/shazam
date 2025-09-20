@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -8,6 +9,7 @@ import { revalidatePath } from 'next/cache';
 import { logAdminAction } from '@/services/audit-service';
 import { cookies } from 'next/headers';
 import { auth } from '@/lib/firebase/server-auth';
+import { createNotification } from '@/services/notifications';
 
 export async function findInfluencerByUsername(username: string): Promise<{ success: boolean; data?: { uid: string, name: string, photoURL?: string }; error?: string; }> {
     if (!username) {
@@ -62,7 +64,10 @@ export async function createPromocode(data: Omit<Promocode, 'id' | 'usageCount' 
         if (!auth) throw new Error("Server auth not initialized");
         decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
     } catch (e) {
-        return { success: false, error: 'Authentication failed.' };
+        // Allow system-level creation for new user coupons
+        if (data.organizerId !== 'NAKSYETU_SYSTEM') {
+            return { success: false, error: 'Authentication failed.' };
+        }
     }
     
     try {
@@ -80,14 +85,27 @@ export async function createPromocode(data: Omit<Promocode, 'id' | 'usageCount' 
 
         const docRef = await addDoc(collection(db, 'promocodes'), newCode);
         
-        await logAdminAction({
-            adminId: decodedClaims.uid,
-            adminName: decodedClaims.name || 'Admin/Organizer',
-            action: 'create_promocode',
-            targetType: 'promocode',
-            targetId: docRef.id,
-            details: { code: data.code, listingName: data.listingName, influencerId: data.influencerId || 'N/A' }
-        });
+        if (decodedClaims) {
+            await logAdminAction({
+                adminId: decodedClaims.uid,
+                adminName: decodedClaims.name || 'Admin/Organizer',
+                action: 'create_promocode',
+                targetType: 'promocode',
+                targetId: docRef.id,
+                details: { code: data.code, listingName: data.listingName, influencerId: data.influencerId || 'N/A' }
+            });
+        }
+        
+        if (data.influencerId) {
+             await createNotification({
+                type: 'partner_request', // Re-using for simplicity
+                message: `You have been invited to a new campaign for "${data.listingName}"!`,
+                link: `/influencer/campaigns`,
+                targetRoles: ['influencer'],
+                targetUsers: [data.influencerId]
+            });
+        }
+
 
         revalidatePath('/organizer/promocodes');
         if (data.influencerId) {
@@ -147,3 +165,30 @@ export async function getPromocodesByOrganizer(organizerId: string) {
         return { success: false, error: 'Failed to fetch promocodes.' };
     }
 }
+
+export async function getUserCoupons(userId: string) {
+    if (!userId) return { success: false, error: 'User ID is required.' };
+    
+    try {
+        const q = query(
+            collection(db, 'promocodes'),
+            where('userId', '==', userId),
+            where('isActive', '==', true)
+        );
+        const snapshot = await getDocs(q);
+        const coupons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Promocode))
+            .filter(c => {
+                // Manual expiration check
+                if (c.expiresAt && new Date(c.expiresAt) < new Date()) return false;
+                // Manual usage check
+                if (c.usageLimit > 0 && c.usageCount >= c.usageLimit) return false;
+                return true;
+            });
+            
+        return { success: true, data: coupons };
+    } catch (error) {
+        console.error("Error fetching user coupons:", error);
+        return { success: false, error: 'Failed to fetch coupons.' };
+    }
+}
+

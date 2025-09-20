@@ -15,7 +15,7 @@ import * as z from 'zod';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { getSettings, updateSettings } from "./actions";
 import { useEffect, useState, useTransition } from "react";
-import { Loader2, UploadCloud, Home, ImageIcon } from "lucide-react";
+import { Loader2, UploadCloud, Home, ImageIcon, Gift } from "lucide-react";
 import type { SiteSettings, FeatureCardContent, PartnerSectionContent } from "@/lib/types";
 import { useDropzone } from "react-dropzone";
 import { uploadImage } from "@/app/organizer/events/create/cloudinary-actions";
@@ -47,6 +47,7 @@ const settingsSchema = z.object({
     requireStaffVerification: z.boolean().optional(),
     logoBriefUrl: z.string().url().optional(),
     logoLongUrl: z.string().url().optional(),
+    enableHolidayTheme: z.boolean().optional(),
     homepage: z.object({
       featureCards: z.array(featureCardSchema).optional(),
       partnerSection: partnerSectionSchema.optional(),
@@ -150,6 +151,7 @@ export default function AdminSettingsPage() {
         influencerCut: 10,
         logoBriefUrl: "",
         logoLongUrl: "",
+        enableHolidayTheme: false,
         homepage: {
             featureCards: [
                 { title: "Events", description: "From music festivals to tech conferences, find your next experience.", href: "/events", cta: "Browse Events", imageUrl: "https://picsum.photos/seed/cat-event/800/600" },
@@ -345,8 +347,8 @@ export default function AdminSettingsPage() {
 
                      <div className="p-6 border rounded-lg space-y-4">
                         <div className="space-y-1">
-                            <h3 className="text-xl font-semibold">Security Settings</h3>
-                            <p className="text-sm text-muted-foreground">Manage security features for staff accounts.</p>
+                            <h3 className="text-xl font-semibold">Security & Theme</h3>
+                            <p className="text-sm text-muted-foreground">Manage security and visual features.</p>
                         </div>
                         <FormField
                             control={form.control}
@@ -356,6 +358,24 @@ export default function AdminSettingsPage() {
                                     <div className="space-y-0.5">
                                         <FormLabel>Require Staff Email Verification</FormLabel>
                                         <FormDescription>If enabled, staff members (organizers, verifiers, etc.) will need to verify their email with a one-time code upon login.</FormDescription>
+                                    </div>
+                                    <FormControl>
+                                        <Switch
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="enableHolidayTheme"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="flex items-center gap-2"><Gift /> Force Holiday Theme</FormLabel>
+                                        <FormDescription>Manually enable or disable the festive holiday theme across the entire site, overriding the automatic date-based detection.</FormDescription>
                                     </div>
                                     <FormControl>
                                         <Switch

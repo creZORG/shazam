@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import { Metadata } from 'next';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HomeCarousel } from './_components/HomeCarousel';
+import { NewUserCouponModal } from './_components/NewUserCouponModal';
 
 export const metadata: Metadata = {
   title: 'NaksYetu | Tickets for Events, Tours, and Nightlife in Nakuru',
@@ -128,6 +129,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col">
+      <NewUserCouponModal />
       <HomeCarousel posters={carouselPosters} />
 
         <section className="py-12 md:py-20 bg-background">

@@ -4,24 +4,26 @@
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Eye, Bookmark, Ticket, CheckCircle, ArrowRight, Star, Loader2 } from 'lucide-react';
+import { Eye, Bookmark, Ticket, CheckCircle, ArrowRight, Star, Loader2, Gift } from 'lucide-react';
 import { EventCard } from '@/components/events/EventCard';
 import { TourCard } from '@/components/tours/TourCard';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { useEffect, useState, useTransition } from 'react';
-import type { Event, Ticket as TicketType, Tour } from '@/lib/types';
+import type { Event, Ticket as TicketType, Tour, Promocode } from '@/lib/types';
 import { getUserProfileData, rateEvent, upgradeToInfluencer } from './actions';
+import { getUserCoupons } from '@/app/organizer/promocodes/actions';
 import { StarRating } from '@/components/ui/star-rating';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format } from 'date-fns';
 
 
-type ActiveView = 'purchased' | 'attended' | 'bookmarked' | 'viewed';
+type ActiveView = 'purchased' | 'attended' | 'bookmarked' | 'viewed' | 'coupons';
 type Listing = Event | Tour;
 
 function AttendedEventCard({ item }: { item: Listing }) {
@@ -58,6 +60,31 @@ function AttendedEventCard({ item }: { item: Listing }) {
     );
 }
 
+function CouponCard({ coupon }: { coupon: Promocode }) {
+    const discountText = coupon.discountType === 'percentage'
+        ? `${coupon.discountValue}% OFF`
+        : `Ksh ${coupon.discountValue} OFF`;
+        
+    return (
+         <Card className="bg-muted/30">
+            <CardHeader>
+                <div className="flex justify-between items-start">
+                     <CardTitle className="text-2xl font-mono text-primary">{coupon.code}</CardTitle>
+                     <Badge variant="secondary">{discountText}</Badge>
+                </div>
+                <CardDescription>
+                    Valid for: {coupon.listingName}
+                </CardDescription>
+            </CardHeader>
+             <CardContent>
+                <p className="text-sm text-muted-foreground">
+                    {coupon.expiresAt ? `Expires on ${format(new Date(coupon.expiresAt), 'PP')}` : 'No expiration date.'}
+                </p>
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function ProfilePage() {
   const { user, dbUser, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -70,6 +97,7 @@ export default function ProfilePage() {
       bookmarked: Listing[],
       viewed: Listing[],
   }>({ purchased: [], attended: [], bookmarked: [], viewed: [] });
+  const [coupons, setCoupons] = useState<Promocode[]>([]);
   const [isUpgrading, startUpgradeTransition] = useTransition();
 
   const isProfileComplete = !!(dbUser?.fullName && dbUser?.phone && dbUser?.profilePicture);
@@ -77,12 +105,18 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user && !authLoading) {
       setLoading(true);
-      getUserProfileData().then(result => {
-        if (result.success && result.data) {
-          setProfileData(result.data as any);
-        }
-        setLoading(false);
-      });
+      Promise.all([
+          getUserProfileData(),
+          getUserCoupons(user.uid)
+      ]).then(([profileResult, couponResult]) => {
+          if (profileResult.success && profileResult.data) {
+            setProfileData(profileResult.data as any);
+          }
+           if (couponResult.success && couponResult.data) {
+            setCoupons(couponResult.data);
+          }
+          setLoading(false);
+      })
     } else if (!user && !authLoading) {
         setLoading(false);
     }
@@ -146,6 +180,13 @@ export default function ProfilePage() {
              return profileData.viewed.length > 0 ? renderGrid(profileData.viewed)
              : <p className="text-muted-foreground text-center py-8">You haven't viewed any events recently.</p>;
 
+        case 'coupons':
+            return coupons.length > 0 ? (
+                <div className="max-w-2xl mx-auto space-y-4">
+                    {coupons.map(coupon => <CouponCard key={coupon.id} coupon={coupon} />)}
+                </div>
+            ) : <p className="text-muted-foreground text-center py-8">You don't have any active coupons.</p>;
+
         default:
             return null;
     }
@@ -165,6 +206,7 @@ export default function ProfilePage() {
         { value: "purchased", icon: Ticket, label: "My Tickets" },
         { value: "attended", icon: Star, label: "Attended & Rate" },
         { value: "bookmarked", icon: Bookmark, label: "Bookmarked" },
+        { value: "coupons", icon: Gift, label: `My Coupons (${coupons.length})` },
         { value: "viewed", icon: Eye, label: "Recently Viewed" },
     ];
 
