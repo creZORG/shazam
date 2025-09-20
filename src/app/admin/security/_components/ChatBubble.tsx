@@ -51,7 +51,7 @@ export function ChatBubble() {
         onClick={() => setIsOpen(true)}
       >
         <Sparkles className="h-8 w-8" />
-        <span className="sr-only">Open Audit AI</span>
+        <span className="sr-only">Open NaksYetu AI</span>
       </Button>
     );
   }
@@ -65,7 +65,7 @@ export function ChatBubble() {
                 <AvatarFallback className="bg-gradient-to-r from-primary to-accent"><Sparkles className="text-white"/></AvatarFallback>
             </Avatar>
             <div>
-                 <CardTitle>Admin AI</CardTitle>
+                 <CardTitle>NaksYetu AI</CardTitle>
                  <CardDescription>Ask me anything about the platform.</CardDescription>
             </div>
           </div>
