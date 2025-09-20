@@ -116,7 +116,7 @@ export function OtpVerificationModal({
       <DialogContent 
         showCloseButton={isDismissible} 
         onInteractOutside={(e) => { if (!isDismissible) e.preventDefault(); }} 
-        className="max-w-md"
+        className="w-full max-w-md"
       >
         <DialogHeader className="text-center items-center">
           <div className="h-14 w-14 rounded-full flex items-center justify-center bg-gradient-to-r from-pink-500 to-orange-500">
@@ -147,12 +147,12 @@ export function OtpVerificationModal({
           )}
         </div>
         <DialogFooter className="flex-col gap-4">
-          <div className="flex w-full items-center gap-2">
+          <div className="flex flex-col sm:flex-row w-full items-center gap-2">
             <Button onClick={handleVerifyOtp} disabled={isActionInProgress || otp.length !== 6} className="w-full bg-gradient-to-r from-pink-500 to-orange-500">
                 {isVerifying ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
                 <span className="ml-2">Verify & Continue</span>
             </Button>
-            <Button variant="link" size="sm" onClick={() => handleSendOtp(true)} disabled={isActionInProgress}>
+            <Button variant="link" size="sm" onClick={() => handleSendOtp(true)} disabled={isActionInProgress} className="flex-shrink-0">
                 {isSending ? <Loader2 className="animate-spin mr-2" /> : <MailCheck className="mr-2" />}
                 Resend Code
             </Button>
