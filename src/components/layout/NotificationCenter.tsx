@@ -38,6 +38,9 @@ export function NotificationCenter() {
   useEffect(() => {
     if (!dbUser?.role || !user?.uid) return;
 
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
     // Listener for staff notes
     const notesQuery = query(
         collection(db, 'staffNotes'),
@@ -56,9 +59,11 @@ export function NotificationCenter() {
         setNotes(fetchedNotes);
         
         if (!modalShown) {
-            const newestUnread = fetchedNotes.find(note => 
-                !note.readBy || !note.readBy.some(reader => reader.userId === user?.uid)
-            );
+            const newestUnread = fetchedNotes.find(note => {
+                const isUnread = !note.readBy || !note.readBy.some(reader => reader.userId === user?.uid);
+                const isRecent = new Date(note.createdAt) > twoDaysAgo;
+                return isUnread && isRecent;
+            });
             if (newestUnread) {
                 setShowModalForNote(newestUnread);
                 setModalShown(true);
