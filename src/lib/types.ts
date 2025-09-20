@@ -1,5 +1,4 @@
 
-
 export type EventTicketingType = 'naksyetu' | 'external';
 export type ExternalEventPricing = 'Free' | 'Paid' | 'RSVP' | 'Online';
 
@@ -145,7 +144,8 @@ export type MerchOrder = {
         price: number;
     }[];
     total: number;
-    status: 'awaiting_pickup' | 'completed';
+    paymentType: 'merchandise';
+    status: 'pending' | 'awaiting_pickup' | 'completed' | 'failed';
     confirmationCode: string;
     createdAt: any;
     completedAt?: any;

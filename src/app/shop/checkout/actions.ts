@@ -58,21 +58,15 @@ export async function createMerchOrder(payload: MerchOrderPayload) {
                 throw new Error("Insufficient stock for this item.");
             }
 
-            // Decrement stock (this part is now inside the transaction)
-            // Note: This decrements on order creation, not payment confirmation. 
-            // A more robust system might handle this differently (e.g., reservations).
-            transaction.update(productRef, { stock: product.stock - requestedQuantity });
-
-            const batch = writeBatch(db);
-
             const orderRef = doc(collection(db, 'merchOrders'));
             const orderData: Omit<MerchOrder, 'id'> = {
                 userId: userId || undefined,
                 userName: payload.userName,
                 userEmail: payload.userEmail,
+                paymentType: 'merchandise',
                 items: payload.items,
                 total: payload.total,
-                status: 'awaiting_pickup',
+                status: 'pending', // Status is now pending until payment is confirmed
                 confirmationCode: nanoid(8).toUpperCase(),
                 createdAt: serverTimestamp(),
             };
@@ -106,8 +100,6 @@ export async function createMerchOrder(payload: MerchOrderPayload) {
         });
 
         if (!stkPushResult.success || !stkPushResult.checkoutRequestId) {
-            // NOTE: The order is created but payment failed to initiate.
-            // A reconciliation process might be needed in a real-world app.
             throw new Error(stkPushResult.error || 'Failed to initiate M-Pesa payment.');
         }
 
