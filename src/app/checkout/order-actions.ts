@@ -1,10 +1,9 @@
 
 
-
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { addDoc, collection, doc, getDoc, serverTimestamp, query, where, getDocs, writeBatch, updateDoc, increment } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, serverTimestamp, query, where, getDocs, writeBatch, updateDoc, increment, orderBy, limit, Timestamp } from 'firebase/firestore';
 import type { Order, Transaction, Promocode, CheckoutFeedback, Event } from '@/lib/types';
 import { initiateStkPush } from '@/services/mpesa';
 import { unstable_noStore as noStore } from 'next/cache';
@@ -47,6 +46,37 @@ async function getUserIdFromSession(): Promise<string | null> {
         return null;
     }
 }
+
+export async function checkForRecentOrder(listingId: string): Promise<{ recentOrder: boolean, orderId?: string }> {
+    noStore();
+    const userId = await getUserIdFromSession();
+    if (!userId) return { recentOrder: false };
+
+    try {
+        const threeMinutesAgo = Timestamp.fromMillis(Date.now() - 3 * 60 * 1000);
+        const q = query(
+            collection(db, 'orders'),
+            where('userId', '==', userId),
+            where('listingId', '==', listingId),
+            where('status', '==', 'completed'),
+            where('createdAt', '>=', threeMinutesAgo),
+            orderBy('createdAt', 'desc'),
+            limit(1)
+        );
+        
+        const snapshot = await getDocs(q);
+
+        if (!snapshot.empty) {
+            return { recentOrder: true, orderId: snapshot.docs[0].id };
+        }
+        return { recentOrder: false };
+
+    } catch (e) {
+        console.error("Error checking for recent order:", e);
+        return { recentOrder: false }; // Fail silently
+    }
+}
+
 
 export async function createOrderAndInitiatePayment(
   payload: OrderPayload

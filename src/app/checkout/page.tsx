@@ -20,16 +20,24 @@ import { validatePromocode } from './actions';
 import { useAuth } from '@/hooks/use-auth';
 import Image from 'next/image';
 import { PaymentStatusModal, type PaymentStage } from './_components/PaymentStatusModal';
-import { createOrderAndInitiatePayment, getTransactionStatus, initiatePaymentForOrder, type OrderPayload } from './order-actions';
+import { createOrderAndInitiatePayment, getTransactionStatus, initiatePaymentForOrder, type OrderPayload, checkForRecentOrder } from './order-actions';
 import { Badge } from '@/components/ui/badge';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/components/ui/alert-dialog";
 
 type Listing = Event | Tour;
 type ListingType = 'event' | 'tour';
@@ -87,6 +95,10 @@ function CheckoutComponent() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+
+  // Double purchase check state
+  const [showDoublePurchaseDialog, setShowDoublePurchaseDialog] = useState(false);
+  const [recentOrderId, setRecentOrderId] = useState<string | null>(null);
 
   const paymentInitiated = useRef(false);
 
@@ -379,7 +391,16 @@ function CheckoutComponent() {
         return;
     }
 
-    if (user) paymentInitiated.current = true;
+    if (user && listingId) {
+      paymentInitiated.current = true;
+      const recentOrderCheck = await checkForRecentOrder(listingId);
+      if (recentOrderCheck.recentOrder && recentOrderCheck.orderId) {
+        setRecentOrderId(recentOrderCheck.orderId);
+        setShowDoublePurchaseDialog(true);
+        return; // Stop here and wait for user confirmation
+      }
+    }
+
     startPaymentProcess();
   }
   
@@ -394,6 +415,23 @@ function CheckoutComponent() {
 
   return (
     <>
+    <AlertDialog open={showDoublePurchaseDialog} onOpenChange={setShowDoublePurchaseDialog}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>Double Purchase Check</AlertDialogTitle>
+            <AlertDialogDescription>
+                It looks like you just bought a ticket for this event. Do you want to continue with a new purchase or view your existing tickets?
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={startPaymentProcess}>Proceed with new purchase</AlertDialogAction>
+                 <Link href={`/ticket-center?orderId=${recentOrderId}`} target="_blank">
+                    <Button variant="outline">View My Tickets</Button>
+                </Link>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
     {paymentStage && (
       <PaymentStatusModal
         isOpen={!!paymentStage}
