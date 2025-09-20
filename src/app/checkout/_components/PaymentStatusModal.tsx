@@ -105,13 +105,13 @@ export function PaymentStatusModal({
                         <DialogDescription>
                             {error || 'An unknown error occurred.'}
                         </DialogDescription>
-                        {retryCount < 1 && (
+                        {retryCount < 2 && (
                              <div className="pt-4">
                                 <p className="text-sm text-muted-foreground mb-2">Would you like to try again?</p>
                                 <Button onClick={onRetry}>Try Again</Button>
                             </div>
                         )}
-                        {retryCount >= 1 && (
+                        {retryCount >= 2 && (
                             <div className="pt-4 text-sm text-muted-foreground text-left bg-muted p-4 rounded-md">
                                 <h4 className="font-semibold text-foreground flex items-center gap-2"><CircleHelp />Manual Payment Instructions</h4>
                                 <p className="mt-2">It seems there's an issue with automated payments. You can pay manually:</p>
