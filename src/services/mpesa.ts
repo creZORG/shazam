@@ -57,19 +57,18 @@ export async function initiateStkPush(payload: StkPushPayload): Promise<{ succes
 
     const shortcode = process.env.MPESA_SHORTCODE;
     const passkey = process.env.MPESA_PASSKEY;
-    const callbackSecret = process.env.MPESA_CALLBACK_SECRET;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
     if (!appUrl) {
       return { success: false, error: "NEXT_PUBLIC_APP_URL environment variable is not set. Cannot determine callback URL." };
     }
 
-    const callbackURL = `${appUrl}/api/mpesa-callback/${callbackSecret}`;
+    const callbackURL = `${appUrl}/api/mpesa-callback`;
     console.log("Using M-Pesa Callback URL:", callbackURL);
 
 
-    if (!shortcode || !passkey || !callbackURL || !callbackSecret) {
-        return { success: false, error: "M-Pesa shortcode, passkey, or callback URL/secret is not configured." };
+    if (!shortcode || !passkey || !callbackURL) {
+        return { success: false, error: "M-Pesa shortcode, passkey, or callback URL is not configured." };
     }
 
     const timestamp = format(new Date(), 'yyyyMMddHHmmss');
@@ -127,3 +126,5 @@ export async function initiateStkPush(payload: StkPushPayload): Promise<{ succes
         return { success: false, error: 'An unexpected server error occurred.' };
     }
 }
+
+    
