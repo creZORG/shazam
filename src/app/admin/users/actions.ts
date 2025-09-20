@@ -178,7 +178,11 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
         }
 
         const longInviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${token}`;
-        const shortId = await createShortLink({ longUrl: longInviteLink, invitationId: inviteRef.id });
+        const shortId = await createShortLink({ 
+            longUrl: longInviteLink, 
+            invitationId: inviteRef.id,
+            listingId: eventId || null, // Ensure listingId is null, not undefined
+        });
 
         inviteData.shortId = shortId;
 
