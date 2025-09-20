@@ -24,9 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const isAdminPage = pathname.startsWith('/admin') || pathname.startsWith('/organizer') || pathname.startsWith('/influencer') || pathname.startsWith('/verify') || pathname.startsWith('/developer');
-
-  const showMainLayout = !isAdminPage;
+  const isAdminPage = pathname.startsWith('/admin') || pathname.startsWith('/organizer') || pathname.startsWith('/influencer') || pathname.startsWith('/verify') || pathname.startsWith('/developer') || pathname.startsWith('/club');
   
   const [themeForced, setThemeForced] = useState(false);
 
@@ -59,16 +57,12 @@ export default function RootLayout({
       <body className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}>
           <AuthProvider>
             <AppProviders>
-              {showMainLayout ? (
-                <div className="flex flex-col min-h-screen">
-                  <SeasonalBanner />
+              <div className="flex flex-col min-h-screen">
+                  {!isAdminPage && <SeasonalBanner />}
                   <Header />
                   <main className="flex-grow">{children}</main>
-                  <Footer />
-                </div>
-              ) : (
-                <>{children}</>
-              )}
+                  {!isAdminPage && <Footer />}
+              </div>
             </AppProviders>
           </AuthProvider>
           <Toaster />

@@ -51,29 +51,6 @@ export default function ClubLayout({ children }: { children: ReactNode }) {
 
   return (
       <div className="flex flex-col min-h-screen">
-        <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container flex h-14 items-center">
-              <div className="flex-1 flex items-center gap-2">
-                   <Link href="/" className="flex items-center space-x-2">
-                        <Logo />
-                        <span className="font-bold">NaksYetu</span>
-                    </Link>
-                    <span className="text-muted-foreground">/</span>
-                    <h1 className="text-xl font-semibold">Club Dashboard</h1>
-              </div>
-              <div className="flex items-center space-x-2">
-                  {user && <NotificationCenter />}
-                  <ThemeToggle />
-                  {user && (
-                      <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
-                          <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
-                      </Avatar>
-                  )}
-              </div>
-          </div>
-        </header>
-
         <main className="flex-1">
           {loading ? (
              <div className="flex items-center justify-center p-12">

@@ -62,21 +62,6 @@ export default function DeveloperLayout({ children }: { children: ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <VerificationGate>
-          <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              <div className="container flex h-14 items-center">
-                  <div className="md:hidden">
-                      <SidebarTrigger />
-                  </div>
-                  <div className="flex-1">
-                      <h1 className="text-xl font-semibold ml-2 flex items-center gap-2"><Code /> Developer Portal</h1>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                      {user && <NotificationCenter />}
-                      <ThemeToggle />
-                      {user && <p className="text-sm font-medium">{user.displayName}</p>}
-                  </div>
-              </div>
-          </header>
           <main className="p-4 sm:p-6 lg:p-8">
               {children}
           </main>
