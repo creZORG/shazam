@@ -143,7 +143,7 @@ export function OtpVerificationModal({
             </p>
           )}
         </div>
-        <DialogFooter className="flex-col gap-2">
+        <DialogFooter className="flex-col gap-4">
           <Button onClick={handleVerifyOtp} disabled={isVerifying || otp.length !== 6} className="w-full">
             {isVerifying ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
             <span className="ml-2">Verify & Continue</span>
