@@ -135,7 +135,7 @@ export function OtpVerificationModal({
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               maxLength={6}
-              placeholder="000000"
+              placeholder="------"
               className="w-48 text-center text-2xl font-mono tracking-[0.5em]"
               disabled={isActionInProgress}
             />
@@ -147,7 +147,8 @@ export function OtpVerificationModal({
           )}
         </div>
         <DialogFooter className="flex-col gap-4">
-           <Button onClick={handleVerifyOtp} disabled={isActionInProgress || otp.length !== 6} className="w-full bg-gradient-to-r from-pink-500 to-orange-500">
+          <div className="flex w-full items-center gap-2">
+            <Button onClick={handleVerifyOtp} disabled={isActionInProgress || otp.length !== 6} className="w-full bg-gradient-to-r from-pink-500 to-orange-500">
                 {isVerifying ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
                 <span className="ml-2">Verify & Continue</span>
             </Button>
@@ -155,6 +156,7 @@ export function OtpVerificationModal({
                 {isSending ? <Loader2 className="animate-spin mr-2" /> : <MailCheck className="mr-2" />}
                 Resend Code
             </Button>
+          </div>
           
           {!isDismissible && (
             <div className="pt-4 text-center">
