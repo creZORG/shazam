@@ -5,7 +5,7 @@ import { useState, useCallback, createContext, useContext, ReactNode } from 'rea
 import { OtpVerificationModal } from '@/components/auth/OtpVerificationModal';
 
 interface OtpVerificationContextType {
-  requestVerification: (identifier: string, type: 'generic' | 'payout_request') => Promise<boolean>;
+  requestVerification: (identifier: string) => Promise<boolean>;
 }
 
 const OtpVerificationContext = createContext<OtpVerificationContextType | undefined>(undefined);
@@ -14,13 +14,12 @@ export function OtpVerificationProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [verificationProps, setVerificationProps] = useState<{
     identifier: string;
-    type: 'generic' | 'payout_request';
     resolve: (value: boolean) => void;
   } | null>(null);
 
-  const requestVerification = useCallback((identifier: string, type: 'generic' | 'payout_request' = 'generic') => {
+  const requestVerification = useCallback((identifier: string) => {
     return new Promise<boolean>((resolve) => {
-      setVerificationProps({ identifier, type, resolve });
+      setVerificationProps({ identifier, resolve });
       setIsOpen(true);
     });
   }, []);
@@ -39,7 +38,9 @@ export function OtpVerificationProvider({ children }: { children: ReactNode }) {
           isOpen={isOpen}
           onClose={handleClose}
           identifier={verificationProps.identifier}
-          type={verificationProps.type}
+          isDismissible={true}
+          title="Confirm Your Identity"
+          description="To protect your account, please complete this quick verification. A 6-digit code has been sent to your email."
         />
       )}
     </OtpVerificationContext.Provider>

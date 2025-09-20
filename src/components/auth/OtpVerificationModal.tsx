@@ -7,43 +7,76 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, MailCheck, ShieldCheck } from 'lucide-react';
+import { Loader2, MailCheck, ShieldCheck, HelpCircle, LogOut } from 'lucide-react';
 import { Logo } from '../icons/Logo';
+import { useAuth } from '@/hooks/use-auth';
+import Link from 'next/link';
 
 interface OtpVerificationModalProps {
   isOpen: boolean;
   onClose: (verified: boolean) => void;
   identifier: string;
-  type?: 'generic' | 'payout_request';
+  isDismissible?: boolean;
   title?: string;
   description?: string;
+}
+
+function redactEmail(email: string) {
+    if (!email || email.indexOf('@') === -1) return '***';
+    const [name, domain] = email.split('@');
+    if (name.length <= 2) return `${name.charAt(0)}***@${domain}`;
+    return `${name.substring(0, 2)}***@${domain}`;
+}
+
+function Timer({ expiryTimestamp }: { expiryTimestamp: number }) {
+    const [timeLeft, setTimeLeft] = useState(expiryTimestamp - Date.now());
+
+    useEffect(() => {
+        if (timeLeft <= 0) return;
+        const interval = setInterval(() => {
+            setTimeLeft(prev => Math.max(0, prev - 1000));
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [timeLeft]);
+    
+    const minutes = Math.floor((timeLeft / 1000) / 60);
+    const seconds = Math.floor((timeLeft / 1000) % 60);
+
+    return (
+        <span className="font-mono font-semibold">
+            {minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
+        </span>
+    );
 }
 
 export function OtpVerificationModal({ 
     isOpen, 
     onClose, 
     identifier, 
-    type = 'generic',
+    isDismissible = true,
     title = "Verification Required",
     description = "For your security, please complete this verification step. We've sent a 6-digit code to your email."
 }: OtpVerificationModalProps) {
   const { toast } = useToast();
+  const { signOut } = useAuth();
   const [otp, setOtp] = useState('');
   const [isSending, startSending] = useTransition();
   const [isVerifying, startVerifying] = useTransition();
+  const [expiry, setExpiry] = useState<number | null>(null);
 
   const handleSendOtp = async (showToast = true) => {
     if (!identifier) return;
 
     startSending(async () => {
       const result = await sendVerificationOtp(identifier);
-      if (result.success) {
+      if (result.success && result.expiresAt) {
+        setExpiry(result.expiresAt);
         if (showToast) {
           toast({ title: 'OTP Sent', description: 'A new verification code has been sent to your email.' });
         }
       } else {
         if (showToast) {
-          toast({ variant: 'destructive', title: 'Error', description: result.error });
+          toast({ variant: 'destructive', title: 'Error Sending Code', description: result.error });
         }
       }
     });
@@ -53,7 +86,7 @@ export function OtpVerificationModal({
     if (!identifier || otp.length !== 6) return;
 
     startVerifying(async () => {
-      const result = await verifyUserOtp(identifier, otp, type);
+      const result = await verifyUserOtp(identifier, otp);
       if (result.success) {
         toast({ title: 'Verification Successful' });
         onClose(true); // Signal success
@@ -63,7 +96,6 @@ export function OtpVerificationModal({
     });
   };
   
-  // Send OTP automatically when the modal opens
   useEffect(() => {
     if (isOpen) {
       handleSendOtp(false);
@@ -71,24 +103,45 @@ export function OtpVerificationModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
+  const onModalOpenChange = (open: boolean) => {
+    if (!open && isDismissible) {
+      onClose(false);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose(false)}>
-      <DialogContent showCloseButton={false} onInteractOutside={(e) => e.preventDefault()} className="max-w-md">
+    <Dialog open={isOpen} onOpenChange={onModalOpenChange}>
+      <DialogContent 
+        showCloseButton={isDismissible} 
+        onInteractOutside={(e) => { if (!isDismissible) e.preventDefault(); }} 
+        className="max-w-md"
+      >
         <DialogHeader className="text-center items-center">
-          <Logo />
+          <div className="h-14 w-14 rounded-full flex items-center justify-center bg-gradient-to-r from-primary to-accent">
+            <ShieldCheck className="h-8 w-8 text-white" />
+          </div>
           <DialogTitle className="text-2xl pt-4">{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-4">
+          <div className="p-3 bg-muted rounded-md text-center">
+            <p className="text-sm text-muted-foreground">Verification code sent to:</p>
+            <p className="font-semibold">{redactEmail(identifier)}</p>
+          </div>
           <div className="flex justify-center">
             <Input 
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               maxLength={6}
-              placeholder="_ _ _ _ _ _"
+              placeholder="000000"
               className="w-48 text-center text-2xl font-mono tracking-[0.5em]"
             />
           </div>
+          {expiry && (
+             <p className="text-center text-sm text-muted-foreground">
+                Code expires in <Timer expiryTimestamp={expiry} />
+            </p>
+          )}
         </div>
         <DialogFooter className="flex-col gap-2">
           <Button onClick={handleVerifyOtp} disabled={isVerifying || otp.length !== 6} className="w-full">
@@ -99,6 +152,22 @@ export function OtpVerificationModal({
             {isSending ? <Loader2 className="animate-spin" /> : <MailCheck />}
             <span className="ml-2">Resend Code</span>
           </Button>
+          
+          {!isDismissible && (
+            <>
+            <p className="text-xs text-center text-muted-foreground pt-2">
+              For security, you must verify your identity to continue, or sign out.
+            </p>
+            <div className="flex w-full items-center justify-center gap-4">
+                 <Button variant="ghost" size="sm" asChild>
+                    <Link href="/support"><HelpCircle/> Support</Link>
+                </Button>
+                <Button variant="destructive" size="sm" onClick={signOut}>
+                    <LogOut/> Sign Out
+                </Button>
+            </div>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

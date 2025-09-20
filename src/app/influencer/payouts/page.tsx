@@ -65,7 +65,7 @@ function PayoutRequestModal({ availableBalance, fullName, mpesaNumber }: { avail
         }
         
         // Request OTP verification before proceeding
-        const isVerified = await requestVerification(user.email, 'payout_request');
+        const isVerified = await requestVerification(user.email);
         if (!isVerified) {
             toast({ variant: 'destructive', title: 'Verification Cancelled', description: 'Payout request was not submitted.'});
             return;

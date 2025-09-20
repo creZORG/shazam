@@ -1,29 +1,38 @@
 
 'use server';
 
-import { generateOtp, validateOtp } from '@/services/otp-service';
+import { generateOtp, validateOtp, checkRateLimit } from '@/services/otp-service';
 import { sendOtpEmail } from '@/services/email';
 import { getSettings } from '@/app/admin/settings/actions';
+import { headers } from 'next/headers';
 
 /**
- * Generates and sends a 6-digit OTP to the specified email address.
+ * Generates and sends a 6-digit OTP to the specified email address, with rate limiting.
  * @param email The email address to send the OTP to.
- * @returns An object indicating success or failure.
+ * @returns An object indicating success or failure and the OTP expiry time.
  */
-export async function sendVerificationOtp(email: string) {
+export async function sendVerificationOtp(email: string): Promise<{ success: boolean; error?: string; expiresAt?: number }> {
   if (!email) {
     return { success: false, error: 'Email is required.' };
   }
+  const ip = headers().get('x-forwarded-for') ?? '127.0.0.1';
 
   try {
-    const code = await generateOtp(email, 'generic');
+    const rateLimitCheck = await checkRateLimit(email, ip);
+    if (!rateLimitCheck.success) {
+      return { success: false, error: rateLimitCheck.error };
+    }
+
+    const { code, expiresAt } = await generateOtp(email, 'generic', ip);
     await sendOtpEmail({ to: email, otp: code });
-    return { success: true };
+    return { success: true, expiresAt: expiresAt.getTime() };
   } catch (error) {
     console.error('Error sending OTP:', error);
-    return { success: false, error: 'Failed to send OTP. Please try again.' };
+    const errorMessage = error instanceof Error ? error.message : 'Failed to send OTP. Please try again.';
+    return { success: false, error: errorMessage };
   }
 }
+
 
 /**
  * Validates the OTP provided by the user.
@@ -32,7 +41,8 @@ export async function sendVerificationOtp(email: string) {
  * @returns An object indicating success or failure.
  */
 export async function verifyUserOtp(email: string, otp: string) {
-  return await validateOtp(email, otp, 'generic');
+  // The 'type' parameter is removed as we consolidate OTP types for simplicity
+  return await validateOtp(email, otp);
 }
 
 

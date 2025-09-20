@@ -41,7 +41,7 @@ export function VerificationGate({ children }: { children: React.ReactNode }) {
             sessionStorage.setItem('sessionVerified', 'true');
             setNeedsVerification(false);
         }
-        // If they close the modal without verifying, it will remain open.
+        // If not verified, the modal is non-dismissible and will remain open.
     };
     
     if (loading || authLoading) {
@@ -61,8 +61,9 @@ export function VerificationGate({ children }: { children: React.ReactNode }) {
                 isOpen={true}
                 onClose={handleVerificationSuccess}
                 identifier={user.email}
+                isDismissible={false}
                 title="Session Verification Required"
-                description="For enhanced security, this staff account requires email verification for each session. We've sent a 6-digit code to your email."
+                description="For enhanced security, this staff account requires email verification for each new session."
             />
         );
     }
@@ -70,4 +71,3 @@ export function VerificationGate({ children }: { children: React.ReactNode }) {
     // Render children if no verification is needed or already passed
     return <>{children}</>;
 }
-
