@@ -191,4 +191,3 @@ export async function getUserCoupons(userId: string) {
         return { success: false, error: 'Failed to fetch coupons.' };
     }
 }
-
