@@ -39,7 +39,7 @@ export function Logo({ variant = 'brief', asLink = false, className, ...props }:
 
   const dimensions = variant === 'brief' 
     ? { width: 60, height: 60 } 
-    : { width: 120, height: 40 };
+    : { width: 240, height: 80 };
 
   const logoImage = (
     <div className={cn("relative", className)} style={{ width: dimensions.width, height: dimensions.height }} {...props}>
