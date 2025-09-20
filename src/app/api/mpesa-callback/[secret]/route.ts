@@ -5,7 +5,13 @@ import { collection, query, where, getDocs, doc, writeBatch, serverTimestamp, in
 import type { Order, Ticket, Transaction, Event, Tour } from '@/lib/types';
 import { sendTicketEmail } from '@/services/email';
 
-export async function POST(request: Request) {
+export async function POST(request: Request, { params }: { params: { secret: string } }) {
+    // SEC-FIX: Validate the secret from the URL
+    if (params.secret !== process.env.MPESA_CALLBACK_SECRET) {
+        console.error("Invalid M-Pesa callback secret received.");
+        return NextResponse.json({ message: 'Invalid secret' }, { status: 403 });
+    }
+    
     try {
         const callbackData = await request.json();
         console.log("Received M-Pesa Callback:", JSON.stringify(callbackData, null, 2));

@@ -58,17 +58,18 @@ export async function initiateStkPush(payload: StkPushPayload): Promise<{ succes
 
     const shortcode = process.env.MPESA_SHORTCODE;
     const passkey = process.env.MPESA_PASSKEY;
+    const callbackSecret = process.env.MPESA_CALLBACK_SECRET;
 
     const headersList = headers();
     const host = headersList.get('host');
     const protocol = headersList.get('x-forwarded-proto') || 'http';
-    const callbackURL = `${protocol}://${host}/api/mpesa-callback`;
+    const callbackURL = `${protocol}://${host}/api/mpesa-callback/${callbackSecret}`;
 
     console.log("Using M-Pesa Callback URL:", callbackURL);
 
 
-    if (!shortcode || !passkey || !callbackURL) {
-        return { success: false, error: "M-Pesa shortcode, passkey, or callback URL is not configured." };
+    if (!shortcode || !passkey || !callbackURL || !callbackSecret) {
+        return { success: false, error: "M-Pesa shortcode, passkey, or callback URL/secret is not configured." };
     }
 
     const timestamp = format(new Date(), 'yyyyMMddHHmmss');

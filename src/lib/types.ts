@@ -166,7 +166,7 @@ export type FirebaseUser = {
   createdAt: any;
   lastLogin: string | number;
   bookmarkedEvents?: string[];
-  assignedEvents?: string[]; // For event-specific roles like verifier
+  assignedEvents?: string[]; // For event-specific verifiers
   
   // Analytics fields
   userAgent?: string;
