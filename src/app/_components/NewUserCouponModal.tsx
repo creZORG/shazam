@@ -8,6 +8,8 @@ import { createPromocode } from '@/app/organizer/promocodes/actions';
 import { useAuth } from '@/hooks/use-auth';
 import { Gift, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
+import Link from 'next/link';
 
 const NEW_USER_COUPON_FLAG = 'has_seen_new_user_coupon';
 
@@ -18,18 +20,16 @@ export function NewUserCouponModal() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Only show for logged-in, non-partner users
-    if (user && user.isAnonymous === false) {
-      const hasSeen = localStorage.getItem(NEW_USER_COUPON_FLAG);
-      if (!hasSeen) {
-        // Delay showing the modal slightly to not be too intrusive
-        const timer = setTimeout(() => {
-          setIsOpen(true);
-        }, 3000);
-        return () => clearTimeout(timer);
-      }
+    // Show for any first-time visitor
+    const hasSeen = localStorage.getItem(NEW_USER_COUPON_FLAG);
+    if (!hasSeen) {
+      // Delay showing the modal slightly to not be too intrusive
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+      }, 3000);
+      return () => clearTimeout(timer);
     }
-  }, [user]);
+  }, []);
 
   const handleClaimCoupon = async () => {
     if (!user) return;
@@ -66,9 +66,11 @@ export function NewUserCouponModal() {
     setIsClaiming(false);
   };
   
-  const handleClose = () => {
-      localStorage.setItem(NEW_USER_COUPON_FLAG, 'true');
-      setIsOpen(false);
+  const handleClose = (open: boolean) => {
+      if (!open) {
+          localStorage.setItem(NEW_USER_COUPON_FLAG, 'true');
+          setIsOpen(false);
+      }
   }
 
   if (!isOpen) {
@@ -77,23 +79,36 @@ export function NewUserCouponModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent>
-        <DialogHeader className="items-center text-center">
-          <div className="h-16 w-16 mb-4 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-accent">
-            <Gift className="h-10 w-10 text-white" />
+      <DialogContent className="p-0 overflow-hidden">
+        <div className="relative h-32 w-full">
+            <Image src="https://img.ltwebstatic.com/images3_ccc/2024/03/27/d3/17115267680e016ed8c30f24eb9aaa5b9b714085ce.png" alt="Gift" layout="fill" objectFit="cover" />
+        </div>
+        <DialogHeader className="items-center text-center pt-8 px-6">
+          <div className="h-16 w-16 mb-4 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-accent -mt-20 bg-background border-4 border-background">
+            <Gift className="h-10 w-10 text-primary" />
           </div>
           <DialogTitle className="text-2xl">A Special Welcome Gift!</DialogTitle>
           <DialogDescription>As a new member of the NaksYetu family, here's a special discount just for you.</DialogDescription>
         </DialogHeader>
-        <div className="py-6 text-center">
+        <div className="py-6 text-center px-6">
             <p className="text-sm text-muted-foreground">NEW USER ONLY</p>
             <p className="text-6xl font-extrabold text-primary">15% OFF</p>
             <p className="text-muted-foreground">Your first ticket purchase</p>
         </div>
-        <Button size="lg" className="w-full" onClick={handleClaimCoupon} disabled={isClaiming}>
-          {isClaiming ? <Loader2 className="animate-spin mr-2" /> : null}
-          Claim My Discount
-        </Button>
+        <div className="px-6 pb-8">
+            {user ? (
+                 <Button size="lg" className="w-full" onClick={handleClaimCoupon} disabled={isClaiming}>
+                    {isClaiming ? <Loader2 className="animate-spin mr-2" /> : null}
+                    Claim My Discount
+                </Button>
+            ) : (
+                <Link href="/login" className="w-full">
+                    <Button size="lg" className="w-full">
+                        Login or Sign Up to Claim
+                    </Button>
+                </Link>
+            )}
+        </div>
       </DialogContent>
     </Dialog>
   );
