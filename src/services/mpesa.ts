@@ -2,7 +2,6 @@
 'use server';
 
 import { format } from 'date-fns';
-import { headers } from 'next/headers';
 
 interface StkPushPayload {
     phoneNumber: string;
@@ -59,12 +58,13 @@ export async function initiateStkPush(payload: StkPushPayload): Promise<{ succes
     const shortcode = process.env.MPESA_SHORTCODE;
     const passkey = process.env.MPESA_PASSKEY;
     const callbackSecret = process.env.MPESA_CALLBACK_SECRET;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-    const headersList = headers();
-    const host = headersList.get('host');
-    const protocol = headersList.get('x-forwarded-proto') || 'http';
-    const callbackURL = `${protocol}://${host}/api/mpesa-callback/${callbackSecret}`;
+    if (!appUrl) {
+      return { success: false, error: "NEXT_PUBLIC_APP_URL environment variable is not set. Cannot determine callback URL." };
+    }
 
+    const callbackURL = `${appUrl}/api/mpesa-callback/${callbackSecret}`;
     console.log("Using M-Pesa Callback URL:", callbackURL);
 
 
