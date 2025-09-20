@@ -12,6 +12,8 @@ import { usePathname } from 'next/navigation';
 import { AuthProvider } from '@/hooks/use-auth';
 import { AppProviders } from './providers';
 import { Analytics } from "@vercel/analytics/next"
+import { useEffect } from 'react';
+import { getSettings } from './admin/settings/actions';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -24,6 +26,19 @@ export default function RootLayout({
   const isAdminPage = pathname.startsWith('/admin') || pathname.startsWith('/organizer') || pathname.startsWith('/influencer') || pathname.startsWith('/verify') || pathname.startsWith('/developer');
 
   const showMainLayout = !isAdminPage;
+
+  useEffect(() => {
+    getSettings().then(({ settings }) => {
+      const faviconUrl = settings?.logoBriefUrl || 'https://i.postimg.cc/Vk16XVjR/here.png';
+      let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+      link.href = faviconUrl;
+    });
+  }, []);
 
   return (
     <html lang="en" suppressHydrationWarning>
