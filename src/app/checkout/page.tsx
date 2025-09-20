@@ -31,13 +31,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/dialog";
 
 type Listing = Event | Tour;
 type ListingType = 'event' | 'tour';
