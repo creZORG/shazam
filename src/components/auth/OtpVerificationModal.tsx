@@ -108,6 +108,8 @@ export function OtpVerificationModal({
       onClose(false);
     }
   };
+  
+  const isActionInProgress = isSending || isVerifying;
 
   return (
     <Dialog open={isOpen} onOpenChange={onModalOpenChange}>
@@ -135,6 +137,7 @@ export function OtpVerificationModal({
               maxLength={6}
               placeholder="000000"
               className="w-48 text-center text-2xl font-mono tracking-[0.5em]"
+              disabled={isActionInProgress}
             />
           </div>
           {expiry && (
@@ -143,30 +146,30 @@ export function OtpVerificationModal({
             </p>
           )}
         </div>
-        <DialogFooter className="flex-col gap-4">
-           <Button onClick={handleVerifyOtp} disabled={isVerifying || otp.length !== 6} className="w-full bg-gradient-to-r from-pink-500 to-orange-500">
+        <DialogFooter className="flex-col gap-2">
+           <Button onClick={handleVerifyOtp} disabled={isActionInProgress || otp.length !== 6} className="w-full bg-gradient-to-r from-pink-500 to-orange-500">
                 {isVerifying ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
                 <span className="ml-2">Verify & Continue</span>
             </Button>
-            <Button variant="link" size="sm" onClick={() => handleSendOtp(true)} disabled={isSending}>
+            <Button variant="link" size="sm" onClick={() => handleSendOtp(true)} disabled={isActionInProgress}>
                 {isSending ? <Loader2 className="animate-spin" /> : <MailCheck />}
                 <span className="ml-2">Resend Code</span>
             </Button>
           
           {!isDismissible && (
-            <>
-            <p className="text-xs text-center text-muted-foreground pt-2">
-              For security, you must verify your identity to continue, or sign out.
-            </p>
-            <div className="flex w-full items-center justify-center gap-4">
-                 <Button variant="ghost" size="sm" asChild>
-                    <Link href="/support"><HelpCircle/> Support</Link>
-                </Button>
-                <Button variant="destructive" size="sm" onClick={signOut}>
-                    <LogOut/> Sign Out
-                </Button>
+            <div className="pt-4 text-center">
+              <p className="text-xs text-muted-foreground">
+                For security, you must verify your identity to continue.
+              </p>
+              <div className="flex w-full items-center justify-center gap-4 mt-2">
+                   <Button variant="ghost" size="sm" asChild>
+                      <Link href="/support"><HelpCircle/> Support</Link>
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={signOut}>
+                      <LogOut/> Sign Out
+                  </Button>
+              </div>
             </div>
-            </>
           )}
         </DialogFooter>
       </DialogContent>
