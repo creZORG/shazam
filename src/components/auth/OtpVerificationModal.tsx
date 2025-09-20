@@ -115,8 +115,7 @@ export function OtpVerificationModal({
     <Dialog open={isOpen} onOpenChange={onModalOpenChange}>
       <DialogContent 
         showCloseButton={isDismissible} 
-        onInteractOutside={(e) => { if (!isDismissible) e.preventDefault(); }} 
-        className="w-full max-w-md"
+        onInteractOutside={(e) => { if (!isDismissible) e.preventDefault(); }}
       >
         <DialogHeader className="text-center items-center">
           <div className="h-14 w-14 rounded-full flex items-center justify-center bg-gradient-to-r from-pink-500 to-orange-500">
@@ -146,33 +145,34 @@ export function OtpVerificationModal({
             </p>
           )}
         </div>
-        <DialogFooter className="flex-col gap-4">
-          <div className="flex flex-col sm:flex-row w-full items-center gap-2">
-            <Button onClick={handleVerifyOtp} disabled={isActionInProgress || otp.length !== 6} className="w-full bg-gradient-to-r from-pink-500 to-orange-500">
-                {isVerifying ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
-                <span className="ml-2">Verify & Continue</span>
-            </Button>
-            <Button variant="link" size="sm" onClick={() => handleSendOtp(true)} disabled={isActionInProgress} className="flex-shrink-0">
-                {isSending ? <Loader2 className="animate-spin mr-2" /> : <MailCheck className="mr-2" />}
-                Resend Code
-            </Button>
-          </div>
-          
-          {!isDismissible && (
-            <div className="pt-4 text-center">
-              <p className="text-xs text-muted-foreground">
-                For security, you must verify your identity to continue.
-              </p>
-              <div className="flex w-full items-center justify-center gap-4 mt-2">
-                   <Button variant="ghost" size="sm" asChild>
-                      <Link href="/support"><HelpCircle className="mr-2" /> Support</Link>
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={signOut}>
-                      <LogOut className="mr-2" /> Sign Out
-                  </Button>
-              </div>
-            </div>
-          )}
+        <DialogFooter>
+             <div className="w-full flex flex-col items-center gap-4">
+                 <div className="w-full flex flex-col sm:flex-row items-center gap-2">
+                    <Button onClick={handleVerifyOtp} disabled={isActionInProgress || otp.length !== 6} className="w-full bg-gradient-to-r from-pink-500 to-orange-500">
+                        {isVerifying ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
+                        <span className="ml-2">Verify & Continue</span>
+                    </Button>
+                    <Button variant="link" size="sm" onClick={() => handleSendOtp(true)} disabled={isActionInProgress} className="flex-shrink-0">
+                        {isSending ? <Loader2 className="animate-spin mr-2" /> : <MailCheck className="mr-2" />}
+                        Resend Code
+                    </Button>
+                 </div>
+                  {!isDismissible && (
+                    <div className="pt-4 text-center">
+                      <p className="text-xs text-muted-foreground">
+                        For security, you must verify your identity to continue.
+                      </p>
+                      <div className="flex w-full items-center justify-center gap-4 mt-2">
+                           <Button variant="ghost" size="sm" asChild>
+                              <Link href="/support"><HelpCircle className="mr-2" /> Support</Link>
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={signOut}>
+                              <LogOut className="mr-2" /> Sign Out
+                          </Button>
+                      </div>
+                    </div>
+                  )}
+             </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
