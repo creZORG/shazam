@@ -37,8 +37,6 @@ export default function AdminSecurityPage() {
 
   return (
     <div className="space-y-8">
-        <ChatBubble />
-
         <Card>
         <CardHeader>
             <CardTitle>Security & Audit Logs</CardTitle>
@@ -87,6 +85,3 @@ export default function AdminSecurityPage() {
     </div>
   );
 }
-
-
-

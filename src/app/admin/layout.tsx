@@ -10,6 +10,7 @@ import { Logo } from "@/components/icons/Logo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useAuth } from "@/hooks/use-auth";
 import { NotificationCenter } from "@/components/layout/NotificationCenter";
+import { ChatBubble } from "./security/_components/ChatBubble";
 
 
 const allAdminNavLinks = [
@@ -104,6 +105,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <main className="p-4 sm:p-6 lg:p-8">
             {children}
         </main>
+        {dbUser.role === 'super-admin' && <ChatBubble />}
       </SidebarInset>
     </SidebarProvider>
   );
