@@ -11,6 +11,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationCenter } from "@/components/layout/NotificationCenter";
+import { VerificationGate } from '@/components/auth/VerificationGate';
 
 const verificationNavLinks = [
   { href: "/verify", label: "Dashboard", icon: CalendarDays },
@@ -60,29 +61,31 @@ export default function VerifyLayout({ children }: { children: ReactNode }) {
         </SidebarMenu>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 items-center">
-                <div className="md:hidden">
-                    <SidebarTrigger />
-                </div>
-                <div className="flex-1">
-                    <h1 className="text-xl font-semibold ml-2">Verification Portal</h1>
-                </div>
-                <div className="flex items-center space-x-2">
-                    {user && <NotificationCenter />}
-                    <ThemeToggle />
-                    {user && (
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'U'} />
-                            <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
-                        </Avatar>
-                    )}
-                </div>
-            </div>
-        </header>
-        <main className="p-4 sm:p-6 lg:p-8">
-            {children}
-        </main>
+        <VerificationGate>
+          <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <div className="container flex h-14 items-center">
+                  <div className="md:hidden">
+                      <SidebarTrigger />
+                  </div>
+                  <div className="flex-1">
+                      <h1 className="text-xl font-semibold ml-2">Verification Portal</h1>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                      {user && <NotificationCenter />}
+                      <ThemeToggle />
+                      {user && (
+                          <Avatar className="h-8 w-8">
+                              <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'U'} />
+                              <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                          </Avatar>
+                      )}
+                  </div>
+              </div>
+          </header>
+          <main className="p-4 sm:p-6 lg:p-8">
+              {children}
+          </main>
+        </VerificationGate>
       </SidebarInset>
     </SidebarProvider>
   );

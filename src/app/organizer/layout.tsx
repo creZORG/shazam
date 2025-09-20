@@ -22,6 +22,7 @@ import { Logo } from "@/components/icons/Logo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { NotificationCenter } from "@/components/layout/NotificationCenter";
+import { VerificationGate } from '@/components/auth/VerificationGate';
 
 const organizerNavLinks = [
   { href: "/organizer", label: "Overview", icon: LayoutDashboard },
@@ -170,32 +171,34 @@ export default function OrganizerLayout({ children }: { children: ReactNode }) {
         </SidebarMenu>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 items-center">
-                <div className="md:hidden">
-                    <SidebarTrigger />
-                </div>
-                <div className="flex-1">
-                    <h1 className="text-xl font-semibold ml-2">Organizer Dashboard</h1>
-                </div>
-                <div className="flex items-center space-x-2">
-                    {user && <NotificationCenter />}
-                    <ThemeToggle />
-                    {dbUser && (
-                         <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage src={user?.photoURL || ''} />
-                                <AvatarFallback>{dbUser.organizerName?.charAt(0) || user?.displayName?.charAt(0) || 'O'}</AvatarFallback>
-                            </Avatar>
-                            <p className="text-sm font-medium hidden sm:block">{dbUser.organizerName || user?.displayName}</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </header>
-        <main className={cn("p-4 sm:p-6 lg:p-8", showProfileModal && !isProfilePage && "blur-sm pointer-events-none")}>
-            {children}
-        </main>
+        <VerificationGate>
+          <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <div className="container flex h-14 items-center">
+                  <div className="md:hidden">
+                      <SidebarTrigger />
+                  </div>
+                  <div className="flex-1">
+                      <h1 className="text-xl font-semibold ml-2">Organizer Dashboard</h1>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                      {user && <NotificationCenter />}
+                      <ThemeToggle />
+                      {dbUser && (
+                          <div className="flex items-center gap-2">
+                              <Avatar className="h-8 w-8">
+                                  <AvatarImage src={user?.photoURL || ''} />
+                                  <AvatarFallback>{dbUser.organizerName?.charAt(0) || user?.displayName?.charAt(0) || 'O'}</AvatarFallback>
+                              </Avatar>
+                              <p className="text-sm font-medium hidden sm:block">{dbUser.organizerName || user?.displayName}</p>
+                          </div>
+                      )}
+                  </div>
+              </div>
+          </header>
+          <main className={cn("p-4 sm:p-6 lg:p-8", showProfileModal && !isProfilePage && "blur-sm pointer-events-none")}>
+              {children}
+          </main>
+        </VerificationGate>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -13,6 +13,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NotificationCenter } from "@/components/layout/NotificationCenter";
+import { VerificationGate } from '@/components/auth/VerificationGate';
 
 
 const clubNavLinks = [
@@ -123,9 +124,11 @@ export default function ClubLayout({ children }: { children: ReactNode }) {
                     </Alert>
                 )}
                 
-                <div className={cn(profileIncomplete && !isSettingsPage && "blur-sm pointer-events-none")}>
-                    {children}
-                </div>
+                <VerificationGate>
+                    <div className={cn(profileIncomplete && !isSettingsPage && "blur-sm pointer-events-none")}>
+                        {children}
+                    </div>
+                </VerificationGate>
             </div>
           )}
         </main>

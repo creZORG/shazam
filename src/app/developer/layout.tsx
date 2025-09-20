@@ -10,6 +10,7 @@ import { Logo } from "@/components/icons/Logo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { useAuth } from "@/hooks/use-auth";
 import { NotificationCenter } from "@/components/layout/NotificationCenter";
+import { VerificationGate } from '@/components/auth/VerificationGate';
 
 const devNavLinks = [
   { href: "/developer", label: "Dashboard", icon: LayoutDashboard },
@@ -60,24 +61,26 @@ export default function DeveloperLayout({ children }: { children: ReactNode }) {
         </SidebarMenu>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 items-center">
-                <div className="md:hidden">
-                    <SidebarTrigger />
-                </div>
-                <div className="flex-1">
-                    <h1 className="text-xl font-semibold ml-2 flex items-center gap-2"><Code /> Developer Portal</h1>
-                </div>
-                <div className="flex items-center space-x-2">
-                    {user && <NotificationCenter />}
-                    <ThemeToggle />
-                    {user && <p className="text-sm font-medium">{user.displayName}</p>}
-                </div>
-            </div>
-        </header>
-        <main className="p-4 sm:p-6 lg:p-8">
-            {children}
-        </main>
+        <VerificationGate>
+          <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <div className="container flex h-14 items-center">
+                  <div className="md:hidden">
+                      <SidebarTrigger />
+                  </div>
+                  <div className="flex-1">
+                      <h1 className="text-xl font-semibold ml-2 flex items-center gap-2"><Code /> Developer Portal</h1>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                      {user && <NotificationCenter />}
+                      <ThemeToggle />
+                      {user && <p className="text-sm font-medium">{user.displayName}</p>}
+                  </div>
+              </div>
+          </header>
+          <main className="p-4 sm:p-6 lg:p-8">
+              {children}
+          </main>
+        </VerificationGate>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -13,6 +13,7 @@ import { Logo } from "@/components/icons/Logo";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { NotificationCenter } from "@/components/layout/NotificationCenter";
+import { VerificationGate } from '@/components/auth/VerificationGate';
 
 
 const influencerNavLinks = [
@@ -78,7 +79,7 @@ export default function InfluencerLayout({ children }: { children: ReactNode }) 
             <Tabs defaultValue={pathname} className="w-auto">
                 <TabsList className="p-1.5 h-auto rounded-full bg-background border shadow-md">
                     {influencerNavLinks.map((link) => {
-                        const canAccess = isProfileComplete || link.href === '/influencer/profile';
+                        const canAccess = isProfileComplete || link.href === '/influencer/profile' || link.href === '/influencer/guide';
                         return (
                              <Link key={link.href} href={canAccess ? link.href : '#'} legacyBehavior passHref>
                                 <TabsTrigger 
@@ -118,9 +119,11 @@ export default function InfluencerLayout({ children }: { children: ReactNode }) 
                     </Alert>
                 </div>
             )}
-            <div className={cn(!isProfileComplete && !isProfilePage && "opacity-50 pointer-events-none")}>
-                {children}
-            </div>
+            <VerificationGate>
+                <div className={cn(!isProfileComplete && !isProfilePage && "opacity-50 pointer-events-none")}>
+                    {children}
+                </div>
+            </VerificationGate>
         </main>
     </div>
     </>
