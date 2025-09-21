@@ -1,9 +1,10 @@
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { cookies } from 'next/headers';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import type { UserRole } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { logAdminAction } from '@/services/audit-service';
@@ -19,6 +20,7 @@ export async function sendStaffNote(payload: StaffNotePayload) {
     if (!sessionCookie) {
         return { success: false, error: 'Authentication required.' };
     }
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {

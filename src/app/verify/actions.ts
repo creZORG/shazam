@@ -5,7 +5,7 @@ import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, getDoc, doc, Timestamp, orderBy, addDoc, serverTimestamp, writeBatch, documentId, updateDoc } from 'firebase/firestore';
 import type { Order, Ticket, Event, Tour, FirebaseUser, TicketDefinition } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 
@@ -18,6 +18,7 @@ export async function validateTicket(
     if (!sessionCookie) {
       return { success: false, message: 'Authentication failed. Please log in.' };
     }
+    const auth = await getAdminAuth();
     
     if (!auth) throw new Error("Server auth not initialized");
     const session = await auth.verifySessionCookie(sessionCookie, true);

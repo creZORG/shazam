@@ -4,10 +4,10 @@
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc, setDoc, addDoc, collection, getDocs, updateDoc, increment, orderBy, Timestamp, deleteDoc, where, query, serverTimestamp } from "firebase/firestore";
 import { revalidatePath } from 'next/cache';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 import { unstable_noStore as noStore } from 'next/cache';
-import type { TeamMember, BlogPost, ExternalEventPricing, Opportunity, AdSubmission, Product } from '@/lib/types';
+import type { TeamMember, BlogPost, ExternalEventPricing, Opportunity, AdSubmission, Product, FeatureCardContent, PartnerSectionContent } from '@/lib/types';
 import { logAdminAction } from '@/services/audit-service';
 
 
@@ -24,7 +24,11 @@ type SiteContent = {
         twitter?: string;
         instagram?: string;
         facebook?: string;
-    }
+    },
+    homepage?: {
+      featureCards?: FeatureCardContent[];
+      partnerSection?: PartnerSectionContent;
+    };
 }
 
 export type Poster = {
@@ -61,6 +65,7 @@ export async function getSiteContent(): Promise<{ data: SiteContent | null, erro
 export async function updateSiteContent(content: SiteContent) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -85,6 +90,7 @@ export async function updateSiteContent(content: SiteContent) {
         
         revalidatePath('/');
         revalidatePath('/contact');
+        revalidatePath('/admin/settings');
         
         return { success: true };
     } catch (error: any) {
@@ -96,6 +102,7 @@ export async function updateSiteContent(content: SiteContent) {
 export async function createPoster(data: Omit<Poster, 'id' | 'clicks' | 'shares' | 'createdAt'>) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -149,6 +156,7 @@ export async function getPosters(): Promise<{ data: Poster[], error: string | nu
 export async function deletePoster(id: string): Promise<{ success: boolean; error?: string }> {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -202,6 +210,7 @@ export async function trackPosterInteraction(posterId: string, interactionType: 
 export async function createTeamMember(data: Omit<TeamMember, 'id'>) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -245,6 +254,7 @@ export async function getTeamMembers(): Promise<{ data: TeamMember[], error: str
 export async function createBlogPost(data: Omit<BlogPost, 'id' | 'authorId' | 'authorName' | 'createdAt'>) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
     
     let decodedClaims;
     try {
@@ -307,6 +317,7 @@ export async function getBlogPosts(): Promise<{ data: BlogPost[], error: string 
 export async function createOpportunity(data: Omit<Opportunity, 'id' | 'createdAt'>) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -354,6 +365,7 @@ export async function getOpportunities(): Promise<{ data: Opportunity[], error: 
 export async function deleteOpportunity(id: string): Promise<{ success: boolean; error?: string }> {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -404,6 +416,7 @@ export async function getApprovedAds(): Promise<{ data: AdSubmission[], error: s
 export async function createProduct(data: Omit<Product, 'id' | 'createdAt'>) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -465,6 +478,7 @@ export async function getProducts(showTakenDown = false): Promise<{ data: Produc
 export async function updateProductStatus(productId: string, status: 'active' | 'taken-down') {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -501,6 +515,7 @@ export async function updateProduct(productId: string, data: Partial<Omit<Produc
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
     if (!productId) return { success: false, error: 'Product ID is required.' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -533,5 +548,3 @@ export async function updateProduct(productId: string, data: Partial<Omit<Produc
         return { success: false, error: `Failed to update product. Details: ${error.message}` };
     }
 }
-
-    

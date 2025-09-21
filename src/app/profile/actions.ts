@@ -19,7 +19,7 @@ import {
   documentId
 } from 'firebase/firestore';
 import { cookies } from 'next/headers';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import type { FirebaseUser, Ticket, Event, UserEvent, Order, Tour } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 
@@ -27,6 +27,7 @@ async function getUserIdFromSession(): Promise<string | null> {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return null;
     try {
+        const auth = await getAdminAuth();
         if (!auth) throw new Error("Server auth not initialized");
         const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
         return decodedClaims.uid;

@@ -1,5 +1,4 @@
 
-
 "use server";
 
 import { db } from "@/lib/firebase/config";
@@ -7,7 +6,7 @@ import { collection, doc, getDocs, query, updateDoc, where, getDoc, addDoc, writ
 import { revalidatePath } from 'next/cache';
 import type { FirebaseUser, Promocode, EarningsAudit, PayoutRequest, UserRole, PromocodeClick } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
-import { auth } from "@/lib/firebase/server-auth";
+import { getAdminAuth } from "@/lib/firebase/server-auth";
 import { cookies } from 'next/headers';
 
 type ProfileUpdateData = Pick<FirebaseUser, 'fullName' | 'phone' | 'profilePicture' | 'socials' | 'privacy'> & { username: string };
@@ -102,6 +101,7 @@ export async function getInfluencerStats() {
     if (!sessionCookie) {
         return { success: false, error: 'Not authenticated. Session cookie not found.' };
     }
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -164,6 +164,7 @@ export async function getPayoutHistory() {
     noStore();
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated. Session cookie not found.' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -198,6 +199,7 @@ export async function requestPayout(amount: number) {
     noStore();
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated. Session cookie not found.' };
+    const auth = await getAdminAuth();
     
     let decodedClaims;
     try {

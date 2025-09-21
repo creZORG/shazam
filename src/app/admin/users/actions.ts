@@ -1,6 +1,4 @@
 
-
-
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -8,7 +6,7 @@ import { collection, getDocs, query, where, Timestamp, orderBy, limit, startAfte
 import type { FirebaseUser, UserRole, Event, Invitation } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { randomBytes } from 'crypto';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies, headers } from 'next/headers';
 import { sendInvitationEmail } from '@/services/email';
 import { createShortLink } from '@/lib/shortlinks';
@@ -122,6 +120,7 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
 
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {

@@ -7,7 +7,7 @@ import type { PartnerRequest, AdSubmission, UserRole, SupportTicket, SupportTick
 import { unstable_noStore as noStore } from 'next/cache';
 import { revalidatePath } from 'next/cache';
 import { logAdminAction } from '@/services/audit-service';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 import { sendSupportReplyEmail } from '@/services/email';
 
@@ -57,6 +57,7 @@ export async function getAdRequests(): Promise<{ success: boolean; data?: AdSubm
 export async function updateAdStatus(adId: string, status: 'approved' | 'rejected') {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -93,6 +94,7 @@ export async function updateAdStatus(adId: string, status: 'approved' | 'rejecte
 export async function approvePartnerRequest(requestId: string, userId: string, newRole: UserRole) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -135,6 +137,7 @@ export async function approvePartnerRequest(requestId: string, userId: string, n
 export async function denyPartnerRequest(requestId: string) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
      let decodedClaims;
     try {
@@ -202,6 +205,7 @@ export async function getSupportTickets(): Promise<{ success: boolean; data?: Su
 export async function updateSupportTicketStatus(ticketId: string, status: 'open' | 'closed'): Promise<{ success: boolean, error?: string }> {
      const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -235,6 +239,7 @@ export async function updateSupportTicketStatus(ticketId: string, status: 'open'
 export async function replyToSupportTicket(payload: { ticketId: string, message: string, userEmail: string }): Promise<{ success: boolean, data?: SupportTicketReply, error?: string }> {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {

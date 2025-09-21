@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -8,7 +7,7 @@ import type { Order, Transaction, Promocode, CheckoutFeedback, Event } from '@/l
 import { initiateStkPush } from '@/services/mpesa';
 import { unstable_noStore as noStore } from 'next/cache';
 import { headers } from 'next/headers';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 import { createNotification } from '@/services/notifications';
 
@@ -38,6 +37,7 @@ async function getUserIdFromSession(): Promise<string | null> {
         return null;
     }
     try {
+        const auth = await getAdminAuth();
         if (!auth) throw new Error("Server auth not initialized");
         const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
         return decodedClaims.uid;

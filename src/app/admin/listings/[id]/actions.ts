@@ -7,7 +7,7 @@ import type { Order, Ticket, UserEvent, Event, Tour, FirebaseUser, Product } fro
 import { unstable_noStore as noStore } from 'next/cache';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { logAdminAction } from '@/services/audit-service';
 
 function serializeData(doc: any) {
@@ -133,6 +133,7 @@ export async function getListingDetailsForAdmin(listingId: string, listingType: 
 export async function updateListingStatus(listingId: string, type: 'event' | 'tour', status: 'published' | 'rejected' | 'taken-down' | 'archived') {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated.' };
+    const auth = await getAdminAuth();
 
     try {
         if (!auth) throw new Error("Server auth not initialized");
@@ -167,6 +168,7 @@ export async function generateManualTicketForAdmin(
 ): Promise<{ success: boolean; error?: string, orderId?: string }> {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let admin;
     try {
@@ -254,6 +256,7 @@ export async function generateManualTicketForAdmin(
 export async function updateListingMerch(listingId: string, type: 'event' | 'tour', merch: { productId: string; productName: string; } | null) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated.' };
+    const auth = await getAdminAuth();
     
     try {
         if (!auth) throw new Error("Server auth not initialized");
@@ -289,5 +292,37 @@ export async function getProductsForSelect(): Promise<{ success: boolean; data?:
         return { success: true, data };
     } catch (e: any) {
         return { success: false, error: 'Failed to fetch products' };
+    }
+}
+
+
+export async function updateEventGallery(listingId: string, galleryUrls: string[]) {
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) return { success: false, error: 'Not authenticated.' };
+    const auth = await getAdminAuth();
+    try {
+        if (!auth) throw new Error("Server auth not initialized");
+        const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+
+        const docRef = doc(db, "events", listingId);
+        await updateDoc(docRef, {
+            gallery: galleryUrls
+        });
+        
+        await logAdminAction({
+            adminId: decodedClaims.uid,
+            adminName: decodedClaims.name || 'Admin/Organizer',
+            action: 'update_event_gallery',
+            targetType: 'event',
+            targetId: listingId,
+            details: { imageCount: galleryUrls.length }
+        });
+
+        revalidatePath(`/events/${listingId}`);
+        revalidatePath(`/organizer/listings/${listingId}`);
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error updating gallery:", error);
+        return { success: false, error: "Failed to update event gallery." };
     }
 }

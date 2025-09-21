@@ -1,11 +1,10 @@
 
-
 'use server';
 
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, doc, writeBatch, Timestamp, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
 import type { Invitation, FirebaseUser } from '@/lib/types';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 
 export async function getInvitationDetails(token: string): Promise<{ success: boolean; data?: Invitation; error?: string; }> {
     if (!token) {
@@ -56,6 +55,7 @@ export async function acceptInvitation(token: string, uid: string): Promise<{ su
         }
         
         const invite = inviteResult.data;
+        const auth = await getAdminAuth();
 
         if (!auth) throw new Error("Server auth not initialized");
         const userRecord = await auth.getUser(uid);

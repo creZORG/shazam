@@ -10,7 +10,6 @@ import { sendTicketEmail } from '@/services/email';
 export async function POST(request: Request, { params }: { params: { secret:string } }) {
     console.log("--- M-PESA CALLBACK ENDPOINT HIT ---");
 
-    // 1. Validate Secret from URL
     const secret = params.secret;
     if (secret !== process.env.MPESA_CALLBACK_SECRET) {
         console.error("!!! CRITICAL: Invalid M-Pesa callback secret received in URL. Halting execution. !!!");
@@ -22,9 +21,6 @@ export async function POST(request: Request, { params }: { params: { secret:stri
     let db;
     try {
         db = await getAdminDb();
-        if (!db) {
-            throw new Error("Firestore Admin DB instance is not available.");
-        }
     } catch(e: any) {
         console.error("!!! FATAL ERROR initializing Firestore Admin DB:", e);
         return NextResponse.json({ ResultCode: 1, ResultDesc: "Internal Server Error" }, { status: 500 });
@@ -52,7 +48,6 @@ export async function POST(request: Request, { params }: { params: { secret:stri
 
         if (querySnapshot.empty) {
             console.error(`Transaction not found for CheckoutRequestID: ${checkoutRequestId}. This might be a test callback or an old request.`);
-            // Acknowledge receipt to Safaricom even if we can't find it.
             return NextResponse.json({ ResultCode: 0, ResultDesc: "Accepted" }, { status: 200 });
         }
         console.log(`Found matching transaction document: ${querySnapshot.docs[0].id}`);
@@ -108,7 +103,6 @@ export async function POST(request: Request, { params }: { params: { secret:stri
                         firestoreTransaction.update(userRef, { totalPurchases: FieldValue.increment(order.total) });
                     }
                     
-                    // Ticket generation and other logic...
                     if (order.paymentType === 'full' && order.listingType === 'event') {
                         console.log("Full payment for an event detected. Generating tickets...");
                         for (const ticketItem of order.tickets) {
@@ -170,7 +164,6 @@ export async function POST(request: Request, { params }: { params: { secret:stri
             }
         });
 
-        // --- Post-Transaction Actions (like sending emails) ---
         if (resultCode === 0) {
             const finalOrderDoc = await orderRef.get();
             if (finalOrderDoc.exists()) {
@@ -204,5 +197,3 @@ export async function POST(request: Request, { params }: { params: { secret:stri
         return NextResponse.json({ ResultCode: 1, ResultDesc: "Internal Server Error" }, { status: 500 });
     }
 }
-
-    

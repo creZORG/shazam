@@ -1,7 +1,17 @@
 
+'use server';
 
 import { getAuth } from 'firebase-admin/auth';
-import { app } from './server-config';
+import { getAdminApp } from './server-config';
 
-// Ensure app is defined before calling getAuth
-export const auth = app ? getAuth(app) : undefined;
+/**
+ * Returns the Firebase Admin Auth instance.
+ * This is an async function to comply with "use server" requirements.
+ */
+export async function getAdminAuth() {
+  const app = getAdminApp();
+  if (!app) {
+    throw new Error("Firebase Admin App is not initialized. Check server configuration.");
+  }
+  return getAuth(app);
+}

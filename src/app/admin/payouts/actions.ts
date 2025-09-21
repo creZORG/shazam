@@ -5,7 +5,7 @@ import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, doc, updateDoc, Timestamp, orderBy } from "firebase/firestore";
 import type { FirebaseUser, PayoutRequest } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 import { logAdminAction } from '@/services/audit-service';
 
@@ -61,6 +61,7 @@ export async function updatePayoutStatus(requestId: string, status: 'accepted' |
     noStore();
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {

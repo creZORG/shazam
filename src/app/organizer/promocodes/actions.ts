@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -8,7 +7,7 @@ import type { FirebaseUser, Promocode } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { logAdminAction } from '@/services/audit-service';
 import { cookies } from 'next/headers';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { createNotification } from '@/services/notifications';
 
 export async function findInfluencerByUsername(username: string): Promise<{ success: boolean; data?: { uid: string, name: string, photoURL?: string }; error?: string; }> {
@@ -58,6 +57,7 @@ export async function findInfluencerByUsername(username: string): Promise<{ succ
 export async function createPromocode(data: Omit<Promocode, 'id' | 'usageCount' | 'revenueGenerated' | 'isActive' | 'createdAt' | 'updatedAt'>) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {

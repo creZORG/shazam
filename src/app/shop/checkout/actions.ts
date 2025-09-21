@@ -6,7 +6,7 @@ import { addDoc, collection, doc, writeBatch, serverTimestamp, updateDoc, runTra
 import type { MerchOrder, Transaction, Product } from '@/lib/types';
 import { initiateStkPush } from '@/services/mpesa';
 import { nanoid } from 'nanoid';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 import { headers } from 'next/headers';
 
@@ -29,6 +29,7 @@ async function getUserIdFromSession(): Promise<string | null> {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return null;
     try {
+        const auth = await getAdminAuth();
         if (!auth) throw new Error("Server auth not initialized");
         return (await auth.verifySessionCookie(sessionCookie, true)).uid;
     } catch (error) {

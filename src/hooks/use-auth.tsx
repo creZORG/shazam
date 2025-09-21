@@ -14,8 +14,8 @@ interface AuthContextType {
   dbUser: FirebaseUser | null;
   loading: boolean;
   signInWithGoogle: (analyticsData: { userAgent: string; referrer: string; }) => Promise<void>;
-  signUpWithEmail: (email, password, username, analyticsData: { userAgent: string; referrer: string; }) => Promise<any>;
-  signInWithEmail: (email, password) => Promise<{status?: string} | void>;
+  signUpWithEmail: (email: string, password: string, username: string, analyticsData: { userAgent: string; referrer: string; }) => Promise<any>;
+  signInWithEmail: (email: string, password: string) => Promise<{status?: string} | void>;
   resetPassword: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     dbUser,
     loading,
-    signInWithGoogle: async (analyticsData) => {
+    signInWithGoogle: async (analyticsData: { userAgent: string; referrer: string; }) => {
       await signInWithGoogle(analyticsData);
     },
     signUpWithEmail,

@@ -5,7 +5,7 @@ import { db } from '@/lib/firebase/config';
 import { collection, query, getDocs, doc, updateDoc, orderBy, where, Timestamp } from "firebase/firestore";
 import type { Tour, Order, UserEvent } from '@/lib/types';
 import { logAdminAction } from '@/services/audit-service';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 import { unstable_noStore as noStore } from 'next/cache';
 
@@ -79,6 +79,7 @@ export async function updateTourStatus(tourId: string, status: 'published' | 're
 
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
     
     if (!auth) {
         throw new Error("Server auth not initialized");

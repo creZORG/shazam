@@ -1,12 +1,11 @@
 
-
 'use server';
 
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc, collection, query, where, orderBy, getDocs, Timestamp, updateDoc } from 'firebase/firestore';
 import type { Invitation, FirebaseUser, InvitationClick } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 import { logAdminAction } from '@/services/audit-service';
 
@@ -87,6 +86,7 @@ export async function getInvitationDetails(invitationId: string): Promise<{ succ
 export async function voidInvitation(invitationId: string): Promise<{ success: boolean; error?: string; }> {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {

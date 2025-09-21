@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 import type { FirebaseUser, Order, Ticket, UserEvent } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { logAdminAction } from '@/services/audit-service';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 
 function serializeData(doc: any) {
@@ -53,6 +53,7 @@ export async function updateUserRole(userId: string, newRole: FirebaseUser['role
     }
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
     
     if (!auth) {
         throw new Error("Server auth not initialized");
@@ -92,6 +93,7 @@ export async function updateUserStatus(userId: string, newStatus: 'active' | 'su
     }
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
     
     if (!auth) {
         throw new Error("Server auth not initialized");

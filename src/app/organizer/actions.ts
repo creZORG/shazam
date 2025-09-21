@@ -1,7 +1,7 @@
 
 'use server';
 
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { db } from '@/lib/firebase/config';
 import type { Tour, Event, Order, FirebaseUser, UserRole, EventTicketingType } from '@/lib/types';
 import {
@@ -37,6 +37,7 @@ async function getUserIdFromSession(): Promise<string | null> {
         return null;
     }
     try {
+        const auth = await getAdminAuth();
         if (!auth) throw new Error("Server auth not initialized");
         const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
         return decodedClaims.uid;
@@ -247,6 +248,7 @@ export async function getOrganizerGlobalStats() {
     if (!sessionCookie) {
         return { success: false, error: 'Not authenticated. Please log in.' };
     }
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -314,6 +316,7 @@ export async function getOrganizerTourStats() {
     
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated.' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {
@@ -381,6 +384,7 @@ export async function assignVerifier(payload: AssignVerifierPayload) {
     
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let decodedClaims;
     try {

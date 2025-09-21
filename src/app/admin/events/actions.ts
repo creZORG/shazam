@@ -5,7 +5,7 @@ import { db } from '@/lib/firebase/config';
 import { collection, query, getDocs, doc, updateDoc, orderBy } from "firebase/firestore";
 import type { Event } from '@/lib/types';
 import { logAdminAction } from '@/services/audit-service';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 
 export async function getAllEvents() {
@@ -27,6 +27,7 @@ export async function updateEventStatus(eventId: string, status: 'published' | '
 
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
     
     if (!auth) {
         throw new Error("Server auth not initialized");
