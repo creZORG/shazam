@@ -1,10 +1,11 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc, updateDoc, Timestamp, collection, query, where, orderBy, getDocs, limit } from 'firebase/firestore';
 import { revalidatePath } from 'next/cache';
-import type { FirebaseUser, Order, Ticket, UserEvent } from '@/lib/types';
+import type { FirebaseUser } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { logAdminAction } from '@/services/audit-service';
 import { getAdminAuth } from '@/lib/firebase/server-auth';
@@ -51,6 +52,11 @@ export async function updateUserRole(userId: string, newRole: FirebaseUser['role
     if (!userId || !newRole) {
         return { success: false, error: "User ID and new role are required." };
     }
+
+    if (userId === process.env.OWNER_UID) {
+        return { success: false, error: "This user's role cannot be changed." };
+    }
+
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
     const auth = await getAdminAuth();
@@ -91,6 +97,11 @@ export async function updateUserStatus(userId: string, newStatus: 'active' | 'su
      if (!userId || !newStatus) {
         return { success: false, error: "User ID and new status are required." };
     }
+
+    if (userId === process.env.OWNER_UID) {
+        return { success: false, error: "This user's status cannot be changed." };
+    }
+    
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
     const auth = await getAdminAuth();
