@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, FileText, Pencil, BarChart2, Loader2, AlertTriangle, Route, Ticket, Archive, EyeOff, UserPlus, Link as LinkIcon, Copy, Send, QrCode, Upload } from "lucide-react";
+import { PlusCircle, FileText, Pencil, BarChart2, Loader2, AlertTriangle, Route, Ticket, Archive, EyeOff, UserPlus, Link as LinkIcon, Copy, Send, QrCode, Upload, Settings } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useMemo, Suspense, useTransition } from "react";
 import { getListings, updateListingStatus } from "../actions";
@@ -22,6 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Image from "next/image";
 
 
 type Listing = (Event | Tour) & { id: string; status: string; updatedAt?: { seconds: number } };
@@ -195,128 +196,122 @@ function ListingCard({ listing, onStatusChange }: { listing: Listing, onStatusCh
     };
 
     return (
-        <Card className="flex flex-col">
-            <CardHeader>
-                <div className="flex justify-between items-start">
-                    <div>
-                         <CardTitle className="text-xl flex items-center gap-2 mb-1">
-                            {isEvent ? <Ticket className="text-primary"/> : <Route className="text-primary"/>}
-                            {name}
-                        </CardTitle>
-                        <CardDescription>
-                            Last updated: {lastSaved}
-                        </CardDescription>
-                    </div>
-                     <Badge variant={statusInfo.variant} className={statusInfo.className}>{statusInfo.label}</Badge>
-                </div>
-            </CardHeader>
-            <CardContent className="flex-grow">
-                 <p className="text-sm text-muted-foreground line-clamp-2">{listing.description}</p>
-                 {listing.status === 'draft' && (
-                    <Button className="w-full mt-4" size="sm" onClick={() => handleStatusUpdate('submitted for review')}>
-                        <Upload className="mr-2" /> Submit for Review
-                    </Button>
-                 )}
-            </CardContent>
-            <CardFooter className="flex gap-2">
-                 <Dialog>
-                    <DialogTrigger asChild>
-                       <Button variant="outline" className="w-full">Manage</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Manage "{name}"</DialogTitle>
-                        </DialogHeader>
-                        <Tabs defaultValue="actions" className="w-full">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="actions">Actions</TabsTrigger>
-                                <TabsTrigger value="verifiers">Verifiers</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="actions" className="pt-4">
-                                <div className="grid grid-cols-2 gap-4 py-4">
-                                    <Link href={`/organizer/events/create?id=${listing.id}&type=${isEvent ? 'event' : 'tour'}`} passHref>
-                                        <Button variant="outline" className="w-full h-20 flex-col gap-1">
-                                            <Pencil />
-                                            Edit Listing
-                                        </Button>
-                                    </Link>
-                                    <Link href={`/organizer/analytics/${isEvent ? 'event' : 'tour'}/${listing.id}`} passHref>
-                                        <Button variant="outline" className="w-full h-20 flex-col gap-1">
-                                            <BarChart2 />
-                                            View Stats
-                                        </Button>
-                                    </Link>
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                        <Button variant="outline" className="w-full h-20 flex-col gap-1 text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10 hover:text-yellow-300" disabled={listing.status !== 'published'}>
-                                            <EyeOff />
-                                            Take Down
-                                        </Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader><DialogTitle>Are you sure?</DialogTitle></DialogHeader>
-                                            <DialogDescription>Taking a listing down will unpublish it from the site, but it won't be deleted. You can republish it later after review.</DialogDescription>
-                                            <DialogFooter>
-                                                <DialogClose asChild><Button variant="ghost">Cancel</Button></DialogClose>
-                                                <DialogClose asChild><Button variant="destructive" onClick={() => handleStatusUpdate('taken-down')} disabled={isPending}>
-                                                    {isPending && <Loader2 className="animate-spin mr-2" />}
-                                                    Yes, Take Down
-                                                </Button></DialogClose>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
-                                     <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" className="w-full h-20 flex-col gap-1 text-red-500 border-red-500/50 hover:bg-red-500/10 hover:text-red-400" disabled={listing.status === 'archived'}>
-                                                <Archive />
-                                                Archive
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader><DialogTitle>Are you sure?</DialogTitle></DialogHeader>
-                                            <DialogDescription>Archiving a listing is permanent. It will be moved to past events and cannot be edited or republished.</DialogDescription>
-                                            <DialogFooter>
-                                                <DialogClose asChild><Button variant="ghost">Cancel</Button></DialogClose>
-                                                 <DialogClose asChild><Button variant="destructive" onClick={() => handleStatusUpdate('archived')} disabled={isPending}>
-                                                    {isPending && <Loader2 className="animate-spin mr-2" />}
-                                                    Yes, Archive
-                                                </Button></DialogClose>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                     </Dialog>
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="verifiers" className="pt-4 space-y-4">
-                                <Card className="bg-primary/10 border-primary/20">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2 text-primary">Verify Tickets Yourself</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-sm text-muted-foreground mb-4">You can scan tickets for your own event. Click the button below to open the verification portal.</p>
-                                        <Link href={`/verify/scan/${listing.id}`} className="w-full">
-                                            <Button className="w-full">
-                                                <QrCode className="mr-2" /> Start Scanning Now
+        <Card className="flex items-center p-4 gap-4">
+            <div className="relative h-16 w-16 rounded-md overflow-hidden flex-shrink-0">
+                <Image src={listing.imageUrl} alt={name} layout="fill" objectFit="cover" />
+            </div>
+            <div className="flex-grow">
+                 <div className="flex justify-between items-start">
+                    <h3 className="font-semibold line-clamp-1">{name}</h3>
+                    <Badge variant={statusInfo.variant} className={statusInfo.className}>{statusInfo.label}</Badge>
+                 </div>
+                 <p className="text-xs text-muted-foreground">Last updated: {lastSaved}</p>
+                 <div className="flex gap-2 mt-2">
+                     <Dialog>
+                        <DialogTrigger asChild>
+                           <Button variant="outline" size="sm">Manage</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Manage "{name}"</DialogTitle>
+                            </DialogHeader>
+                            <Tabs defaultValue="actions" className="w-full">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="actions">Actions</TabsTrigger>
+                                    <TabsTrigger value="verifiers">Verifiers</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="actions" className="pt-4">
+                                    <div className="grid grid-cols-2 gap-4 py-4">
+                                        <Link href={`/organizer/events/create?id=${listing.id}&type=${isEvent ? 'event' : 'tour'}`} passHref>
+                                            <Button variant="outline" className="w-full h-20 flex-col gap-1">
+                                                <Pencil />
+                                                Edit Listing
                                             </Button>
                                         </Link>
-                                    </CardContent>
-                                </Card>
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2"><UserPlus /> Invite Verification Agents</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <InviteVerifierForm eventId={listing.id} eventName={listing.name || 'this event'} />
-                                    </CardContent>
-                                </Card>
-                                <AssignedVerifiers eventId={listing.id} />
-                            </TabsContent>
-                        </Tabs>
-                    </DialogContent>
-                </Dialog>
-            </CardFooter>
+                                        <Link href={`/organizer/analytics/${isEvent ? 'event' : 'tour'}/${listing.id}`} passHref>
+                                            <Button variant="outline" className="w-full h-20 flex-col gap-1">
+                                                <BarChart2 />
+                                                View Stats
+                                            </Button>
+                                        </Link>
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                            <Button variant="outline" className="w-full h-20 flex-col gap-1 text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/10 hover:text-yellow-300" disabled={listing.status !== 'published'}>
+                                                <EyeOff />
+                                                Take Down
+                                            </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader><DialogTitle>Are you sure?</DialogTitle></DialogHeader>
+                                                <DialogDescription>Taking a listing down will unpublish it from the site, but it won't be deleted. You can republish it later after review.</DialogDescription>
+                                                <DialogFooter>
+                                                    <DialogClose asChild><Button variant="ghost">Cancel</Button></DialogClose>
+                                                    <DialogClose asChild><Button variant="destructive" onClick={() => handleStatusUpdate('taken-down')} disabled={isPending}>
+                                                        {isPending && <Loader2 className="animate-spin mr-2" />}
+                                                        Yes, Take Down
+                                                    </Button></DialogClose>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                         <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button variant="outline" className="w-full h-20 flex-col gap-1 text-red-500 border-red-500/50 hover:bg-red-500/10 hover:text-red-400" disabled={listing.status === 'archived'}>
+                                                    <Archive />
+                                                    Archive
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader><DialogTitle>Are you sure?</DialogTitle></DialogHeader>
+                                                <DialogDescription>Archiving a listing is permanent. It will be moved to past events and cannot be edited or republished.</DialogDescription>
+                                                <DialogFooter>
+                                                    <DialogClose asChild><Button variant="ghost">Cancel</Button></DialogClose>
+                                                     <DialogClose asChild><Button variant="destructive" onClick={() => handleStatusUpdate('archived')} disabled={isPending}>
+                                                        {isPending && <Loader2 className="animate-spin mr-2" />}
+                                                        Yes, Archive
+                                                    </Button></DialogClose>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                         </Dialog>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="verifiers" className="pt-4 space-y-4">
+                                    <Card className="bg-primary/10 border-primary/20">
+                                        <CardHeader>
+                                            <CardTitle className="flex items-center gap-2 text-primary">Verify Tickets Yourself</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-sm text-muted-foreground mb-4">You can scan tickets for your own event. Click the button below to open the verification portal.</p>
+                                            <Link href={`/verify/scan/${listing.id}`} className="w-full">
+                                                <Button className="w-full">
+                                                    <QrCode className="mr-2" /> Start Scanning Now
+                                                </Button>
+                                            </Link>
+                                        </CardContent>
+                                    </Card>
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle className="flex items-center gap-2"><UserPlus /> Invite Verification Agents</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <InviteVerifierForm eventId={listing.id} eventName={listing.name || 'this event'} />
+                                        </CardContent>
+                                    </Card>
+                                    <AssignedVerifiers eventId={listing.id} />
+                                </TabsContent>
+                            </Tabs>
+                        </DialogContent>
+                    </Dialog>
+                     {listing.status === 'draft' && (
+                        <Button size="sm" className="w-full" onClick={() => handleStatusUpdate('submitted for review')}>
+                            <Upload className="mr-2 h-4 w-4" /> Submit
+                        </Button>
+                     )}
+                 </div>
+            </div>
         </Card>
     );
 }
+
 
 function ListingsGrid({ listings, statusFilter, onStatusChange }: { listings: Listing[], statusFilter: ListingStatus, onStatusChange: () => void }) {
     
@@ -339,7 +334,7 @@ function ListingsGrid({ listings, statusFilter, onStatusChange }: { listings: Li
     }
     
     return (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
             {filteredListings.map(listing => (
                 <ListingCard key={listing.id} listing={listing} onStatusChange={onStatusChange} />
             ))}
