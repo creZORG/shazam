@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -8,7 +9,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from 'zod';
+import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,24 +17,21 @@ import { useToast } from "@/hooks/use-toast";
 import { updateOrganizerProfile } from "./actions";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, PlusCircle, Ticket, UserCircle, Loader2, Percent, BarChart2, CheckSquare, BookOpen, DollarSign } from "lucide-react";
-import { Logo } from "@/components/icons/Logo";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { NotificationCenter } from "@/components/layout/NotificationCenter";
 import { VerificationGate } from '@/components/auth/VerificationGate';
-
-const topNavLinks = [
-  { href: "/organizer/promocodes", label: "Promocodes", icon: Percent },
-  { href: "/organizer/payouts", label: "Payouts", icon: DollarSign },
-  { href: "/organizer/guide", label: "Guide", icon: BookOpen },
-  { href: "/organizer/profile", label: "Profile", icon: UserCircle },
-];
 
 const bottomNavLinks = [
   { href: "/organizer", label: "Overview", icon: LayoutDashboard },
   { href: "/organizer/listings", label: "My Listings", icon: Ticket },
   { href: "/organizer/events/create", label: "Create New", icon: PlusCircle },
   { href: "/organizer/attendance", label: "Attendance", icon: CheckSquare },
+];
+
+const secondaryNavLinks = [
+  { href: "/organizer/promocodes", label: "Promocodes", icon: Percent },
+  { href: "/organizer/payouts", label: "Payouts", icon: DollarSign },
+  { href: "/organizer/guide", label: "Guide", icon: BookOpen },
+  { href: "/organizer/profile", label: "Profile", icon: UserCircle },
 ];
 
 
@@ -146,53 +144,36 @@ export default function OrganizerLayout({ children }: { children: ReactNode }) {
     <div className="flex flex-col min-h-screen">
       {showProfileModal && user && <ProfileSetupModal open={showProfileModal} user={user} />}
       
-      {/* Top Bar */}
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
-          <div className="mr-4 hidden md:flex">
-            <Link href="/" className="mr-6 flex items-center space-x-2">
-              <Logo />
-              <span className="hidden font-bold sm:inline-block">NaksYetu</span>
-            </Link>
-          </div>
-          <div className="flex items-center gap-1 p-1 rounded-full bg-muted/50 border shadow-sm">
-            {topNavLinks.map(link => {
-              const isActive = pathname.startsWith(link.href);
-              const isDisabled = showProfileModal && link.href !== '/organizer/profile';
-              return (
-                <Link key={link.href} href={isDisabled ? '#' : link.href}>
-                  <Button
-                    variant={isActive ? "secondary" : "ghost"}
-                    size="sm"
-                    className="flex items-center gap-1.5"
-                    disabled={isDisabled}
-                  >
-                    <link.icon className="h-4 w-4" />
-                    <span className="hidden sm:inline">{link.label}</span>
-                  </Button>
-                </Link>
-              );
-            })}
-          </div>
-          <div className="flex flex-1 items-center justify-end gap-2">
-            <NotificationCenter />
-            <ThemeToggle />
-             <Avatar>
-                <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
-                <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
-              </Avatar>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className={cn("flex-1 p-4 sm:p-6 lg:p-8 pb-24", showProfileModal && !isProfilePage && "blur-sm pointer-events-none")}>
+        <div className="hidden md:flex justify-center mb-8">
+            <div className="flex items-center gap-1 p-1 rounded-full bg-muted/50 border shadow-sm">
+                {secondaryNavLinks.map(link => {
+                const isActive = pathname.startsWith(link.href);
+                const isDisabled = showProfileModal && link.href !== '/organizer/profile';
+                return (
+                    <Link key={link.href} href={isDisabled ? '#' : link.href}>
+                    <Button
+                        variant={isActive ? "secondary" : "ghost"}
+                        size="sm"
+                        className="flex items-center gap-1.5"
+                        disabled={isDisabled}
+                    >
+                        <link.icon className="h-4 w-4" />
+                        <span>{link.label}</span>
+                    </Button>
+                    </Link>
+                );
+                })}
+            </div>
+        </div>
+
         <VerificationGate>
           {children}
         </VerificationGate>
       </main>
 
-      {/* Bottom Bar */}
+      {/* Bottom Bar for Mobile */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur md:hidden">
         <div className="grid h-16 grid-cols-4 items-center justify-items-center">
            {bottomNavLinks.map(link => {
