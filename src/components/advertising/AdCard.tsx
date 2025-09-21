@@ -46,19 +46,21 @@ export function AdCard({ ad, isNightlife = false }: AdCardProps) {
     <>
       <div onClick={handleCardClick} className="block h-full group cursor-pointer">
           <Card className={cn(
-              "overflow-hidden h-full transition-all duration-300 relative group",
-              "hover:scale-105 hover:shadow-2xl",
+              "overflow-hidden h-full flex flex-col transition-all duration-300 relative group",
+              "hover:shadow-2xl hover:-translate-y-1",
                isNightlife ? "hover:shadow-purple-500/40" : "hover:shadow-primary/40"
           )}>
-            <Image
-              src={primaryImage}
-              alt={ad.campaignName}
-              fill
-              className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+            <div className="relative aspect-[4/5] w-full">
+                <Image
+                src={primaryImage}
+                alt={ad.campaignName}
+                fill
+                className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+            </div>
 
-            <div className="relative h-full flex flex-col justify-between p-4 text-white">
+            <div className="absolute inset-0 h-full flex flex-col justify-between p-4 text-white">
               <div>
                    <Badge
                     variant="destructive"

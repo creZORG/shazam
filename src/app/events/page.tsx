@@ -164,7 +164,8 @@ export default function EventsPage() {
       }
 
       if (adsResult.data && adsResult.data.length > 0) {
-        setApprovedAds(adsResult.data);
+        // Filter for ads that are NOT adult content for this page
+        setApprovedAds(adsResult.data.filter(ad => !ad.isAdultContent));
       }
 
       setIsSearching(false);

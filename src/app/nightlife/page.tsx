@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { NightlifeCard } from "@/components/nightlife/NightlifeCard";
@@ -73,7 +74,8 @@ export default function NightlifePage() {
             setFilteredEvents(events);
         }
         if (adsResult.data) {
-            setApprovedAds(adsResult.data);
+            // Filter for ads that ARE adult content for this page
+            setApprovedAds(adsResult.data.filter(ad => ad.isAdultContent));
         }
         setLoading(false);
     }

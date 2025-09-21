@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
@@ -305,13 +306,13 @@ export default function AdvertisingPage() {
                                     Is this ad suitable for kids?
                                     </FormLabel>
                                     <FormDescription>
-                                     No
+                                     Turn this off if your ad is for nightlife events or contains adult themes.
                                     </FormDescription>
                                 </div>
                                 <FormControl>
                                     <Switch
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
+                                    checked={!field.value}
+                                    onCheckedChange={(checked) => field.onChange(!checked)}
                                     />
                                 </FormControl>
                                 </FormItem>
