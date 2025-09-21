@@ -71,8 +71,7 @@ export async function createPromocode(data: Partial<Omit<Promocode, 'id' | 'usag
     }
     
     try {
-        // Base structure for any new promocode
-        const newCodeBase = {
+        const newCodeBase: Partial<Promocode> = {
             ...data,
             isActive: true,
             usageCount: 0,
@@ -81,14 +80,12 @@ export async function createPromocode(data: Partial<Omit<Promocode, 'id' | 'usag
             updatedAt: serverTimestamp(),
         };
 
-        // Conditionally add influencer-specific fields
-        if (data.influencerId) {
-            (newCodeBase as any).influencerStatus = 'pending';
+        if (!newCodeBase.influencerId) {
+             delete newCodeBase.influencerId;
+             delete newCodeBase.commissionType;
+             delete newCodeBase.commissionValue;
         } else {
-            // Explicitly remove influencer fields for general codes to prevent Firestore errors
-            delete (newCodeBase as any).influencerId;
-            delete (newCodeBase as any).commissionType;
-            delete (newCodeBase as any).commissionValue;
+            newCodeBase.influencerStatus = 'pending';
         }
 
         const docRef = await addDoc(collection(db, 'promocodes'), newCodeBase);

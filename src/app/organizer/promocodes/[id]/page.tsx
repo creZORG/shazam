@@ -40,8 +40,8 @@ const statusConfig: Record<string, { variant: 'default' | 'secondary' | 'destruc
 function getPromocodeStatus(code: Promocode) {
     if (!code.isActive) return 'void';
     if (code.expiresAt && new Date(code.expiresAt) < new Date()) return 'expired';
-    if (code.usageCount >= code.usageLimit) return 'limit_reached';
-    if (code.influencerId && code.influencerStatus === 'pending') return 'active_pending';
+    if (code.usageLimit > 0 && code.usageCount >= code.usageLimit) return 'limit_reached';
+    if (code.influencerId && code.influencerStatus !== 'accepted') return 'active_pending';
     return 'active_accepted';
 }
 
