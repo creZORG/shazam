@@ -47,7 +47,7 @@ function EventAttendanceCard({ event }: { event: AttendanceEvent }) {
                 </div>
             </CardContent>
             <CardFooter>
-                 <Link href={`/organizer/listings/${event.id}?type=event`} className="w-full">
+                 <Link href={`/organizer/attendance/${event.id}`} className="w-full">
                     <Button variant="outline" className="w-full">
                         <Settings className="mr-2" /> Manage Attendance
                     </Button>
