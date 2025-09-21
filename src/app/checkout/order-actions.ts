@@ -197,6 +197,26 @@ export async function initiatePaymentForOrder(orderId: string, transactionId: st
     }
 }
 
+function translateMpesaError(reason: string | null | undefined): string {
+    if (!reason) return 'An unknown error occurred.';
+
+    if (reason.includes('1032')) {
+        return "You cancelled the M-Pesa request on your phone. Please try again when you're ready.";
+    }
+    if (reason.includes('1037')) {
+        return "Oops! The M-Pesa prompt on your phone timed out. Please try again and enter your PIN more quickly.";
+    }
+    if (reason.includes('2001')) {
+        return "You have insufficient funds in your M-Pesa account to complete this transaction.";
+    }
+    if (reason.includes('The transaction is already in process')) {
+        return "Another payment is already in progress for this order. Please wait a moment for it to complete.";
+    }
+    
+    // Fallback for unknown errors
+    return reason;
+}
+
 export async function getTransactionStatus(transactionId: string) {
     noStore();
     try {
@@ -208,7 +228,7 @@ export async function getTransactionStatus(transactionId: string) {
         return {
             success: true,
             status: txData.status,
-            failReason: txData.failReason || 'An unknown error occurred.',
+            failReason: translateMpesaError(txData.failReason),
             retryCount: txData.retryCount || 0
         };
     } catch(e: any) {
