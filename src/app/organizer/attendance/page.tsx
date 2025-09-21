@@ -241,7 +241,7 @@ function AttendanceDashboard() {
                                 <CardTitle>Check-in History</CardTitle>
                                 <CardDescription>A log of the most recent ticket scans.</CardDescription>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="relative w-full overflow-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -270,7 +270,7 @@ function AttendanceDashboard() {
                                 <CardTitle className="flex items-center gap-2"><UserCheck /> Verifier Performance</CardTitle>
                                 <CardDescription>Tickets scanned by each verification agent.</CardDescription>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="relative w-full overflow-auto">
                                 {stats.verifierStats.length > 0 ? (
                                     <Table>
                                         <TableHeader>

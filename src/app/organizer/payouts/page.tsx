@@ -165,7 +165,7 @@ export default function OrganizerPayoutsPage() {
                 <AlertDescription>{error}</AlertDescription>
             </Alert>
         )}
-
+        
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -205,7 +205,7 @@ export default function OrganizerPayoutsPage() {
 
         <Card>
             <CardHeader><CardTitle>Payout History</CardTitle></CardHeader>
-            <CardContent>
+            <CardContent className="relative w-full overflow-auto">
             {loading ? (
                 <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>
             ) : !error && payouts.length > 0 ? (
@@ -226,10 +226,19 @@ export default function OrganizerPayoutsPage() {
                 <div className="text-center py-12">
                     <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
                     <h3 className="text-lg font-semibold mt-4">No payout history</h3>
-                    <p className="text-muted-foreground mt-2">When you receive a payout, it will appear here.</p>
+                    <p className="text-muted-foreground mt-2">
+                    When you receive a payout, it will appear here.
+                    </p>
                 </div>
             )}
             </CardContent>
+            {payouts && payouts.length > 0 && (
+                <CardFooter>
+                    <p className="text-xs text-muted-foreground">
+                        All payouts are processed via M-Pesa.
+                    </p>
+                </CardFooter>
+            )}
         </Card>
     </div>
   );

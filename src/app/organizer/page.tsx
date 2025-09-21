@@ -111,7 +111,7 @@ export default function OrganizerOverviewPage() {
                         <CardTitle>Top Performing Listings</CardTitle>
                         <CardDescription>Your most successful events based on tickets sold.</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="relative w-full overflow-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -170,7 +170,7 @@ export default function OrganizerOverviewPage() {
                         <CardTitle>Top Performing Tours</CardTitle>
                         <CardDescription>Your most successful tours based on bookings.</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="relative w-full overflow-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
