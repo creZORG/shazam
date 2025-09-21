@@ -54,7 +54,7 @@ export async function findInfluencerByUsername(username: string): Promise<{ succ
 }
 
 
-export async function createPromocode(data: Omit<Promocode, 'id' | 'usageCount' | 'revenueGenerated' | 'isActive' | 'createdAt' | 'updatedAt'>) {
+export async function createPromocode(data: Partial<Omit<Promocode, 'id' | 'usageCount' | 'revenueGenerated' | 'isActive' | 'createdAt' | 'updatedAt'>>) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
     const auth = await getAdminAuth();
@@ -71,19 +71,27 @@ export async function createPromocode(data: Omit<Promocode, 'id' | 'usageCount' 
     }
     
     try {
-        const newCode: Omit<Promocode, 'id'> = {
+        // Base structure for any new promocode
+        const newCodeBase = {
             ...data,
-            influencerStatus: data.influencerId ? 'pending' : undefined,
-            commissionType: data.influencerId ? data.commissionType : undefined,
-            commissionValue: data.influencerId ? data.commissionValue : undefined,
             isActive: true,
             usageCount: 0,
             revenueGenerated: 0,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
+        };
+
+        // Conditionally add influencer-specific fields
+        if (data.influencerId) {
+            (newCodeBase as any).influencerStatus = 'pending';
+        } else {
+            // Explicitly remove influencer fields for general codes to prevent Firestore errors
+            delete (newCodeBase as any).influencerId;
+            delete (newCodeBase as any).commissionType;
+            delete (newCodeBase as any).commissionValue;
         }
 
-        const docRef = await addDoc(collection(db, 'promocodes'), newCode);
+        const docRef = await addDoc(collection(db, 'promocodes'), newCodeBase);
         
         if (decodedClaims) {
             await logAdminAction({
@@ -116,7 +124,8 @@ export async function createPromocode(data: Omit<Promocode, 'id' | 'usageCount' 
 
     } catch (error) {
         console.error("Error creating promocode:", error);
-        return { success: false, error: 'Failed to create the promocode.' };
+        const errorMessage = error instanceof Error ? error.message : 'An unknown server error occurred.';
+        return { success: false, error: errorMessage };
     }
 }
 
