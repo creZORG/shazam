@@ -180,11 +180,14 @@ export async function getPayoutHistory() {
         const snapshot = await getDocs(q);
         const payouts = snapshot.docs.map(doc => {
             const data = doc.data();
+            const requestedAtDate = data.requestedAt?.toDate() ?? new Date();
+            const processedAt = data.processedAt?.toDate() ?? null;
+            
             return {
                 id: doc.id,
                 ...data,
-                requestedAt: (data.requestedAt?.toDate ?? new Date()).toISOString(),
-                processedAt: (data.processedAt?.toDate ?? null)?.toISOString(),
+                requestedAt: requestedAtDate.toISOString(),
+                processedAt: processedAt ? processedAt.toISOString() : null,
             }
         }) as PayoutRequest[];
 
