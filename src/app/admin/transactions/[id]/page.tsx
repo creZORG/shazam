@@ -2,7 +2,7 @@
 'use client';
 
 import { notFound, useRouter } from 'next/navigation';
-import { getTransactionDetails, resendTicketEmail } from './actions';
+import { getTransactionDetails } from './actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -22,93 +22,6 @@ function DetailItem({ label, value }: { label: string, value: React.ReactNode })
             <span className="font-semibold text-right">{value}</span>
         </div>
     )
-}
-
-function UserActivityFeed({ activity }: { activity: UserEvent[] }) {
-  const interactionIcons: Record<UserEvent['action'], React.ElementType> = {
-    click_event: Eye,
-    hover_event: BarChart,
-    bookmark_event: Bookmark,
-    share_event: Briefcase,
-    start_checkout: HandCoins,
-    abandon_checkout: Ticket,
-  };
-
-  const getInteractionText = (item: UserEvent) => {
-    switch (item.action) {
-        case 'click_event': return `Viewed event: ${item.eventId}`;
-        case 'hover_event': return `Hovered over event ${item.eventId} for ${item.durationMs}ms`;
-        case 'bookmark_event': return `Bookmarked event: ${item.eventId}`;
-        case 'share_event': return `Shared event: ${item.eventId}`;
-        case 'start_checkout': return `Started checkout for event: ${item.eventId}`;
-        case 'abandon_checkout': return `Abandoned checkout for event: ${item.eventId}`;
-        default: return 'Performed an action';
-    }
-  }
-
-  if (activity.length === 0) {
-    return <p className="text-sm text-muted-foreground text-center py-4">No pre-transaction activity recorded.</p>
-  }
-
-  return (
-    <ScrollArea className="h-64">
-        <div className="space-y-6">
-            {activity.map((item, index) => {
-                const Icon = interactionIcons[item.action as UserEvent['action']];
-                const timestamp = new Date(item.timestamp);
-                return (
-                    <div key={index} className="flex items-start gap-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                            <Icon className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                        <div className="flex-grow">
-                             <p className="font-medium text-sm">
-                                {getInteractionText(item)}
-                             </p>
-                             <p className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(timestamp, { addSuffix: true })}
-                             </p>
-                        </div>
-                    </div>
-                )
-            })}
-        </div>
-    </ScrollArea>
-  )
-}
-
-function ResendEmailCard({ order, listingName }: { order: any; listingName: string; }) {
-    const { toast } = useToast();
-    const [isSending, setIsSending] = useState(false);
-    const [email, setEmail] = useState(order.userEmail);
-
-    const handleResend = async () => {
-        setIsSending(true);
-        const result = await resendTicketEmail({ orderId: order.id, to: email, eventName: listingName });
-        if (result.success) {
-            toast({ title: "Email Sent!", description: `The ticket email has been sent to ${email}.` });
-        } else {
-            toast({ variant: 'destructive', title: 'Failed to Send', description: result.error });
-        }
-        setIsSending(false);
-    }
-
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Mail/> Ticket Email</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">Resend the ticket confirmation email to the customer. You can change the email address if needed.</p>
-                <div className="flex gap-2">
-                    <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Recipient email" />
-                    <Button onClick={handleResend} disabled={isSending}>
-                        {isSending ? <Loader2 className="animate-spin" /> : <Send />}
-                    </Button>
-                </div>
-            </CardContent>
-        </Card>
-    );
 }
 
 export default function TransactionDetailPage({ params }: { params: { id: string } }) {
@@ -134,7 +47,7 @@ export default function TransactionDetailPage({ params }: { params: { id: string
         notFound();
     }
 
-    const { transaction, order, user, listing, tickets, userActivity } = details;
+    const { transaction, order, user, listing } = details;
     const statusVariant = transaction.status === 'completed' ? 'default' : transaction.status === 'pending' ? 'secondary' : 'destructive';
 
     return (
@@ -178,34 +91,6 @@ export default function TransactionDetailPage({ params }: { params: { id: string
                              <DetailItem label="Retry Count" value={transaction.retryCount} />
                         </CardContent>
                     </Card>
-                    
-                    {transaction.status === 'completed' && (
-                         <Card>
-                            <CardHeader><CardTitle>Tickets Purchased</CardTitle></CardHeader>
-                            <CardContent>
-                                {order.tickets && order.tickets.length > 0 ? (
-                                    <ul className="space-y-2">
-                                        {order.tickets.map((ticket: any, index: number) => (
-                                            <li key={index} className="flex justify-between items-center text-sm p-2 bg-muted rounded-md">
-                                                <p className="font-medium">{ticket.quantity}x {ticket.name}</p>
-                                                <p>@ Ksh {ticket.price.toLocaleString()}</p>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="text-sm text-center text-muted-foreground py-4">No tickets were generated for this order (e.g., booking-only payment).</p>
-                                )}
-                            </CardContent>
-                        </Card>
-                    )}
-
-
-                     <Card>
-                        <CardHeader><CardTitle>User's Journey</CardTitle><CardDescription>A timeline of the user's actions before this transaction was initiated.</CardDescription></CardHeader>
-                        <CardContent>
-                            <UserActivityFeed activity={userActivity} />
-                        </CardContent>
-                    </Card>
                 </div>
 
                 <div className="space-y-8">
@@ -244,8 +129,6 @@ export default function TransactionDetailPage({ params }: { params: { id: string
                              <DetailItem label="Total" value={`Ksh ${order.total.toLocaleString()}`} />
                         </CardContent>
                     </Card>
-
-                    {transaction.status === 'completed' && <ResendEmailCard order={order} listingName={listing.name} />}
                 </div>
             </div>
         </div>
