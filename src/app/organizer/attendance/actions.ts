@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -8,6 +9,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { logAdminAction } from '@/services/audit-service';
 
 function serializeData(doc: any) {
     const data = doc.data();
@@ -105,7 +107,7 @@ export async function getAttendanceStats(eventId: string) {
             return { success: false, error: 'Event not found or you do not have permission to view it.' };
         }
         
-        const eventData = eventSnap.data() as Event;
+        const eventData = serializeData(eventSnap) as Event;
 
         const ticketsQuery = query(collection(db, 'tickets'), where('listingId', '==', eventId));
         const allTicketsSnapshot = await getDocs(ticketsQuery);
@@ -157,6 +159,7 @@ export async function getAttendanceStats(eventId: string) {
             success: true,
             data: {
                 eventName: eventData.name,
+                event: eventData,
                 totalCapacity: totalCapacity,
                 totalSoldOnline: totalSoldOnline,
                 generatedAtGate,
@@ -170,5 +173,78 @@ export async function getAttendanceStats(eventId: string) {
     } catch (e: any) {
         console.error("Error fetching attendance stats:", e);
         return { success: false, error: e.message };
+    }
+}
+
+
+export async function generateManualTicketForOrganizer(
+    eventId: string, 
+    ticketsToGenerate: { name: string; quantity: number }[]
+): Promise<{ success: boolean; error?: string }> {
+    const organizerId = await getOrganizerId();
+    if (!organizerId) {
+        return { success: false, error: 'Not authenticated' };
+    }
+    
+    if (!ticketsToGenerate || ticketsToGenerate.length === 0) {
+        return { success: false, error: 'No tickets specified for generation.'};
+    }
+
+    try {
+        const eventRef = doc(db, 'events', eventId);
+        const eventSnap = await getDoc(eventRef);
+        if (!eventSnap.exists() || eventSnap.data().organizerId !== organizerId) {
+            return { success: false, error: 'Event not found or permission denied.' };
+        }
+        const eventData = eventSnap.data();
+        
+        const batch = writeBatch(db);
+        const orderRef = doc(collection(db, 'orders'));
+
+        batch.set(orderRef, {
+            userId: organizerId,
+            userName: 'Gate Sale (Organizer)',
+            userEmail: 'organizer@naksyetu.com',
+            userPhone: 'N/A',
+            listingId: eventId,
+            organizerId: eventData.organizerId,
+            listingType: 'event',
+            tickets: ticketsToGenerate.map(t => ({...t, price: 0})),
+            total: 0, subtotal: 0, discount: 0, platformFee: 0, processingFee: 0,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            status: 'completed',
+            channel: 'direct',
+            deviceInfo: { userAgent: 'organizer_gate_sale' },
+        });
+
+        for (const ticket of ticketsToGenerate) {
+            for (let i = 0; i < ticket.quantity; i++) {
+                const ticketRef = doc(collection(db, 'tickets'));
+                const ticketPayload: Partial<Ticket> = {
+                    orderId: orderRef.id,
+                    userId: organizerId,
+                    userName: 'Gate Sale (Organizer)',
+                    listingId: eventId,
+                    ticketType: ticket.name,
+                    qrCode: ticketRef.id,
+                    status: 'used',
+                    createdAt: serverTimestamp(),
+                    generatedBy: 'organizer',
+                    validatedAt: serverTimestamp(),
+                    validatedBy: organizerId,
+                };
+                batch.set(ticketRef, ticketPayload);
+            }
+        }
+        
+        await batch.commit();
+        
+        revalidatePath(`/organizer/attendance/${eventId}`);
+        return { success: true };
+
+    } catch (e: any) {
+        console.error('Error generating manual ticket for organizer:', e);
+        return { success: false, error: 'Failed to generate ticket.' };
     }
 }

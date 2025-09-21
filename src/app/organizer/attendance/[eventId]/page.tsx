@@ -1,18 +1,21 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
-import { notFound, useParams } from 'next/navigation';
-import { getAttendanceStats } from '../actions';
+import { notFound, useParams, useRouter } from 'next/navigation';
+import { getAttendanceStats, generateManualTicketForOrganizer } from '../actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Ticket, Users, FileText, ArrowLeft, BarChart2, AlertTriangle, QrCode } from 'lucide-react';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Pie, PieChart, Cell, Legend } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Loader2, Ticket, Users, FileText, ArrowLeft, BarChart2, AlertTriangle, QrCode, PlusCircle, Minus } from 'lucide-react';
 import Link from 'next/link';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import type { Event } from '@/lib/types';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
 
 type AnalyticsData = Awaited<ReturnType<typeof getAttendanceStats>>['data'];
 
@@ -31,14 +34,91 @@ function StatCard({ title, value, icon: Icon, description }: { title: string; va
   );
 }
 
+function GateTicketModal({ event, onTicketsGenerated }: { event: Event, onTicketsGenerated: () => void }) {
+    const { toast } = useToast();
+    const [loading, setLoading] = useState(false);
+    const [quantities, setQuantities] = useState<Record<string, number>>({});
+    
+    useEffect(() => {
+        setQuantities({});
+    }, [event]);
+
+    const handleQuantityChange = (name: string, delta: number) => {
+        setQuantities(prev => ({
+            ...prev,
+            [name]: Math.max(0, (prev[name] || 0) + delta)
+        }));
+    };
+
+    const ticketsToGenerate = Object.entries(quantities)
+        .map(([name, quantity]) => ({ name, quantity }))
+        .filter(t => t.quantity > 0);
+        
+    const totalTickets = ticketsToGenerate.reduce((sum, t) => sum + t.quantity, 0);
+
+    const handleGenerate = async () => {
+        if (!event || ticketsToGenerate.length === 0) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Please select tickets to generate.' });
+            return;
+        }
+        setLoading(true);
+        const result = await generateManualTicketForOrganizer(event.id, ticketsToGenerate);
+        if(result.success) {
+            toast({ title: 'Tickets Generated!', description: `${totalTickets} new "used" ticket(s) have been created.`});
+            onTicketsGenerated();
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: result.error });
+        }
+        setLoading(false);
+    }
+
+    return (
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Generate At-the-Gate Tickets</DialogTitle>
+                <DialogDescription>
+                    Create tickets for attendees entering now. These tickets will be automatically marked as "used".
+                </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+                <div className="space-y-3">
+                    <Label>Ticket Types</Label>
+                    {(event as Event).tickets && (event as Event).tickets!.length > 0 ? (event as Event).tickets!.map(def => (
+                        <div key={def.name} className="flex justify-between items-center p-3 border rounded-md">
+                            <span className="font-medium">{def.name}</span>
+                            <div className="flex items-center gap-2">
+                                <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => handleQuantityChange(def.name, -1)}><Minus className="h-4 w-4"/></Button>
+                                <span className="font-bold w-6 text-center">{quantities[def.name] || 0}</span>
+                                <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => handleQuantityChange(def.name, 1)}><PlusCircle className="h-4 w-4"/></Button>
+                            </div>
+                        </div>
+                    )) : (
+                        <p className="text-sm text-muted-foreground">No ticket types are configured for this event.</p>
+                    )}
+                </div>
+            </div>
+            <DialogFooter>
+                 <div className="flex-grow space-y-2">
+                    <Button onClick={handleGenerate} disabled={loading || totalTickets === 0} className="w-full">
+                        {loading && <Loader2 className="animate-spin mr-2" />}
+                        Generate & Use for Entry
+                    </Button>
+                     <p className="text-xs text-muted-foreground text-center">Creates tickets and immediately marks them as used.</p>
+                 </div>
+            </DialogFooter>
+        </DialogContent>
+    )
+}
+
 export default function EventAttendancePage() {
   const params = useParams();
+  const router = useRouter();
   const eventId = params.eventId as string;
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchAttendanceData = () => {
     if (eventId) {
       setLoading(true);
       getAttendanceStats(eventId).then(result => {
@@ -50,7 +130,16 @@ export default function EventAttendancePage() {
         setLoading(false);
       });
     }
+  };
+
+  useEffect(() => {
+    fetchAttendanceData();
   }, [eventId]);
+
+  const handleTicketGeneration = () => {
+    // Re-fetch data after tickets are generated
+    fetchAttendanceData();
+  };
 
   if (loading) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -73,24 +162,32 @@ export default function EventAttendancePage() {
     return notFound();
   }
   
-  const overallAttendance = `${data.overallAttendance.toFixed(1)}% (${data.totalAttended} of ${data.totalSoldOnline + data.generatedAtGate}) checked in`;
+  const overallAttendance = data.overallAttendance.toFixed(1);
 
   return (
     <div className="space-y-8">
-      <Link href="/organizer/attendance" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="mr-2" /> Back to Attendance Overview
-      </Link>
-      <div>
-        <p className="text-muted-foreground">Attendance for</p>
-        <h1 className="text-3xl font-bold">{data.eventName}</h1>
+      <div className="flex justify-between items-start">
+        <div>
+          <Link href="/organizer/attendance" className="flex items-center text-sm text-muted-foreground hover:text-foreground mb-4">
+            <ArrowLeft className="mr-2" /> Back to Attendance Overview
+          </Link>
+          <p className="text-muted-foreground">Attendance for</p>
+          <h1 className="text-3xl font-bold">{data.eventName}</h1>
+        </div>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button><PlusCircle className="mr-2" /> Generate Gate Ticket</Button>
+          </DialogTrigger>
+          <GateTicketModal event={data.event} onTicketsGenerated={handleTicketGeneration} />
+        </Dialog>
       </div>
       
        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <StatCard title="Tickets Sold" value={data.totalSoldOnline} icon={Ticket} />
+        <StatCard title="Tickets Sold Online" value={data.totalSoldOnline} icon={Ticket} />
         <StatCard title="Total Generated at Gate" value={data.generatedAtGate} icon={QrCode} />
         <StatCard title="Total Attended" value={data.totalAttended} icon={Users} />
         <StatCard title="Overall Capacity" value={data.totalCapacity === 0 ? 'N/A' : data.totalCapacity} icon={Users} />
-        <StatCard title="Overall Attendance" value={`${data.overallAttendance.toFixed(1)}%`} icon={BarChart2} description={`${data.totalAttended} of ${data.totalSoldOnline + data.generatedAtGate} checked in`} />
+        <StatCard title="Overall Attendance" value={`${overallAttendance}%`} icon={BarChart2} description={`${data.totalAttended} of ${data.totalSoldOnline + data.generatedAtGate} checked in`} />
       </div>
 
        <div className="grid lg:grid-cols-3 gap-8">
