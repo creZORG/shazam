@@ -66,7 +66,7 @@ export async function POST(request: Request, { params }: { params: { secret:stri
             const merchOrderDoc = await firestoreTransaction.get(merchOrderRef);
 
             // --- VALIDATION PHASE ---
-            if (orderDoc.exists() && orderDoc.data()?.status === 'completed') {
+            if (orderDoc.exists && orderDoc.data()?.status === 'completed') {
                 console.warn(`Idempotency check: Order ${transaction.orderId} already completed. Ignoring callback.`);
                 return;
             }
