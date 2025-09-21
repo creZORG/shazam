@@ -445,6 +445,7 @@ function CheckoutComponent() {
         orderId={orderId}
         retryCount={retryCount}
         onRetry={handleRetry}
+        contactPhone={settings?.contact?.phone}
       />
     )}
     <div className="min-h-screen bg-muted/20">
@@ -533,9 +534,7 @@ function CheckoutComponent() {
                           <div className="pt-4 text-sm text-left bg-muted p-4 rounded-md">
                                 <p className="mt-2">To complete your purchase manually, please follow these steps:</p>
                                 <ol className="list-decimal list-inside space-y-1 mt-2">
-                                    <li>Go to M-Pesa Menu on your phone</li>
-                                    <li>Select "Lipa na M-Pesa"</li>
-                                    <li>Select "Pay Bill"</li>
+                                    <li>Go to M-Pesa Menu &gt; Lipa na M-Pesa &gt; Pay Bill</li>
                                     <li>Enter Business No: <strong>{process.env.NEXT_PUBLIC_MPESA_SHORTCODE || 'XXXXXX'}</strong></li>
                                     <li>Enter Account No: <strong>{orderId || 'NAKSYETU'}</strong></li>
                                     <li>Enter Amount: <strong>Ksh {finalTotal}</strong></li>
