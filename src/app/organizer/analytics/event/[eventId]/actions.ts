@@ -5,13 +5,14 @@ import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, getDoc, doc, Timestamp } from 'firebase/firestore';
 import type { Order, Ticket, UserEvent, Event } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 
 async function getOrganizerId(): Promise<string | null> {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return null;
     try {
+        const auth = await getAdminAuth();
         if (!auth) throw new Error("Server auth not initialized");
         const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
         return decodedClaims.uid;
