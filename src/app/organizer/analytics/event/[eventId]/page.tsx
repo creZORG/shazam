@@ -10,6 +10,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Pie, PieChart, Cell, Legend
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
 
 type AnalyticsData = Awaited<ReturnType<typeof getEventAnalytics>>['data'];
 
