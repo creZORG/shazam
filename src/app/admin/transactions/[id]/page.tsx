@@ -181,17 +181,14 @@ export default function TransactionDetailPage({ params }: { params: { id: string
                     
                     {transaction.status === 'completed' && (
                          <Card>
-                            <CardHeader><CardTitle>Tickets Generated</CardTitle></CardHeader>
+                            <CardHeader><CardTitle>Tickets Purchased</CardTitle></CardHeader>
                             <CardContent>
-                                {tickets.length > 0 ? (
+                                {order.tickets && order.tickets.length > 0 ? (
                                     <ul className="space-y-2">
-                                        {tickets.map((ticket: TicketType) => (
-                                            <li key={ticket.id} className="flex justify-between items-center text-sm p-2 bg-muted rounded-md">
-                                                <div>
-                                                    <p className="font-medium">{ticket.ticketType}</p>
-                                                    <p className="text-xs text-muted-foreground font-mono">{ticket.qrCode}</p>
-                                                </div>
-                                                <Badge variant={ticket.status === 'valid' ? 'default' : 'secondary'} className="capitalize">{ticket.status}</Badge>
+                                        {order.tickets.map((ticket: any, index: number) => (
+                                            <li key={index} className="flex justify-between items-center text-sm p-2 bg-muted rounded-md">
+                                                <p className="font-medium">{ticket.quantity}x {ticket.name}</p>
+                                                <p>@ Ksh {ticket.price.toLocaleString()}</p>
                                             </li>
                                         ))}
                                     </ul>
@@ -237,8 +234,8 @@ export default function TransactionDetailPage({ params }: { params: { id: string
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <DetailItem label="Event" value={<Link href={`/${order.listingType}s/${listing.slug || listing.id}`} className="hover:underline">{listing.name}</Link>} />
-                            {order.tickets.map((t: any) => (
-                                <DetailItem key={t.name} label={`${t.quantity}x ${t.name}`} value={`Ksh ${t.price.toLocaleString()}`} />
+                            {order.tickets.map((t: any, index: number) => (
+                                <DetailItem key={index} label={`${t.quantity}x ${t.name}`} value={`Ksh ${t.price.toLocaleString()}`} />
                             ))}
                             <hr />
                             <DetailItem label="Subtotal" value={`Ksh ${order.subtotal.toLocaleString()}`} />
