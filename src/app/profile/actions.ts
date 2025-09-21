@@ -90,7 +90,6 @@ export async function getTicketDetails(orderId: string) {
     }
 }
 
-
 export async function getUserProfileData() {
   noStore();
   const userId = await getUserIdFromSession();
@@ -100,40 +99,35 @@ export async function getUserProfileData() {
 
   try {
     const userDocRef = doc(db, 'users', userId);
-    
-    const [userDoc, ticketsSnapshot, viewedEventsSnapshot] = await Promise.all([
-        getDoc(userDocRef),
-        getDocs(query(collection(db, 'tickets'), where('userId', '==', userId), orderBy('createdAt', 'desc'))),
-        getDocs(query(collection(db, 'userEvents'), where('uid', '==', userId), where('action', '==', 'click_event'), orderBy('timestamp', 'desc'), limit(20)))
-    ]);
-    
+    const userDoc = await getDoc(userDocRef);
     if (!userDoc.exists()) {
       return { success: false, error: 'User not found.' };
     }
     
     const userData = userDoc.data() as FirebaseUser;
-    const tickets = ticketsSnapshot.docs.map(doc => serializeData(doc) as Ticket);
-    const viewedEventInteractions = viewedEventsSnapshot.docs.map(doc => serializeData(doc) as UserEvent);
 
-    const purchasedTickets = tickets.filter(t => t.status === 'valid');
-    const attendedTickets = tickets.filter(t => t.status === 'used');
+    const [ticketsSnapshot, bookmarkedSnapshot] = await Promise.all([
+      getDocs(query(collection(db, 'tickets'), where('userId', '==', userId), orderBy('createdAt', 'desc'))),
+      userData.bookmarkedEvents && userData.bookmarkedEvents.length > 0
+        ? getDocs(query(collection(db, 'events'), where(documentId(), 'in', userData.bookmarkedEvents)))
+        : Promise.resolve(null),
+    ]);
 
-    const bookmarkedIds = userData.bookmarkedEvents || [];
-    const viewedIds = [...new Set(viewedEventInteractions.map(v => v.eventId))];
+    const allTickets = ticketsSnapshot.docs.map(doc => serializeData(doc) as Ticket);
+    
+    const purchasedTickets = allTickets.filter(t => t.status === 'valid');
+    const attendedTickets = allTickets.filter(t => t.status === 'used');
 
-    const allListingIds = [...new Set([
+    const listingIds = [...new Set([
         ...purchasedTickets.map(t => t.listingId),
         ...attendedTickets.map(t => t.listingId),
-        ...bookmarkedIds,
-        ...viewedIds,
     ])].filter(Boolean);
 
     const listings: Record<string, Event | Tour> = {};
-
-    if (allListingIds.length > 0) {
+    if (listingIds.length > 0) {
         const batchSize = 30; // Firestore 'in' query limit
-        for (let i = 0; i < allListingIds.length; i += batchSize) {
-            const batchIds = allListingIds.slice(i, i + batchSize);
+        for (let i = 0; i < listingIds.length; i += batchSize) {
+            const batchIds = listingIds.slice(i, i + batchSize);
             
             const eventsQuery = query(collection(db, 'events'), where(documentId(), 'in', batchIds));
             const toursQuery = query(collection(db, 'tours'), where(documentId(), 'in', batchIds));
@@ -152,18 +146,23 @@ export async function getUserProfileData() {
         }
     }
 
-    const purchasedWithListings = purchasedTickets.map(ticket => ({ ...ticket, event: listings[ticket.listingId] })).filter(t => t.event);
-    const attendedWithListings = attendedTickets.map(ticket => listings[ticket.listingId]).filter(Boolean);
-    const bookmarkedWithListings = bookmarkedIds.map(id => listings[id]).filter(Boolean);
-    const viewedWithListings = viewedIds.map(id => listings[id]).filter(Boolean);
+    const purchased = purchasedTickets.map(ticket => ({
+      ...ticket,
+      listing: listings[ticket.listingId],
+    })).filter(t => t.listing);
     
+    const attended = attendedTickets.map(ticket => listings[ticket.listingId]).filter(Boolean);
+    const bookmarked = bookmarkedSnapshot ? bookmarkedSnapshot.docs.map(doc => {
+        const data = serializeData(doc);
+        return { ...data, type: 'venue' in data ? 'event' : 'tour' } as Event | Tour;
+    }) : [];
+
     return {
       success: true,
       data: {
-        purchased: purchasedWithListings,
-        attended: attendedWithListings,
-        bookmarked: bookmarkedWithListings,
-        viewed: viewedWithListings,
+        purchased,
+        attended,
+        bookmarked,
       },
     };
 

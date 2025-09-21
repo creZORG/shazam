@@ -4,7 +4,7 @@
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Eye, Bookmark, Ticket, CheckCircle, ArrowRight, Star, Loader2, Gift } from 'lucide-react';
+import { Eye, Bookmark, Ticket, CheckCircle, ArrowRight, Star, Loader2, Gift, Mountain, PartyPopper } from 'lucide-react';
 import { EventCard } from '@/components/events/EventCard';
 import { TourCard } from '@/components/tours/TourCard';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from 'date-fns';
 
 
-type ActiveView = 'purchased' | 'attended' | 'bookmarked' | 'viewed' | 'coupons';
+type ActiveView = 'purchased' | 'attended' | 'bookmarked' | 'coupons';
 type Listing = Event | Tour;
 
 function AttendedEventCard({ item }: { item: Listing }) {
@@ -92,11 +92,10 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<ActiveView>('purchased');
   const [profileData, setProfileData] = useState<{
-      purchased: (TicketType & { event?: Listing })[],
+      purchased: (TicketType & { listing?: Listing })[],
       attended: Listing[],
       bookmarked: Listing[],
-      viewed: Listing[],
-  }>({ purchased: [], attended: [], bookmarked: [], viewed: [] });
+  }>({ purchased: [], attended: [], bookmarked: [] });
   const [coupons, setCoupons] = useState<Promocode[]>([]);
   const [isUpgrading, startUpgradeTransition] = useTransition();
 
@@ -144,7 +143,6 @@ export default function ProfilePage() {
             {items.map((item) => {
                 if (!item) return null;
                 const key = item.id;
-                // Determine if it's an Event or Tour based on properties
                 if (item.type === 'tour') {
                     return <TourCard key={key} tour={item as Tour} />;
                 }
@@ -157,10 +155,10 @@ export default function ProfilePage() {
         case 'purchased':
             return profileData.purchased.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {profileData.purchased.map(ticket => ticket.event && (
-                        (ticket.event as Listing).type === 'event' 
-                            ? <EventCard key={ticket.id} event={ticket.event as Event} />
-                            : <TourCard key={ticket.id} tour={ticket.event as Tour} />
+                    {profileData.purchased.map(ticket => ticket.listing && (
+                        (ticket.listing as Listing).type === 'event' 
+                            ? <EventCard key={ticket.id} event={ticket.listing as Event} />
+                            : <TourCard key={ticket.id} tour={ticket.listing as Tour} />
                     ))}
                 </div>
             ) : <p className="text-muted-foreground text-center py-8">You haven't purchased any tickets yet.</p>;
@@ -175,10 +173,6 @@ export default function ProfilePage() {
         case 'bookmarked':
             return profileData.bookmarked.length > 0 ? renderGrid(profileData.bookmarked)
              : <p className="text-muted-foreground text-center py-8">You haven't bookmarked any events.</p>;
-
-        case 'viewed':
-             return profileData.viewed.length > 0 ? renderGrid(profileData.viewed)
-             : <p className="text-muted-foreground text-center py-8">You haven't viewed any events recently.</p>;
 
         case 'coupons':
             return coupons.length > 0 ? (
@@ -207,7 +201,6 @@ export default function ProfilePage() {
         { value: "attended", icon: Star, label: "Attended & Rate" },
         { value: "bookmarked", icon: Bookmark, label: "Bookmarked" },
         { value: "coupons", icon: Gift, label: `My Coupons (${coupons.length})` },
-        { value: "viewed", icon: Eye, label: "Recently Viewed" },
     ];
 
   return (
@@ -231,36 +224,34 @@ export default function ProfilePage() {
         </CardHeader>
       </Card>
       
-      {dbUser.role === 'attendee' && (
-          <Card className="max-w-4xl mx-auto mb-12 bg-gradient-to-r from-primary/10 to-accent/10">
-            <CardHeader>
-              <CardTitle>Grow with NaksYetu</CardTitle>
-               <CardDescription>
-                Ready to take the next step? Partner with us to organize events or earn as an influencer.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col sm:flex-row gap-4">
-                 <Link href="/partner-with-us" className="w-full">
-                 <Button variant="outline" className="w-full justify-between h-12">
-                    Become an Organizer
-                    <ArrowRight />
-                 </Button>
-                </Link>
-                {isProfileComplete ? (
-                    <Button className="w-full justify-between h-12" onClick={handleUpgradeToInfluencer} disabled={isUpgrading}>
-                        {isUpgrading ? <Loader2 className="animate-spin" /> : <>Become an Influencer <ArrowRight /></>}
-                    </Button>
-                ) : (
-                    <Link href="/profile/edit" className="w-full">
-                        <Button variant="outline" className="w-full justify-between h-12">
-                            Complete Profile to be an Influencer
-                            <ArrowRight />
-                        </Button>
-                    </Link>
-                )}
-            </CardContent>
-          </Card>
-      )}
+      <div className="max-w-4xl mx-auto mb-12 grid md:grid-cols-2 gap-6">
+        <Link href="/events">
+            <Card className="h-full hover:shadow-primary/20 hover:border-primary/50 transition-all">
+                <CardHeader className="flex-row items-center gap-4">
+                    <div className="p-3 bg-primary/10 rounded-full text-primary">
+                        <Ticket className="h-8 w-8" />
+                    </div>
+                    <div>
+                        <CardTitle>Explore Events</CardTitle>
+                        <CardDescription>Find your next concert or festival.</CardDescription>
+                    </div>
+                </CardHeader>
+            </Card>
+        </Link>
+        <Link href="/tours">
+             <Card className="h-full hover:shadow-primary/20 hover:border-primary/50 transition-all">
+                <CardHeader className="flex-row items-center gap-4">
+                     <div className="p-3 bg-primary/10 rounded-full text-primary">
+                        <Mountain className="h-8 w-8" />
+                    </div>
+                    <div>
+                        <CardTitle>Discover Tours</CardTitle>
+                        <CardDescription>Experience the beauty of Nakuru.</CardDescription>
+                    </div>
+                </CardHeader>
+            </Card>
+        </Link>
+      </div>
 
         <div className="sticky top-14 z-40 bg-background/95 backdrop-blur-sm py-4 -mx-4 px-4 mb-8 border-b">
              <div className="flex justify-center">
