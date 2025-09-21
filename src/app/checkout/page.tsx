@@ -368,6 +368,14 @@ function CheckoutComponent() {
                 const statusResult = await getTransactionStatus(transactionId);
                 if (statusResult.success) {
                     if (statusResult.status === 'completed') {
+                        // For guest users, save to session storage. For logged-in users, the server check is enough.
+                        if (!user) {
+                            sessionStorage.setItem('recent_purchase', JSON.stringify({
+                                listingId,
+                                orderId,
+                                timestamp: Date.now()
+                            }));
+                        }
                         setPaymentStage('success');
                         clearInterval(interval);
                     } else if (statusResult.status === 'failed') {
@@ -381,7 +389,7 @@ function CheckoutComponent() {
 
             return () => clearInterval(interval);
         }
-    }, [paymentStage, transactionId]);
+    }, [paymentStage, transactionId, listingId, orderId, user]);
 
   const handleOpenPaymentModal = async () => {
     if (!phoneNumber || !attendeeEmail || !attendeeName) {
@@ -393,13 +401,31 @@ function CheckoutComponent() {
         return;
     }
 
+    paymentInitiated.current = true;
+
+    // Check for logged-in user first
     if (user && listingId) {
-      paymentInitiated.current = true;
       const recentOrderCheck = await checkForRecentOrder(listingId);
       if (recentOrderCheck.recentOrder && recentOrderCheck.orderId) {
         setRecentOrderId(recentOrderCheck.orderId);
         setShowDoublePurchaseDialog(true);
-        return; // Stop here and wait for user confirmation
+        return;
+      }
+    }
+    
+    // Check for guest user in session storage
+    const recentPurchase = sessionStorage.getItem('recent_purchase');
+    if (recentPurchase) {
+      try {
+        const { listingId: storedListingId, orderId: storedOrderId, timestamp } = JSON.parse(recentPurchase);
+        // Check if purchase was for the same event and within the last 3 minutes
+        if (storedListingId === listingId && (Date.now() - timestamp) < 3 * 60 * 1000) {
+            setRecentOrderId(storedOrderId);
+            setShowDoublePurchaseDialog(true);
+            return;
+        }
+      } catch (e) {
+          // Could not parse, proceed normally
       }
     }
 
@@ -427,7 +453,7 @@ function CheckoutComponent() {
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={startPaymentProcess}>Proceed with new purchase</AlertDialogAction>
+                <AlertDialogAction onClick={() => startPaymentProcess()}>Proceed with new purchase</AlertDialogAction>
                  <Link href={`/ticket-center?orderId=${recentOrderId}`} target="_blank">
                     <Button variant="outline">View My Tickets</Button>
                 </Link>
