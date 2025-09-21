@@ -7,7 +7,7 @@ import type { Promocode } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 import { logAdminAction } from '@/services/audit-service';
 import { cookies } from 'next/headers';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 
 export async function getPromocodeById(id: string): Promise<{ success: boolean; data?: Promocode; error?: string; }> {
     if (!id) {
@@ -43,6 +43,7 @@ export async function getPromocodeById(id: string): Promise<{ success: boolean; 
 export async function updatePromocodeStatus(id: string, isActive: boolean) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     try {
         if (!auth) throw new Error("Server auth not initialized");
@@ -76,6 +77,7 @@ export async function updatePromocodeStatus(id: string, isActive: boolean) {
 export async function updatePromocodeExpiry(id: string, expiresAt: string | null) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
      try {
         if (!auth) throw new Error("Server auth not initialized");

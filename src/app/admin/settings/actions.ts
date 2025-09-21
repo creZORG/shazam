@@ -6,7 +6,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { revalidatePath } from 'next/cache';
 import type { SiteSettings } from '@/lib/types';
 import { logAdminAction } from '@/services/audit-service';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 
 export async function getSettings(): Promise<{ settings: SiteSettings | null, error: string | null }> {
@@ -35,7 +35,8 @@ export async function getSettings(): Promise<{ settings: SiteSettings | null, er
 export async function updateSettings(settings: Partial<SiteSettings>) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
-
+    
+    const auth = await getAdminAuth();
     if (!auth) {
         throw new Error("Server auth not initialized");
     }
