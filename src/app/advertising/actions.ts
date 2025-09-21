@@ -1,10 +1,9 @@
 
-
 'use server';
 
 import { db } from '@/lib/firebase/config';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 import type { AdSubmission } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
@@ -16,6 +15,7 @@ export async function submitAdForReview(data: Omit<AdSubmission, 'id' | 'userId'
 
     let decodedClaims;
     try {
+        const auth = await getAdminAuth();
         if (!auth) throw new Error("Server auth not initialized");
         decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
     } catch (e) {
@@ -28,6 +28,8 @@ export async function submitAdForReview(data: Omit<AdSubmission, 'id' | 'userId'
             userId: decodedClaims.uid,
             status: 'pending',
             createdAt: serverTimestamp(),
+            impressions: 0,
+            clicks: 0,
         });
         
         await createNotification({
