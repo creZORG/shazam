@@ -218,3 +218,44 @@ export async function sendOtpEmail({ to, otp }: OtpEmailPayload) {
     htmlbody: emailHtml,
   });
 }
+
+interface TicketStatusUpdatePayload {
+  to: string;
+  attendeeName: string;
+  eventName: string;
+  ticketType: string;
+  newStatus: 'valid' | 'invalid';
+}
+
+export async function sendTicketStatusUpdateEmail(payload: TicketStatusUpdatePayload) {
+    const { to, attendeeName, eventName, ticketType, newStatus } = payload;
+    const subject = `Update on your ticket for ${eventName}`;
+    
+    let body;
+    if (newStatus === 'invalid') {
+        body = `
+            <p>Hi ${attendeeName},</p>
+            <p>This is a notification that your <strong>${ticketType}</strong> ticket for the event <strong>${eventName}</strong> has been marked as invalid by an administrator.</p>
+            <p>This means the ticket can no longer be used for entry. If you believe this is an error, please contact our support team immediately by replying to this email or visiting our help center.</p>
+        `;
+    } else { // 'valid'
+         body = `
+            <p>Hi ${attendeeName},</p>
+            <p>Great news! Your <strong>${ticketType}</strong> ticket for the event <strong>${eventName}</strong> has been re-validated by an administrator.</p>
+            <p>This ticket is now active and can be used for entry. We apologize for any confusion.</p>
+        `;
+    }
+
+    const emailHtml = `
+        <h1>Ticket Status Update</h1>
+        ${body}
+        <p>Thank you,<br/>The NaksYetu Team</p>
+    `;
+
+    return sendZeptoMail({
+        from: { address: "support@naksyetu.com", name: "NaksYetu Support" },
+        to: [{ email_address: { address: to, name: attendeeName } }],
+        subject,
+        htmlbody: emailHtml,
+    });
+}

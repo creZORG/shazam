@@ -2,15 +2,20 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc, collection, query, where, getDocs, Timestamp, documentId } from 'firebase/firestore';
-import type { Transaction, Order, FirebaseUser, Event, Tour } from '@/lib/types';
+import { doc, getDoc, collection, query, where, getDocs, Timestamp, documentId, updateDoc } from 'firebase/firestore';
+import type { Transaction, Order, FirebaseUser, Event, Tour, Ticket } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
+import { cookies } from 'next/headers';
+import { logAdminAction } from '@/services/audit-service';
+import { sendTicketStatusUpdateEmail } from '@/services/email';
 
 type TransactionDetails = {
     transaction: Transaction & { id: string };
     order: Order & { id: string };
     user: (FirebaseUser & { uid: string }) | null;
     listing: (Event | Tour) & { id: string };
+    tickets: (Ticket & { id: string })[];
 }
 
 function serializeData(doc: any) {
@@ -30,19 +35,16 @@ export async function getTransactionDetails(transactionId: string): Promise<{ su
     }
 
     try {
-        // 1. Fetch Transaction
         const txRef = doc(db, 'transactions', transactionId);
         const txSnap = await getDoc(txRef);
         if (!txSnap.exists()) return { success: false, error: 'Transaction not found.' };
         const transaction = serializeData(txSnap) as Transaction & { id: string };
 
-        // 2. Fetch Order
         const orderRef = doc(db, 'orders', transaction.orderId);
         const orderSnap = await getDoc(orderRef);
         if (!orderSnap.exists()) return { success: false, error: 'Associated order not found.' };
         const order = serializeData(orderSnap) as Order & { id: string };
 
-        // 3. Fetch User (if exists)
         let user: (FirebaseUser & { uid: string }) | null = null;
         if (order.userId) {
             const userRef = doc(db, 'users', order.userId);
@@ -52,20 +54,79 @@ export async function getTransactionDetails(transactionId: string): Promise<{ su
             }
         }
 
-        // 4. Fetch Event/Tour
         const listingCollection = order.listingType === 'event' ? 'events' : 'tours';
         const listingRef = doc(db, listingCollection, order.listingId);
         const listingSnap = await getDoc(listingRef);
         if (!listingSnap.exists()) return { success: false, error: 'Associated listing not found.' };
         const listing = serializeData(listingSnap) as (Event | Tour) & { id: string };
 
+        const ticketsQuery = query(collection(db, 'tickets'), where('orderId', '==', order.id));
+        const ticketsSnapshot = await getDocs(ticketsQuery);
+        const tickets = ticketsSnapshot.docs.map(serializeData) as (Ticket & { id: string })[];
+
+
         return {
             success: true,
-            data: { transaction, order, user, listing }
+            data: { transaction, order, user, listing, tickets }
         };
 
     } catch (error: any) {
         console.error("Error fetching transaction details:", error);
         return { success: false, error: 'Failed to fetch transaction details.' };
+    }
+}
+
+
+export async function updateTicketStatus(ticketId: string, newStatus: 'valid' | 'invalid'): Promise<{ success: boolean; error?: string }> {
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) return { success: false, error: 'Not authenticated.' };
+
+    try {
+        const auth = await getAdminAuth();
+        if (!auth) throw new Error("Server auth not initialized");
+        const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+
+        const ticketRef = doc(db, 'tickets', ticketId);
+        const ticketDoc = await getDoc(ticketRef);
+        if (!ticketDoc.exists()) return { success: false, error: 'Ticket not found.' };
+        
+        const ticketData = ticketDoc.data() as Ticket;
+        const oldStatus = ticketData.status;
+
+        await updateDoc(ticketRef, { status: newStatus });
+        
+        // Log the admin action
+        await logAdminAction({
+            adminId: decodedClaims.uid,
+            adminName: decodedClaims.name || 'Admin',
+            action: 'update_ticket_status',
+            targetType: 'event', // Assuming tickets are part of an event context
+            targetId: ticketData.listingId,
+            details: { ticketId, from: oldStatus, to: newStatus }
+        });
+
+        // Send email notification
+        const orderRef = doc(db, 'orders', ticketData.orderId);
+        const orderSnap = await getDoc(orderRef);
+        if (orderSnap.exists()) {
+            const orderData = orderSnap.data() as Order;
+            const eventRef = doc(db, 'events', ticketData.listingId);
+            const eventSnap = await getDoc(eventRef);
+            const eventName = eventSnap.exists() ? (eventSnap.data() as Event).name : 'your event';
+            
+            await sendTicketStatusUpdateEmail({
+                to: orderData.userEmail,
+                attendeeName: orderData.userName,
+                eventName: eventName,
+                ticketType: ticketData.ticketType,
+                newStatus: newStatus
+            });
+        }
+
+
+        return { success: true };
+    } catch (e: any) {
+        console.error("Error updating ticket status:", e);
+        return { success: false, error: 'Failed to update ticket status.' };
     }
 }
