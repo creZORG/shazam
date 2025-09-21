@@ -17,23 +17,18 @@ import { useToast } from "@/hooks/use-toast";
 import { updateOrganizerProfile } from "./actions";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, PlusCircle, Ticket, UserCircle, Loader2, Percent, BarChart2, CheckSquare, BookOpen, DollarSign } from "lucide-react";
-import { NotificationCenter } from "@/components/layout/NotificationCenter";
 import { VerificationGate } from '@/components/auth/VerificationGate';
 
-const bottomNavLinks = [
+const navLinks = [
   { href: "/organizer", label: "Overview", icon: LayoutDashboard },
-  { href: "/organizer/listings", label: "My Listings", icon: Ticket },
+  { href: "/organizer/listings", label: "Listings", icon: Ticket },
   { href: "/organizer/events/create", label: "Create New", icon: PlusCircle },
   { href: "/organizer/attendance", label: "Attendance", icon: CheckSquare },
-];
-
-const secondaryNavLinks = [
   { href: "/organizer/promocodes", label: "Promocodes", icon: Percent },
   { href: "/organizer/payouts", label: "Payouts", icon: DollarSign },
   { href: "/organizer/guide", label: "Guide", icon: BookOpen },
   { href: "/organizer/profile", label: "Profile", icon: UserCircle },
 ];
-
 
 const profileSchema = z.object({
   organizerName: z.string().min(3, "Organization name must be at least 3 characters."),
@@ -144,59 +139,37 @@ export default function OrganizerLayout({ children }: { children: ReactNode }) {
     <div className="flex flex-col min-h-screen">
       {showProfileModal && user && <ProfileSetupModal open={showProfileModal} user={user} />}
       
-      {/* Main Content */}
-      <main className={cn("flex-1 p-4 sm:p-6 lg:p-8 pb-24", showProfileModal && !isProfilePage && "blur-sm pointer-events-none")}>
-        <div className="hidden md:flex justify-center mb-8">
-            <div className="flex items-center gap-1 p-1 rounded-full bg-muted/50 border shadow-sm">
-                {secondaryNavLinks.map(link => {
-                const isActive = pathname.startsWith(link.href);
-                const isDisabled = showProfileModal && link.href !== '/organizer/profile';
-                return (
-                    <Link key={link.href} href={isDisabled ? '#' : link.href}>
-                    <Button
-                        variant={isActive ? "secondary" : "ghost"}
-                        size="sm"
-                        className="flex items-center gap-1.5"
-                        disabled={isDisabled}
-                    >
-                        <link.icon className="h-4 w-4" />
-                        <span>{link.label}</span>
-                    </Button>
-                    </Link>
-                );
-                })}
+      <div className="w-full sticky top-14 z-40 bg-background/95 backdrop-blur-sm border-b">
+        <div className="container mx-auto px-4">
+            <div className="relative w-full overflow-x-auto">
+                <div className="flex items-center gap-2 py-2">
+                    {navLinks.map(link => {
+                        const isActive = pathname === link.href;
+                        const isDisabled = showProfileModal && link.href !== '/organizer/profile';
+                        return (
+                            <Link key={link.href} href={isDisabled ? '#' : link.href}>
+                            <Button
+                                variant={isActive ? "secondary" : "ghost"}
+                                size="sm"
+                                className="flex items-center gap-1.5 flex-shrink-0"
+                                disabled={isDisabled}
+                            >
+                                <link.icon className="h-4 w-4" />
+                                <span>{link.label}</span>
+                            </Button>
+                            </Link>
+                        );
+                    })}
+                </div>
             </div>
         </div>
+      </div>
 
+      <main className={cn("flex-1 p-4 sm:p-6 lg:p-8", showProfileModal && !isProfilePage && "blur-sm pointer-events-none")}>
         <VerificationGate>
           {children}
         </VerificationGate>
       </main>
-
-      {/* Bottom Bar for Mobile */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur md:hidden">
-        <div className="grid h-16 grid-cols-4 items-center justify-items-center">
-           {bottomNavLinks.map(link => {
-             const isActive = pathname === link.href;
-             const isDisabled = showProfileModal;
-             return (
-              <Link key={link.href} href={isDisabled ? '#' : link.href}>
-                <div
-                  className={cn(
-                    "flex flex-col items-center gap-1 p-2",
-                    isActive ? "text-primary" : "text-muted-foreground",
-                    isDisabled && "opacity-50 pointer-events-none"
-                  )}
-                >
-                  <link.icon className="h-5 w-5" />
-                  <span className="text-xs font-medium">{link.label}</span>
-                </div>
-              </Link>
-             )
-           })}
-        </div>
-      </nav>
-
     </div>
   );
 }
