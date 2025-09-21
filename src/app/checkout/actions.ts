@@ -2,8 +2,8 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, Timestamp, addDoc, serverTimestamp } from 'firebase/firestore';
-import type { Promocode } from '@/lib/types';
+import { collection, query, where, getDocs, Timestamp, addDoc, serverTimestamp, getDoc, doc } from 'firebase/firestore';
+import type { Promocode, FirebaseUser } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { headers } from 'next/headers';
 
@@ -70,9 +70,17 @@ export async function validatePromocode(
       return { success: false, error: 'This promo code is no longer active.' };
     }
     
-    if (promocode.influencerId && promocode.influencerStatus !== 'accepted') {
+    // Correctly check influencer status if applicable
+    if (promocode.influencerId) {
+      const influencerDoc = await getDoc(doc(db, 'users', promocode.influencerId));
+      if (!influencerDoc.exists() || (influencerDoc.data() as FirebaseUser).status !== 'active') {
+          return { success: false, error: 'This influencer code is not active.' };
+      }
+      if (promocode.influencerStatus !== 'accepted') {
         return { success: false, error: 'This promo code is not ready yet. Try again later.'}
+      }
     }
+
 
     if (promocode.expiresAt) {
         const expiryDate = (promocode.expiresAt as any).toDate ? (promocode.expiresAt as any).toDate() : new Date(promocode.expiresAt);
