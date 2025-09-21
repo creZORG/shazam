@@ -58,18 +58,18 @@ export async function initiateStkPush(payload: StkPushPayload): Promise<{ succes
     const shortcode = process.env.MPESA_SHORTCODE;
     const passkey = process.env.MPESA_PASSKEY;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const callbackSecret = process.env.MPESA_CALLBACK_SECRET;
 
     if (!appUrl) {
       return { success: false, error: "NEXT_PUBLIC_APP_URL environment variable is not set. Cannot determine callback URL." };
     }
-
-    const callbackURL = `${appUrl}/api/mpesa-callback`;
-    console.log("Using M-Pesa Callback URL:", callbackURL);
-
-
-    if (!shortcode || !passkey || !callbackURL) {
-        return { success: false, error: "M-Pesa shortcode, passkey, or callback URL is not configured." };
+    
+    if (!shortcode || !passkey || !callbackSecret) {
+        return { success: false, error: "M-Pesa shortcode, passkey, or callback secret is not configured." };
     }
+
+    const callbackURL = `${appUrl}/api/mpesa-callback/${callbackSecret}`;
+    console.log("Using M-Pesa Callback URL:", callbackURL);
 
     const timestamp = format(new Date(), 'yyyyMMddHHmmss');
     const password = Buffer.from(`${shortcode}${passkey}${timestamp}`).toString('base64');
@@ -117,7 +117,7 @@ export async function initiateStkPush(payload: StkPushPayload): Promise<{ succes
             const errorMessage = data.errorMessage || 'Failed to initiate M-Pesa payment.';
             return {
                 success: false,
-                error: `${errorMessage} (Callback URL used: ${callbackURL})`
+                error: `${errorMessage}`
             };
         }
 
