@@ -84,10 +84,10 @@ export async function validatePromocode(
     if (promocode.influencerId) {
       const influencerDoc = await getDoc(doc(db, 'users', promocode.influencerId));
       if (!influencerDoc.exists() || (influencerDoc.data() as FirebaseUser).status !== 'active') {
-        return { success: false, error: 'This influencer code is currently inactive.' };
+        return { success: false, error: 'The associated influencer account for this code is currently inactive.' };
       }
       if (promocode.influencerStatus !== 'accepted') {
-        return { success: false, error: 'This promo code has not been activated by the influencer yet.' };
+        return { success: false, error: 'This promo code has not been accepted by the influencer yet.' };
       }
     }
 
@@ -101,3 +101,4 @@ export async function validatePromocode(
     return { success: false, error: error.message || 'An unexpected server error occurred. Please try again.' };
   }
 }
+
