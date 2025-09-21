@@ -11,11 +11,12 @@ const TRACKING_COOKIE_KEY = 'nak_tracker';
 const TRACKING_EXPIRY_HOURS = 24;
 
 interface AffiliateData {
-    code: string | null;
-    listingId: string | null;
+    code?: string | null;
+    listingId?: string | null;
     trackingLinkId?: string;
-    expiry: number;
-    channel: "direct" | "referral" | "ad" | "search" | "organic_social";
+    expiry?: number;
+    channel?: "direct" | "referral" | "ad" | "search" | "organic_social";
+    promocodeId?: string | null;
 }
 
 const AffiliateContext = createContext<AffiliateData | null>(null);
@@ -69,7 +70,7 @@ export function AffiliateProvider({ children }: { children: ReactNode }) {
         if (storedData) {
             try {
                 const data: AffiliateData = JSON.parse(storedData);
-                if (new Date().getTime() < data.expiry) {
+                if (data.expiry && new Date().getTime() < data.expiry) {
                     setAffiliateData(data);
                 } else {
                     localStorage.removeItem(AFFILIATE_STORAGE_KEY);
