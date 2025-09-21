@@ -4,15 +4,17 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, XCircle, Wallet, Ticket, CircleHelp, MessageSquare, List } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Wallet, Ticket, CircleHelp, MessageSquare, List, Gift } from 'lucide-react';
 import { logCheckoutRating } from '../order-actions';
 import { StarRating } from '@/components/ui/star-rating';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import type { OrderPayload } from '../order-actions';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { format } from 'date-fns';
+import Image from 'next/image';
+import { Confetti } from '@/components/ui/confetti';
+import { type Event, type Tour } from '@/lib/types';
+
 
 export type PaymentStage = 'idle' | 'creating_order' | 'sending_stk' | 'awaiting_payment' | 'success' | 'failed' | null;
 
@@ -21,7 +23,7 @@ const stageMessages: Record<Exclude<PaymentStage, null>, string> = {
   creating_order: 'Creating your order...',
   sending_stk: 'Sending payment request to your phone...',
   awaiting_payment: 'Please complete the M-Pesa payment on your phone.',
-  success: 'Payment Successful!',
+  success: "You're In!",
   failed: 'Payment Failed',
 };
 
@@ -32,8 +34,7 @@ export function PaymentStatusModal({
     onRetry,
     error,
     orderPayload, 
-    listingName,
-    whatsappGroupLink,
+    listing,
     orderId,
     retryCount,
 }: { 
@@ -43,8 +44,7 @@ export function PaymentStatusModal({
     onRetry: () => void;
     error: string | null;
     orderPayload: OrderPayload, 
-    listingName: string,
-    whatsappGroupLink?: string;
+    listing: Event | Tour | null,
     orderId: string | null,
     retryCount: number,
 }) {
@@ -52,6 +52,15 @@ export function PaymentStatusModal({
     const [rating, setRating] = useState(0);
     const [feedback, setFeedback] = useState('');
     const [isSubmittingRating, startSubmittingRating] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
+
+    useEffect(() => {
+        if (stage === 'success') {
+            setShowConfetti(true);
+            const timer = setTimeout(() => setShowConfetti(false), 5000); // Confetti for 5 seconds
+            return () => clearTimeout(timer);
+        }
+    }, [stage]);
 
     const handleRatingSubmit = async () => {
         if (rating === 0) {
@@ -71,18 +80,32 @@ export function PaymentStatusModal({
         switch(stage) {
             case 'success':
                 return (
-                    <div className="text-center space-y-4">
+                    <div className="text-center space-y-4 pt-0">
+                        {showConfetti && <Confetti />}
+                        <div className="relative h-40 w-full -mx-6 -mt-6 rounded-t-lg overflow-hidden">
+                            <Image src={listing?.imageUrl || ''} alt={listing?.name || 'Event'} fill className="object-cover"/>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                            <div className="absolute bottom-4 left-4 text-left">
+                                <p className="text-white font-semibold">You have tickets for:</p>
+                                <h3 className="text-2xl font-bold text-white" style={{textShadow: '1px 1px 3px rgba(0,0,0,0.5)'}}>{listing?.name}</h3>
+                            </div>
+                        </div>
+
                         <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
                         <DialogTitle>{stageMessages.success}</DialogTitle>
                         <DialogDescription>
-                            Thank you, {orderPayload.userName}! Your tickets for <strong>{listingName}</strong> are ready.
+                            Thank you, {orderPayload.userName}! Get ready for an amazing experience.
                         </DialogDescription>
-                         {whatsappGroupLink && (
-                            <a href={whatsappGroupLink} target="_blank" rel="noopener noreferrer">
-                                <Button variant="secondary" className="w-full bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900">
-                                    <MessageSquare className="mr-2 h-5 w-5" /> Join the WhatsApp Group
-                                </Button>
-                            </a>
+                         {(listing as Event)?.whatsappGroupLink && (
+                            <div className="p-4 bg-muted rounded-lg text-left space-y-2">
+                                <h4 className="font-semibold text-foreground flex items-center gap-2"><MessageSquare className="text-green-500"/> Join the Event Community</h4>
+                                <p className="text-xs text-muted-foreground">Connect with other attendees and get real-time updates from the organizer by joining the official WhatsApp group.</p>
+                                <a href={(listing as Event).whatsappGroupLink} target="_blank" rel="noopener noreferrer">
+                                    <Button variant="secondary" className="w-full">
+                                        Join WhatsApp Group
+                                    </Button>
+                                </a>
+                            </div>
                         )}
                         <div className="pt-4 space-y-3">
                             <h4 className="font-semibold">How was your booking experience?</h4>
@@ -149,7 +172,7 @@ export function PaymentStatusModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent>
+            <DialogContent className={stage === 'success' ? 'sm:max-w-lg' : 'sm:max-w-md'}>
                 <DialogHeader>
                     {/* Header is part of the conditional content */}
                 </DialogHeader>

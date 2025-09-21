@@ -441,8 +441,7 @@ function CheckoutComponent() {
         stage={paymentStage}
         error={paymentError}
         orderPayload={orderPayload}
-        listingName={listing.name}
-        whatsappGroupLink={(listing as Event).whatsappGroupLink}
+        listing={listing}
         orderId={orderId}
         retryCount={retryCount}
         onRetry={handleRetry}
