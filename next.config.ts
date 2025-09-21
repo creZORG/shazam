@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  env: {
+    NEXT_PUBLIC_MPESA_SHORTCODE: process.env.MPESA_SHORTCODE,
+  },
   images: {
     remotePatterns: [
       {

@@ -210,7 +210,7 @@ export function PaymentStatusModal({
                                 <>
                                     <Button variant="outline" onClick={() => setConfirmCloseOpen(true)}>Close</Button>
                                     <Link href={`/ticket-center?orderId=${orderId}`} legacyBehavior>
-                                        <a target="_blank"><Button className="bg-gradient-to-r from-primary to-accent"><Ticket className="mr-2" /> View My Tickets <ArrowRight className="ml-2" /></Button></a>
+                                        <a target="_blank"><Button className="bg-gradient-to-r from-primary to-accent text-white"><Ticket className="mr-2" /> View My Tickets <ArrowRight className="ml-2" /></Button></a>
                                     </Link>
                                 </>
                             )}
