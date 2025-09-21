@@ -8,13 +8,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, LayoutDashboard, Megaphone, DollarSign, User, Loader2, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Logo } from "@/components/icons/Logo";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { NotificationCenter } from "@/components/layout/NotificationCenter";
 import { VerificationGate } from '@/components/auth/VerificationGate';
-
+import { Button } from "@/components/ui/button";
 
 const influencerNavLinks = [
   { href: "/influencer", label: "Overview", icon: LayoutDashboard },
@@ -51,59 +46,54 @@ export default function InfluencerLayout({ children }: { children: ReactNode }) 
   const isProfilePage = pathname === '/influencer/profile';
 
   return (
-    <>
-    <div className="container mx-auto py-8">
-        <div className="flex justify-center mb-8">
-            <Tabs defaultValue={pathname} className="w-auto">
-                <TabsList className="p-1.5 h-auto rounded-full bg-background border shadow-md">
-                    {influencerNavLinks.map((link) => {
+    <div className="flex flex-col min-h-screen">
+      <div className="w-full sticky top-14 z-40 bg-background/95 backdrop-blur-sm border-b">
+        <div className="container mx-auto px-4">
+            <div className="relative w-full overflow-x-auto">
+                <div className="flex items-center gap-2 py-2">
+                    {influencerNavLinks.map(link => {
+                        const isActive = pathname.startsWith(link.href);
                         const canAccess = isProfileComplete || link.href === '/influencer/profile' || link.href === '/influencer/guide';
                         return (
-                             <Link key={link.href} href={canAccess ? link.href : '#'} legacyBehavior passHref>
-                                <TabsTrigger 
-                                    value={link.href}
+                            <Link key={link.href} href={canAccess ? link.href : '#'} legacyBehavior passHref>
+                                <Button
+                                    asChild
+                                    variant={isActive ? "secondary" : "ghost"}
+                                    size="sm"
+                                    className="flex items-center gap-1.5 flex-shrink-0"
                                     disabled={!canAccess}
-                                    className={cn(
-                                        "rounded-full px-3 py-1.5 flex items-center gap-2 transition-all duration-300",
-                                        "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm",
-                                        "data-[state=inactive]:text-muted-foreground",
-                                        pathname.startsWith(link.href) ? 'w-auto' : 'w-10 justify-center'
-                                    )}
                                 >
-                                    <link.icon className="h-5 w-5 flex-shrink-0" />
-                                    <span className={cn(
-                                        "overflow-hidden transition-all duration-300",
-                                        pathname.startsWith(link.href) ? 'max-w-xs' : 'max-w-0'
-                                    )}>
-                                        {link.label}
-                                    </span>
-                                </TabsTrigger>
+                                  <a>
+                                    <link.icon className="h-4 w-4" />
+                                    <span>{link.label}</span>
+                                  </a>
+                                </Button>
                             </Link>
-                        )
+                        );
                     })}
-                </TabsList>
-            </Tabs>
+                </div>
+            </div>
         </div>
-        
-        <main>
-             {!isProfileComplete && !isProfilePage && (
-                <div className="mb-8">
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Profile Incomplete</AlertTitle>
-                        <AlertDescription>
-                        Please complete your profile in the <Link href="/influencer/profile" className="font-semibold underline">Profile</Link> tab to access the rest of the portal.
-                        </AlertDescription>
-                    </Alert>
-                </div>
-            )}
-            <VerificationGate>
-                <div className={cn(!isProfileComplete && !isProfilePage && "opacity-50 pointer-events-none")}>
-                    {children}
-                </div>
-            </VerificationGate>
-        </main>
+      </div>
+      
+      <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        {!isProfileComplete && !isProfilePage && (
+          <div className="mb-8">
+              <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Profile Incomplete</AlertTitle>
+                  <AlertDescription>
+                  Please complete your profile in the <Link href="/influencer/profile" className="font-semibold underline">Profile</Link> tab to access the rest of the portal.
+                  </AlertDescription>
+              </Alert>
+          </div>
+        )}
+        <VerificationGate>
+            <div className={cn(!isProfileComplete && !isProfilePage && "opacity-50 pointer-events-none")}>
+                {children}
+            </div>
+        </VerificationGate>
+      </main>
     </div>
-    </>
   );
 }

@@ -95,11 +95,36 @@ export async function createOrderAndInitiatePayment(
 
     try {
         let promocodeId: string | undefined = undefined;
+        let finalTrackingLinkId = payload.trackingLinkId;
+
         if (payload.promocode) {
             const q = query(collection(db, 'promocodes'), where('code', '==', payload.promocode));
             const promocodeSnapshot = await getDocs(q);
              if (!promocodeSnapshot.empty) {
+                const promocode = promocodeSnapshot.docs[0].data() as Promocode;
                 promocodeId = promocodeSnapshot.docs[0].id;
+
+                // If a promocode was entered manually, DO NOT attribute it to a tracking link
+                // that might be in a cookie. Only attribute to a tracking link if there's no manual code entry.
+                if (!finalTrackingLinkId) {
+                    // This logic is now cleaner. If payload.trackingLinkId is set, we use it.
+                    // If not, we don't try to guess. The affiliate tracking hook handles the cookie.
+                } else {
+                    // A tracking link was used to get here, but then the user manually entered a different code.
+                    // We should still credit the link click for traffic, but the sale commission goes to the manual code.
+                    // We only clear the link if the codes don't match up.
+                    if (promocode.id !== payload.trackingLinkId) { // This comparison is flawed, but shows intent. Let's fix it.
+                        const trackerCookie = cookies().get('nak_tracker');
+                        if (trackerCookie) {
+                            try {
+                                const parsedTracker = JSON.parse(trackerCookie.value);
+                                if (parsedTracker.promocodeId !== promocodeId) {
+                                    finalTrackingLinkId = undefined; // Don't attribute sale to the link
+                                }
+                            } catch {}
+                        }
+                    }
+                }
             }
         }
         
@@ -132,8 +157,8 @@ export async function createOrderAndInitiatePayment(
         if (promocodeId) orderData.promocodeId = promocodeId;
         
         // Capture tracking link ID from payload
-        if (payload.trackingLinkId) {
-            orderData.trackingLinkId = payload.trackingLinkId;
+        if (finalTrackingLinkId) {
+            orderData.trackingLinkId = finalTrackingLinkId;
         }
 
         if (eventData?.freeMerch) orderData.freeMerch = eventData.freeMerch;

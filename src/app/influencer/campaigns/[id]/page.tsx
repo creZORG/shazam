@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { notFound, useParams } from 'next/navigation';
@@ -8,7 +7,7 @@ import type { Promocode, TrackingLink } from '@/lib/types';
 import { createTrackingLink, getCampaignDetails } from './actions';
 import { getPromocodeById } from '@/app/organizer/promocodes/[id]/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, ArrowLeft, Tag, Users, Link as LinkIcon, Copy, PlusCircle, AlertTriangle } from 'lucide-react';
+import { Loader2, ArrowLeft, Tag, Users, Link as LinkIcon, Copy, PlusCircle, AlertTriangle, CalendarCheck } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -177,14 +176,14 @@ export default function CampaignManagementPage() {
     const discount = promocode.discountType === 'percentage' ? `${promocode.discountValue}%` : `Ksh ${promocode.discountValue}`;
 
     return (
-        <div className="container mx-auto p-4 md:p-8 space-y-8">
+        <div className="space-y-8">
             <Link href="/influencer/campaigns" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
                 <ArrowLeft className="mr-2" /> Back to All Campaigns
             </Link>
 
             <Card>
                 <CardHeader>
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                         <div>
                              <p className="font-mono text-3xl font-bold text-primary">{promocode.code}</p>
                              <CardDescription>For: <span className="font-semibold text-foreground">{promocode.listingName}</span></CardDescription>
@@ -193,27 +192,22 @@ export default function CampaignManagementPage() {
                     </div>
                 </CardHeader>
                  <CardContent className="space-y-4">
-                    <div className="grid md:grid-cols-3 gap-6">
-                        <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
-                            <Tag className="h-6 w-6 text-muted-foreground" />
-                            <div>
-                                <p className="text-sm text-muted-foreground">Discount</p>
-                                <p className="font-bold text-lg">{discount}</p>
-                            </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm text-muted-foreground flex items-center gap-1"><Tag />Discount</p>
+                            <p className="font-bold text-lg">{discount}</p>
                         </div>
-                         <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
-                            <Users className="h-6 w-6 text-muted-foreground" />
-                            <div>
-                                <p className="text-sm text-muted-foreground">Usage</p>
-                                <p className="font-bold text-lg">{promocode.usageCount} / {promocode.usageLimit}</p>
-                            </div>
+                         <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm text-muted-foreground flex items-center gap-1"><Users />Usage</p>
+                            <p className="font-bold text-lg">{promocode.usageCount} / {promocode.usageLimit === 999999 ? 'Unlimited': promocode.usageLimit}</p>
                         </div>
-                        <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
-                            <Users className="h-6 w-6 text-muted-foreground" />
-                            <div>
-                                <p className="text-sm text-muted-foreground">Expires</p>
-                                <p className="font-bold text-lg">{promocode.expiresAt ? format(new Date(promocode.expiresAt), 'PPP') : 'Never'}</p>
-                            </div>
+                        <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm text-muted-foreground flex items-center gap-1"><DollarSign />Revenue</p>
+                            <p className="font-bold text-lg">Ksh {(promocode.revenueGenerated || 0).toLocaleString()}</p>
+                        </div>
+                         <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm text-muted-foreground flex items-center gap-1"><CalendarCheck />Expires</p>
+                            <p className="font-bold text-lg">{promocode.expiresAt ? format(new Date(promocode.expiresAt), 'PPP') : 'Never'}</p>
                         </div>
                     </div>
                 </CardContent>

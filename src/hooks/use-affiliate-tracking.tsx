@@ -1,12 +1,10 @@
 
-
 'use client';
 
 import { useEffect, useState, createContext, useContext, ReactNode } from 'react';
 import { useSearchParams, usePathname } from 'next/navigation';
-import { getCookie, setCookie } from 'cookies-next';
+import { getCookie, setCookie, deleteCookie } from 'cookies-next';
 
-const AFFILIATE_STORAGE_KEY = 'nak_affiliate_promo_code';
 const TRACKING_COOKIE_KEY = 'nak_tracker';
 const TRACKING_EXPIRY_HOURS = 24;
 
@@ -14,9 +12,8 @@ interface AffiliateData {
     code?: string | null;
     listingId?: string | null;
     trackingLinkId?: string;
-    expiry?: number;
-    channel?: "direct" | "referral" | "ad" | "search" | "organic_social";
     promocodeId?: string | null;
+    channel?: "direct" | "referral" | "ad" | "search" | "organic_social";
 }
 
 const AffiliateContext = createContext<AffiliateData | null>(null);
@@ -24,60 +21,45 @@ const AffiliateContext = createContext<AffiliateData | null>(null);
 export function AffiliateProvider({ children }: { children: ReactNode }) {
     const [affiliateData, setAffiliateData] = useState<AffiliateData | null>(null);
     const searchParams = useSearchParams();
-    const pathname = usePathname();
 
     useEffect(() => {
-        // This effect runs only once on the client side to initialize data
-        // from either URL params or cookies.
+        // This effect runs only once on mount to initialize data.
+        // It prioritizes URL params over cookies.
+
+        const linkId = searchParams.get('linkId');
+        const couponFromUrl = searchParams.get('coupon');
+
+        // Case 1: A tracking link `?linkId=...` is present. This is the highest priority.
+        if (linkId) {
+            const data: AffiliateData = {
+                trackingLinkId: linkId,
+                code: couponFromUrl || undefined,
+                channel: 'referral' // Default channel for direct link clicks
+            };
+            try {
+                // We store the tracker data in a cookie to persist it across navigation.
+                setCookie(TRACKING_COOKIE_KEY, JSON.stringify(data), {
+                    maxAge: TRACKING_EXPIRY_HOURS * 60 * 60
+                });
+                setAffiliateData(data);
+                return;
+            } catch (e) {
+                console.error("Failed to set tracking cookie", e);
+            }
+        }
         
-        // 1. Check for `nak_tracker` cookie first, as it's the most reliable source post-redirect.
+        // Case 2: No `linkId` in URL, but a tracker cookie exists from a previous link click.
         const trackerCookie = getCookie(TRACKING_COOKIE_KEY);
         if (typeof trackerCookie === 'string') {
             try {
                 const parsed = JSON.parse(trackerCookie);
                 if (parsed.trackingLinkId) {
-                    const data = { ...parsed, channel: 'referral' }; // Default channel
-                    setAffiliateData(data);
-                    return; // Stop further processing if we have tracker data
+                    setAffiliateData(parsed);
+                    return;
                 }
             } catch (e) {
                  console.error("Failed to parse tracking cookie", e);
-            }
-        }
-
-
-        // 2. Check for legacy `coupon` URL param for backward compatibility.
-        const coupon = searchParams.get('coupon');
-        if (coupon) {
-            const listingId = pathname.split('/').pop() || null;
-            if (listingId) {
-                const expiry = new Date().getTime() + TRACKING_EXPIRY_HOURS * 60 * 60 * 1000;
-                const source = searchParams.get('utm_source');
-                const medium = searchParams.get('utm_medium');
-                let channel: AffiliateData['channel'] = 'referral';
-                if (medium === 'cpc' || medium === 'paid') channel = 'ad';
-                if (source === 'facebook' || source === 'instagram' || source === 'twitter') channel = 'organic_social';
-
-                const data: AffiliateData = { code: coupon, listingId, expiry, channel };
-                localStorage.setItem(AFFILIATE_STORAGE_KEY, JSON.stringify(data));
-                setAffiliateData(data);
-                return;
-            }
-        }
-        
-        // 3. If no params, try to load from old localStorage method (for backward compatibility).
-        const storedData = localStorage.getItem(AFFILIATE_STORAGE_KEY);
-        if (storedData) {
-            try {
-                const data: AffiliateData = JSON.parse(storedData);
-                if (data.expiry && new Date().getTime() < data.expiry) {
-                    setAffiliateData(data);
-                } else {
-                    localStorage.removeItem(AFFILIATE_STORAGE_KEY);
-                }
-            } catch (error) {
-                console.error("Error parsing affiliate data from localStorage", error);
-                localStorage.removeItem(AFFILIATE_STORAGE_KEY);
+                 deleteCookie(TRACKING_COOKIE_KEY);
             }
         }
 
