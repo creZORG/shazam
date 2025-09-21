@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -32,6 +31,63 @@ async function getOrganizerId() {
         return null;
     }
 }
+
+export async function getEventsForAttendancePage() {
+    noStore();
+    const organizerId = await getOrganizerId();
+    if (!organizerId) return { success: false, error: 'Not authenticated' };
+
+    try {
+        const eventsQuery = query(
+            collection(db, 'events'),
+            where('organizerId', '==', organizerId),
+            where('status', '==', 'published')
+        );
+
+        const eventsSnapshot = await getDocs(eventsQuery);
+        if (eventsSnapshot.empty) {
+            return { success: true, data: [] };
+        }
+
+        const eventIds = eventsSnapshot.docs.map(doc => doc.id);
+        
+        const ticketsQuery = query(collection(db, 'tickets'), where('listingId', 'in', eventIds));
+        const ticketsSnapshot = await getDocs(ticketsQuery);
+        
+        const ticketsByEvent: Record<string, Ticket[]> = {};
+        ticketsSnapshot.forEach(doc => {
+            const ticket = doc.data() as Ticket;
+            if (!ticketsByEvent[ticket.listingId]) {
+                ticketsByEvent[ticket.listingId] = [];
+            }
+            ticketsByEvent[ticket.listingId].push(ticket);
+        });
+
+        const data = eventsSnapshot.docs.map(doc => {
+            const event = serializeData(doc) as Event;
+            const eventTickets = ticketsByEvent[event.id] || [];
+            const ticketsSold = eventTickets.length;
+            const ticketsScanned = eventTickets.filter(t => t.status === 'used').length;
+            return {
+                id: event.id,
+                name: event.name,
+                date: event.date,
+                imageUrl: event.imageUrl,
+                ticketsSold,
+                ticketsScanned,
+            };
+        });
+
+        // Sort by date, most recent first
+        data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        return { success: true, data };
+    } catch (e: any) {
+        console.error("Error in getEventsForAttendancePage:", e)
+        return { success: false, error: e.message };
+    }
+}
+
 
 export async function getPublishedEvents() {
     noStore();
