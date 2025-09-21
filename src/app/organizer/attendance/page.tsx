@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { AlertCircle, FileText, Loader2, Ticket, Users, CheckCircle, BarChart } from 'lucide-react';
+import { AlertCircle, FileText, Loader2, Ticket, Users, CheckCircle, BarChart, Settings } from 'lucide-react';
 import { getEventsForAttendancePage } from './actions';
 import { useAuth } from '@/hooks/use-auth';
 import type { Event, Ticket as TicketType, TicketDefinition } from '@/lib/types';
@@ -47,9 +47,9 @@ function EventAttendanceCard({ event }: { event: AttendanceEvent }) {
                 </div>
             </CardContent>
             <CardFooter>
-                 <Link href={`/organizer/analytics/event/${event.id}`} className="w-full">
+                 <Link href={`/organizer/listings/${event.id}?type=event`} className="w-full">
                     <Button variant="outline" className="w-full">
-                        <BarChart className="mr-2" /> View Detailed Stats
+                        <Settings className="mr-2" /> Manage Attendance
                     </Button>
                 </Link>
             </CardFooter>
