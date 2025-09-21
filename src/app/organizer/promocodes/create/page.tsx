@@ -143,7 +143,7 @@ function CouponDetailsStep({ onBack, onNext }: { onBack: () => void, onNext: (da
             code: "",
             discountType: "percentage",
             discountValue: 10,
-            usageLimit: 100,
+            usageLimit: 999999,
         },
     });
 
@@ -156,11 +156,11 @@ function CouponDetailsStep({ onBack, onNext }: { onBack: () => void, onNext: (da
                 </div>
                  <div className="grid md:grid-cols-2 gap-6">
                     <FormField control={form.control} name="discountValue" render={({ field }) => (<FormItem><FormLabel>Discount Value</FormLabel><FormControl><Input type="number" placeholder="e.g., 10 or 500" {...field} /></FormControl><FormMessage /></FormItem>)}/>
-                    <FormField control={form.control} name="usageLimit" render={({ field }) => (<FormItem><FormLabel>Usage Limit</FormLabel><FormControl><Input type="number" placeholder="e.g., 100" {...field} /></FormControl><FormMessage /></FormItem>)}/>
+                    <FormField control={form.control} name="usageLimit" render={({ field }) => (<FormItem><FormLabel>Usage Limit</FormLabel><FormControl><Input type="number" placeholder="e.g., 999999 for unlimited" {...field} /></FormControl><FormMessage /></FormItem>)}/>
                 </div>
                 <FormField control={form.control} name="expiresAt" render={({ field }) => (<FormItem className="flex flex-col"><FormLabel>Expiration Date (Optional)</FormLabel><Popover><PopoverTrigger asChild><Button type="button" variant={"outline"} className={cn("w-[240px] pl-3 text-left font-normal",!field.value && "text-muted-foreground")}><>{field.value ? (format(field.value, "PPP")) : (<span>Pick a date</span>)}</><CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><CalendarComponent mode="single" selected={field.value} onSelect={field.onChange} initialFocus /></PopoverContent></Popover><FormMessage /></FormItem>)}/>
                 <div className="flex justify-between pt-4">
-                    <Button type="button" variant="outline" onClick={onBack}><ArrowLeft className="ml-2" /> Back</Button>
+                    <Button type="button" variant="outline" onClick={onBack}><ArrowLeft className="mr-2" /> Back</Button>
                     <Button type="submit">Next <ArrowRight className="ml-2" /></Button>
                 </div>
             </form>
