@@ -96,8 +96,8 @@ export async function validatePromocode(
       discountType: promocode.discountType,
       discountValue: promocode.discountValue,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error validating promocode:', error);
-    return { success: false, error: 'An unexpected server error occurred. Please try again.' };
+    return { success: false, error: error.message || 'An unexpected server error occurred. Please try again.' };
   }
 }
