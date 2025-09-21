@@ -89,6 +89,16 @@ export async function POST(request: Request, { params }: { params: { secret: str
                     console.log(`Processing associated EVENT/TOUR order: ${orderDoc.id}`);
                     const order = { id: orderDoc.id, ...orderDoc.data() } as Order;
                     firestoreTransaction.update(orderRef, { status: 'completed', updatedAt: serverTimestamp() });
+
+                    // Increment revenue on the event/tour
+                    const listingRef = doc(db, order.listingType === 'event' ? 'events' : 'tours', order.listingId);
+                    firestoreTransaction.update(listingRef, { totalRevenue: increment(order.total) });
+
+                    // Increment total purchases for the user
+                    if (order.userId) {
+                        const userRef = doc(db, 'users', order.userId);
+                        firestoreTransaction.update(userRef, { totalPurchases: increment(order.total) });
+                    }
                     
                     if (order.paymentType === 'full' && order.listingType === 'event') {
                         console.log("Full payment for an event detected. Generating tickets...");

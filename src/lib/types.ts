@@ -68,6 +68,7 @@ export type Event = {
     productName: string;
   };
   type: 'event';
+  totalRevenue?: number;
 };
 
 export type Tour = {
@@ -99,6 +100,7 @@ export type Tour = {
     productName: string;
   };
   type: 'tour';
+  totalRevenue?: number;
 };
 
 export type NightlifeEvent = {
@@ -168,6 +170,7 @@ export type FirebaseUser = {
   lastLogin: string | number;
   bookmarkedEvents?: string[];
   assignedEvents?: string[]; // For event-specific verifiers
+  totalPurchases?: number;
   
   // Analytics fields
   userAgent?: string;
