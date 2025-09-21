@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { doc, getDoc, collection, query, where, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, orderBy, getDocs, Timestamp, documentId } from 'firebase/firestore';
 import type { Transaction, Order, FirebaseUser, Event, UserEvent, Tour, Ticket } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { sendTicketEmail } from '@/services/email';
