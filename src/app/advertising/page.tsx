@@ -4,7 +4,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Megaphone, Star, Mail, LayoutPanelLeft, ArrowRight, UploadCloud, X, Loader2, BarChart2 } from "lucide-react";
+import { Megaphone, Star, Mail, LayoutPanelLeft, ArrowRight, UploadCloud, X, Loader2, BarChart2, Shield, Users } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,6 +23,7 @@ import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const adOptions = [
     {
@@ -300,21 +301,29 @@ export default function AdvertisingPage() {
                             control={form.control}
                             name="isAdultContent"
                             render={({ field }) => (
-                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                                <div className="space-y-0.5">
-                                    <FormLabel className="text-base">
-                                    Is this ad suitable for kids?
-                                    </FormLabel>
-                                    <FormDescription>
-                                     Turn this off if your ad is for nightlife events or contains adult themes.
-                                    </FormDescription>
-                                </div>
-                                <FormControl>
-                                    <Switch
-                                    checked={!field.value}
-                                    onCheckedChange={(checked) => field.onChange(!checked)}
-                                    />
-                                </FormControl>
+                                <FormItem className="space-y-3">
+                                    <FormLabel>Audience</FormLabel>
+                                    <FormDescription>Where should this ad be displayed?</FormDescription>
+                                    <FormControl>
+                                        <RadioGroup
+                                            onValueChange={(value) => field.onChange(value === 'true')}
+                                            defaultValue={String(field.value)}
+                                            className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2"
+                                        >
+                                            <Label htmlFor="audience-general" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                                                <RadioGroupItem value="false" id="audience-general" className="sr-only" />
+                                                <Users className="mb-3 h-6 w-6" />
+                                                Safe for All Audiences
+                                                <FormDescription className="text-center mt-2">Will appear on the main Events page.</FormDescription>
+                                            </Label>
+                                            <Label htmlFor="audience-adult" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
+                                                <RadioGroupItem value="true" id="audience-adult" className="sr-only" />
+                                                <Shield className="mb-3 h-6 w-6" />
+                                                Adults Only
+                                                <FormDescription className="text-center mt-2">For nightlife, parties, and restricted content. Will appear on the Nightlife page.</FormDescription>
+                                            </Label>
+                                        </RadioGroup>
+                                    </FormControl>
                                 </FormItem>
                             )}
                         />
