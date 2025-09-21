@@ -433,6 +433,7 @@ export type PayoutRequest = {
     requestedAt: any;
     processedAt?: any;
     processorId?: string; // UID of admin who processed it
+    processorMessage?: string; // M-Pesa code or bank confirmation
     rejectionReason?: string;
     
     // User-confirmed details at time of request

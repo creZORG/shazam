@@ -6,24 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, X, Clock, Loader2, FileText, AlertTriangle } from "lucide-react";
+import { Check, X, Clock, Loader2, FileText, AlertTriangle, Eye, Settings, Banknote } from "lucide-react";
 import { useState, useEffect, useTransition } from 'react';
 import { getPayoutRequests, updatePayoutStatus } from './actions';
 import type { PayoutRequestWithUser } from './actions';
 import { format } from 'date-fns';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type PayoutStatus = 'pending' | 'accepted' | 'rejected' | 'partially_accepted';
 
@@ -39,75 +31,122 @@ function StatusBadge({ status }: { status: PayoutStatus }) {
     return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>
 }
 
-function PayoutActions({ request }: { request: PayoutRequestWithUser }) {
+function ProcessPayoutDialog({ request, onActionComplete }: { request: PayoutRequestWithUser, onActionComplete: () => void }) {
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
+    const [action, setAction] = useState<'approve' | 'reject' | null>(null);
+
+    const [amountDisbursed, setAmountDisbursed] = useState(request.amountRequested.toString());
+    const [processorMessage, setProcessorMessage] = useState('');
     const [rejectionReason, setRejectionReason] = useState('');
 
-    const handleAction = (status: 'accepted' | 'rejected') => {
-        if (status === 'rejected' && !rejectionReason) {
-            toast({ variant: 'destructive', title: 'Reason Required', description: 'Please provide a reason for rejection.' });
-            return;
-        }
-
+    const handleAction = () => {
         startTransition(async () => {
-            const result = await updatePayoutStatus(request.id, status, rejectionReason);
+            let result;
+            if (action === 'approve') {
+                if (!amountDisbursed || !processorMessage) {
+                    toast({ variant: 'destructive', title: 'Missing Info', description: 'Amount and confirmation code are required.'});
+                    return;
+                }
+                result = await updatePayoutStatus({
+                    requestId: request.id,
+                    status: 'accepted',
+                    amountDisbursed: Number(amountDisbursed),
+                    processorMessage: processorMessage
+                });
+            } else if (action === 'reject') {
+                if (!rejectionReason) {
+                    toast({ variant: 'destructive', title: 'Missing Info', description: 'Rejection reason is required.'});
+                    return;
+                }
+                result = await updatePayoutStatus({
+                    requestId: request.id,
+                    status: 'rejected',
+                    rejectionReason: rejectionReason
+                });
+            } else {
+                return;
+            }
+
             if (result.success) {
-                toast({ title: 'Success', description: `Payout request has been ${status}.` });
+                toast({ title: 'Success', description: `Payout request has been ${action === 'approve' ? 'approved' : 'rejected'}.` });
+                onActionComplete();
             } else {
                 toast({ variant: 'destructive', title: 'Error', description: result.error });
             }
         });
-    }
-
-    if (request.status !== 'pending') return null;
+    };
 
     return (
-        <div className="flex gap-2">
-            <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="default" disabled={isPending}>
-                        <Check className="mr-2" />Approve
-                    </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Confirm Payout Approval</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            You are about to approve a payout of Ksh {request.amountRequested.toLocaleString()} to {request.userName} ({request.payoutDetails.mpesaNumber}). This action should only be taken after the M-Pesa transaction has been successfully completed.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleAction('accepted')}>
-                            {isPending ? <Loader2 className="animate-spin" /> : "Confirm Approval"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-            <AlertDialog>
-                 <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="destructive" disabled={isPending}>
-                        <X className="mr-2" />Reject
-                    </Button>
-                 </AlertDialogTrigger>
-                 <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Reject Payout Request</AlertDialogTitle>
-                        <AlertDialogDescription>Please provide a reason for rejecting this payout. This will be visible to the user.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <div className="py-4">
-                        <Input placeholder="e.g., Bank details incorrect" value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
-                    </div>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleAction('rejected')}>
-                             {isPending ? <Loader2 className="animate-spin" /> : "Confirm Rejection"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </div>
+        <DialogContent className="max-w-2xl">
+            <DialogHeader>
+                <DialogTitle>Process Payout for {request.userName}</DialogTitle>
+                <DialogDescription>Review earnings audit and confirm the action.</DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-6 py-4">
+                <div className="space-y-4">
+                    <Card>
+                        <CardHeader className="pb-2"><CardTitle className="text-base">Request Details</CardTitle></CardHeader>
+                        <CardContent className="text-sm space-y-2">
+                             <p><strong>Amount Requested:</strong> Ksh {request.amountRequested.toLocaleString()}</p>
+                             <p><strong>Recipient:</strong> {request.payoutDetails.fullName}</p>
+                             <p><strong>M-Pesa Number:</strong> {request.payoutDetails.mpesaNumber}</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader className="pb-2"><CardTitle className="text-base">Earnings Audit</CardTitle></CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader><TableRow><TableHead>Source</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+                                <TableBody>
+                                    {request.earningsAudit.map(audit => (
+                                        <TableRow key={audit.sourceId}>
+                                            <TableCell className="text-xs">{audit.sourceName}</TableCell>
+                                            <TableCell className="text-right font-mono text-xs">Ksh {audit.amount.toLocaleString()}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </div>
+                 <div className="space-y-4">
+                    <Tabs value={action || ''} onValueChange={(value) => setAction(value as any)} className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="approve">Approve</TabsTrigger>
+                            <TabsTrigger value="reject">Reject</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="approve" className="space-y-4 pt-4">
+                             <div className="space-y-2">
+                                <Label htmlFor="amount-disbursed">Amount Disbursed</Label>
+                                <Input id="amount-disbursed" type="number" value={amountDisbursed} onChange={e => setAmountDisbursed(e.target.value)} />
+                             </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="confirmation-code">Confirmation Code</Label>
+                                <Input id="confirmation-code" placeholder="e.g., QBC123XYZ" value={processorMessage} onChange={e => setProcessorMessage(e.target.value)} />
+                             </div>
+                             <Button onClick={handleAction} disabled={isPending} className="w-full">
+                                {isPending ? <Loader2 className="animate-spin" /> : <Check />} Approve Payout
+                             </Button>
+                        </TabsContent>
+                        <TabsContent value="reject" className="space-y-4 pt-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="rejection-reason">Rejection Reason</Label>
+                                <Textarea id="rejection-reason" placeholder="e.g., Incorrect payment details." value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} />
+                             </div>
+                             <Button onClick={handleAction} variant="destructive" disabled={isPending} className="w-full">
+                                 {isPending ? <Loader2 className="animate-spin" /> : <X />} Reject Payout
+                             </Button>
+                        </TabsContent>
+                    </Tabs>
+                </div>
+            </div>
+             <DialogFooter>
+                <DialogClose asChild>
+                    <Button variant="outline">Close</Button>
+                </DialogClose>
+            </DialogFooter>
+        </DialogContent>
     )
 }
 
@@ -116,7 +155,7 @@ export default function AdminPayoutsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
+    const fetchPayouts = () => {
         setLoading(true);
         getPayoutRequests().then(result => {
             if (result.success && result.data) {
@@ -126,6 +165,10 @@ export default function AdminPayoutsPage() {
             }
             setLoading(false);
         });
+    };
+
+    useEffect(() => {
+        fetchPayouts();
     }, []);
 
     const renderTable = (data: PayoutRequestWithUser[]) => {
@@ -154,7 +197,15 @@ export default function AdminPayoutsPage() {
                             <TableCell>{format(new Date(req.requestedAt as string), 'PPp')}</TableCell>
                             <TableCell><StatusBadge status={req.status as PayoutStatus} /></TableCell>
                             <TableCell className="text-right">
-                                <PayoutActions request={req} />
+                                {req.status === 'pending' && (
+                                     <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button size="sm">Process</Button>
+                                        </DialogTrigger>
+                                        <ProcessPayoutDialog request={req} onActionComplete={fetchPayouts} />
+                                    </Dialog>
+                                )}
+                                {req.status !== 'pending' && <p className="text-xs text-muted-foreground">Processed</p>}
                             </TableCell>
                         </TableRow>
                     ))}

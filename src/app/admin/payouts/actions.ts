@@ -57,7 +57,15 @@ export async function getPayoutRequests(): Promise<{ success: boolean; data?: Pa
     }
 }
 
-export async function updatePayoutStatus(requestId: string, status: 'accepted' | 'rejected', rejectionReason?: string) {
+interface UpdatePayoutPayload {
+    requestId: string;
+    status: 'accepted' | 'rejected';
+    amountDisbursed?: number;
+    processorMessage?: string;
+    rejectionReason?: string;
+}
+
+export async function updatePayoutStatus(payload: UpdatePayoutPayload) {
     noStore();
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
@@ -75,6 +83,7 @@ export async function updatePayoutStatus(requestId: string, status: 'accepted' |
     }
 
     try {
+        const { requestId, status, amountDisbursed, processorMessage, rejectionReason } = payload;
         const payoutRef = doc(db, 'payoutRequests', requestId);
         
         const updatePayload: any = {
@@ -83,8 +92,17 @@ export async function updatePayoutStatus(requestId: string, status: 'accepted' |
             processorId: decodedClaims.uid,
         };
 
-        if (status === 'rejected') {
-            updatePayload.rejectionReason = rejectionReason || 'No reason provided.';
+        if (status === 'accepted') {
+            if (!amountDisbursed || !processorMessage) {
+                return { success: false, error: 'Amount disbursed and confirmation message are required for approval.' };
+            }
+            updatePayload.amountDisbursed = amountDisbursed;
+            updatePayload.processorMessage = processorMessage;
+        } else { // rejected
+            if (!rejectionReason) {
+                return { success: false, error: 'A reason is required for rejection.' };
+            }
+            updatePayload.rejectionReason = rejectionReason;
         }
 
         await updateDoc(payoutRef, updatePayload);
@@ -95,8 +113,10 @@ export async function updatePayoutStatus(requestId: string, status: 'accepted' |
             action: 'update_payout_status',
             targetType: 'payout',
             targetId: requestId,
-            details: { newStatus: status, reason: rejectionReason }
+            details: { newStatus: status, ...payload }
         });
+        
+        revalidatePath('/admin/payouts');
 
         return { success: true };
     } catch (error: any) {
