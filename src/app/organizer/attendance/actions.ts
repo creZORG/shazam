@@ -3,10 +3,10 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, getDoc, doc, Timestamp, orderBy, addDoc, serverTimestamp, writeBatch, documentId } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc, Timestamp, orderBy, addDoc, serverTimestamp, writeBatch, documentId, updateDoc } from 'firebase/firestore';
 import type { Order, Ticket, Event, Tour, FirebaseUser, TicketDefinition } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 
@@ -24,6 +24,7 @@ async function getOrganizerId() {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return null;
     try {
+        const auth = await getAdminAuth();
         if (!auth) throw new Error("Server auth not initialized");
         const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
         return decodedClaims.uid;
@@ -105,7 +106,7 @@ export async function getAttendanceStats(eventId: string) {
         
         const verifiers: Record<string, string> = {};
         if (verifierIds.length > 0) {
-            const usersQuery = query(collection(db, 'users'), where('__name__', 'in', verifierIds));
+            const usersQuery = query(collection(db, 'users'), where(documentId(), 'in', verifierIds));
             const usersSnapshot = await getDocs(usersQuery);
             usersSnapshot.forEach(doc => {
                 verifiers[doc.id] = (doc.data() as FirebaseUser).name || 'Unknown Verifier';
