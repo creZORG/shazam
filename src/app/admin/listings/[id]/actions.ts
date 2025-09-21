@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, getDoc, doc, Timestamp, orderBy, updateDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc, Timestamp, orderBy, updateDoc, writeBatch, serverTimestamp, documentId } from 'firebase/firestore';
 import type { Order, Ticket, UserEvent, Event, Tour, FirebaseUser, Product } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { revalidatePath } from 'next/cache';
@@ -80,7 +80,8 @@ export async function getListingDetailsForAdmin(listingId: string, listingType: 
         const userIds = [...new Set(tickets.map(t => t.userId).filter(Boolean))] as string[];
         const users: Record<string, FirebaseUser> = {};
         if (userIds.length > 0) {
-            const usersQuery = query(collection(db, 'users'), where('__name__', 'in', userIds));
+            // Firestore 'in' query limit is 30. If you expect more users, you'll need to batch this.
+            const usersQuery = query(collection(db, 'users'), where(documentId(), 'in', userIds));
             const usersSnapshot = await getDocs(usersQuery);
             usersSnapshot.forEach(doc => {
                 users[doc.id] = serializeData(doc) as FirebaseUser;
