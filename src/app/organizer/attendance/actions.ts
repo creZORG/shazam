@@ -39,15 +39,19 @@ export async function getPublishedEvents() {
     if (!organizerId) return { success: false, error: 'Not authenticated' };
 
     try {
+        const now = new Date().toISOString();
+
         const eventsQuery = query(
             collection(db, 'events'),
             where('organizerId', '==', organizerId),
-            where('status', '==', 'published')
+            where('status', 'in', ['published', 'submitted for review']),
+            where('date', '>=', now)
         );
         const toursQuery = query(
             collection(db, 'tours'),
             where('organizerId', '==', organizerId),
-            where('status', '==', 'published')
+            where('status', 'in', ['published', 'submitted for review']),
+            where('startDate', '>=', now)
         );
 
         const [eventsSnapshot, toursSnapshot] = await Promise.all([
@@ -61,10 +65,11 @@ export async function getPublishedEvents() {
         const allListings = [...events, ...tours];
         
         // Sort by date, most recent first
-        allListings.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        allListings.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         return { success: true, data: allListings };
     } catch (e: any) {
+        console.error("Error in getPublishedEvents:", e)
         return { success: false, error: e.message };
     }
 }
