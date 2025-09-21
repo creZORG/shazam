@@ -59,7 +59,7 @@ export async function POST(request: Request, { params }: { params: { secret:stri
 
         await db.runTransaction(async (firestoreTransaction) => {
             const orderDoc = await firestoreTransaction.get(orderRef);
-            if (orderDoc.exists() && orderDoc.data()?.status === 'completed') {
+            if (orderDoc.exists && orderDoc.data()?.status === 'completed') {
                 console.warn(`Idempotency check: Order ${transaction.orderId} already completed. Ignoring callback.`);
                 return;
             }
@@ -91,7 +91,7 @@ export async function POST(request: Request, { params }: { params: { secret:stri
                 const merchOrderRef = db.collection('merchOrders').doc(transaction.orderId);
                 const merchOrderDoc = await firestoreTransaction.get(merchOrderRef);
 
-                if (orderDoc.exists()) {
+                if (orderDoc.exists) {
                     const order = { id: orderDoc.id, ...orderDoc.data() } as Order;
                     firestoreTransaction.update(orderRef, { status: 'completed', updatedAt: FieldValue.serverTimestamp() });
 
@@ -135,7 +135,7 @@ export async function POST(request: Request, { params }: { params: { secret:stri
                          firestoreTransaction.update(trackingLinkRef, { purchases: FieldValue.increment(1) }); 
                     }
 
-                } else if (merchOrderDoc.exists()) {
+                } else if (merchOrderDoc.exists) {
                     const merchOrder = merchOrderDoc.data() as MerchOrder;
                     for (const item of merchOrder.items) {
                         const productRef = db.collection('products').doc(item.productId);
@@ -146,11 +146,11 @@ export async function POST(request: Request, { params }: { params: { secret:stri
 
             } else {
                 console.warn(`Payment failed for ${checkoutRequestId}. ResultCode: ${resultCode}. Reason: ${resultDesc}`);
-                if (orderDoc.exists()) {
+                if (orderDoc.exists) {
                      firestoreTransaction.update(orderRef, { status: 'failed', updatedAt: FieldValue.serverTimestamp() });
                 } else {
                     const merchOrderRef = db.collection('merchOrders').doc(transaction.orderId);
-                    if ((await firestoreTransaction.get(merchOrderRef)).exists()) {
+                    if ((await firestoreTransaction.get(merchOrderRef)).exists) {
                         firestoreTransaction.update(merchOrderRef, { status: 'failed', updatedAt: FieldValue.serverTimestamp() });
                     }
                 }
@@ -166,7 +166,7 @@ export async function POST(request: Request, { params }: { params: { secret:stri
 
         if (resultCode === 0) {
             const finalOrderDoc = await orderRef.get();
-            if (finalOrderDoc.exists()) {
+            if (finalOrderDoc.exists) {
                 const orderData = finalOrderDoc.data() as Order;
                 if (orderData.paymentType === 'full' && orderData.listingType === 'event') {
                     const ticketsSnapshot = await db.collection('tickets').where('orderId', '==', orderData.id).get();
@@ -174,7 +174,7 @@ export async function POST(request: Request, { params }: { params: { secret:stri
                     if (tickets.length > 0) {
                          let eventName = 'Your Booking';
                          const eventDoc = await db.collection('events').doc(orderData.listingId).get();
-                         if(eventDoc.exists()) eventName = (eventDoc.data() as Event).name;
+                         if(eventDoc.exists) eventName = (eventDoc.data() as Event).name;
                          
                          await sendTicketEmail({
                             to: orderData.userEmail,
