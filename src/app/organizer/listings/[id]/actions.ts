@@ -2,12 +2,12 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, getDoc, doc, Timestamp, orderBy, updateDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
-import type { Order, Ticket, UserEvent, Event, Tour, FirebaseUser } from '@/lib/types';
+import { collection, query, where, getDocs, getDoc, doc, Timestamp, orderBy, updateDoc, writeBatch, serverTimestamp, documentId } from 'firebase/firestore';
+import type { Order, Ticket, UserEvent, Event, Tour, FirebaseUser, Product } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { logAdminAction } from '@/services/audit-service';
 
 function serializeData(doc: any) {
@@ -80,7 +80,8 @@ export async function getListingDetailsForAdmin(listingId: string, listingType: 
         const userIds = [...new Set(tickets.map(t => t.userId).filter(Boolean))] as string[];
         const users: Record<string, FirebaseUser> = {};
         if (userIds.length > 0) {
-            const usersQuery = query(collection(db, 'users'), where('__name__', 'in', userIds));
+            // Firestore 'in' query limit is 30. If you expect more users, you'll need to batch this.
+            const usersQuery = query(collection(db, 'users'), where(documentId(), 'in', userIds));
             const usersSnapshot = await getDocs(usersQuery);
             usersSnapshot.forEach(doc => {
                 users[doc.id] = serializeData(doc) as FirebaseUser;
@@ -133,11 +134,25 @@ export async function getListingDetailsForAdmin(listingId: string, listingType: 
 export async function updateListingStatus(listingId: string, type: 'event' | 'tour', status: 'published' | 'rejected' | 'taken-down' | 'archived') {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated.' };
+    const auth = await getAdminAuth();
 
     try {
+        if (!auth) throw new Error("Server auth not initialized");
+        const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+
         const collectionName = type === 'event' ? 'events' : 'tours';
         const listingDocRef = doc(db, collectionName, listingId);
         await updateDoc(listingDocRef, { status: status, updatedAt: serverTimestamp() });
+        
+        await logAdminAction({
+            adminId: decodedClaims.uid,
+            adminName: decodedClaims.name || 'Admin',
+            action: `update_${type}_status`,
+            targetType: type,
+            targetId: listingId,
+            details: { newStatus: status }
+        });
+
         revalidatePath(`/admin/listings/${listingId}`);
         revalidatePath(`/admin/${type}s`);
         return { success: true };
@@ -154,6 +169,7 @@ export async function generateManualTicketForAdmin(
 ): Promise<{ success: boolean; error?: string, orderId?: string }> {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated' };
+    const auth = await getAdminAuth();
 
     let admin;
     try {
@@ -174,6 +190,7 @@ export async function generateManualTicketForAdmin(
         if (!eventSnap.exists()) {
             return { success: false, error: 'Event not found.' };
         }
+        const eventData = eventSnap.data();
         
         const batch = writeBatch(db);
 
@@ -184,7 +201,7 @@ export async function generateManualTicketForAdmin(
             userEmail: 'admin@naksyetu.com',
             userPhone: 'N/A',
             listingId: eventId,
-            organizerId: eventSnap.data().organizerId,
+            organizerId: eventData.organizerId,
             listingType: 'event',
             tickets: ticketsToGenerate.map(t => ({...t, price: 0})),
             total: 0, subtotal: 0, discount: 0, platformFee: 0, processingFee: 0,
@@ -216,6 +233,15 @@ export async function generateManualTicketForAdmin(
                 batch.set(ticketRef, ticketPayload);
             }
         }
+
+        await logAdminAction({
+            adminId: admin.uid,
+            adminName: admin.name,
+            action: 'generate_manual_ticket',
+            targetType: 'event',
+            targetId: eventId,
+            details: { tickets: ticketsToGenerate, status }
+        });
         
         await batch.commit();
         
@@ -228,9 +254,53 @@ export async function generateManualTicketForAdmin(
     }
 }
 
+export async function updateListingMerch(listingId: string, type: 'event' | 'tour', merch: { productId: string; productName: string; } | null) {
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) return { success: false, error: 'Not authenticated.' };
+    const auth = await getAdminAuth();
+    
+    try {
+        if (!auth) throw new Error("Server auth not initialized");
+        const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+
+        const collectionName = type === 'event' ? 'events' : 'tours';
+        const listingDocRef = doc(db, collectionName, listingId);
+        await updateDoc(listingDocRef, { freeMerch: merch });
+
+        await logAdminAction({
+            adminId: decodedClaims.uid,
+            adminName: decodedClaims.name || 'Admin',
+            action: 'update_free_merch',
+            targetType: type,
+            targetId: listingId,
+            details: { newMerch: merch }
+        });
+
+        revalidatePath(`/admin/listings/${listingId}`);
+        revalidatePath(`/${type}s/${listingId}`);
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: 'Failed to update free merchandise.' };
+    }
+}
+
+export async function getProductsForSelect(): Promise<{ success: boolean; data?: Product[], error?: string }> {
+    noStore();
+    try {
+        const q = query(collection(db, "products"), where('status', '==', 'active'), orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        const data = snapshot.docs.map(doc => serializeData(doc) as Product);
+        return { success: true, data };
+    } catch (e: any) {
+        return { success: false, error: 'Failed to fetch products' };
+    }
+}
+
+
 export async function updateEventGallery(listingId: string, galleryUrls: string[]) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated.' };
+    const auth = await getAdminAuth();
     try {
         if (!auth) throw new Error("Server auth not initialized");
         const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);

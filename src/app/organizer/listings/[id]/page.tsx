@@ -27,7 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { assignVerifierByAdmin, getVerifierStatsForEvent } from '@/app/admin/verifiers/actions';
@@ -566,6 +566,7 @@ export default function ListingManagementPage({ params, searchParams }: { params
     
     const { listing, stats, attendees, organizer } = listingData;
     const listingDate = (listing as Event).date || (listing as Tour).startDate;
+
     const isPast = new Date(listingDate) < new Date();
 
     const handleGalleryUpdate = (urls: string[]) => {
@@ -697,5 +698,3 @@ export default function ListingManagementPage({ params, searchParams }: { params
         </div>
     )
 }
-
-    
