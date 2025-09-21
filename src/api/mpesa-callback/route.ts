@@ -6,16 +6,19 @@ import type { Order, Ticket, Transaction, Event, Tour, MerchOrder, Product } fro
 import { sendTicketEmail } from '@/services/email';
 
 export async function POST(request: Request) {
+    console.log("--- M-PESA CALLBACK ENDPOINT HIT ---");
     try {
         const callbackData = await request.json();
-        console.log("Received M-Pesa Callback:", JSON.stringify(callbackData, null, 2));
+        console.log("Received M-Pesa Callback Body:", JSON.stringify(callbackData, null, 2));
 
         // Security check for the secret within the payload
         const secret = callbackData.secret;
         if (secret !== process.env.MPESA_CALLBACK_SECRET) {
-            console.error("Invalid M-Pesa callback secret received in payload.");
+            console.error("!!! CRITICAL: Invalid M-Pesa callback secret received. Halting execution. !!!");
+            console.error(`Received Secret: ${secret}`);
             return NextResponse.json({ message: 'Invalid secret' }, { status: 403 });
         }
+        console.log("Callback secret validated successfully.");
         
         const { Body: { stkCallback } } = callbackData;
         const checkoutRequestId = stkCallback.CheckoutRequestID;
@@ -23,18 +26,20 @@ export async function POST(request: Request) {
         const resultDesc = stkCallback.ResultDesc;
 
         if (!checkoutRequestId) {
-             console.error("Callback missing CheckoutRequestID.");
+             console.error("Callback is missing CheckoutRequestID. Invalid payload structure.");
              return NextResponse.json({ message: 'Invalid callback data' }, { status: 400 });
         }
+        console.log(`Processing callback for CheckoutRequestID: ${checkoutRequestId}`);
 
         const transactionsRef = collection(db, 'transactions');
         const q = query(transactionsRef, where('mpesaCheckoutRequestId', '==', checkoutRequestId));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-            console.error(`Transaction not found for CheckoutRequestID: ${checkoutRequestId}`);
+            console.error(`Transaction not found for CheckoutRequestID: ${checkoutRequestId}. This might be a test callback from Safaricom or an old request.`);
             return NextResponse.json({ message: 'Transaction not found' }, { status: 404 });
         }
+        console.log(`Found matching transaction document: ${querySnapshot.docs[0].id}`);
 
         const transactionDoc = querySnapshot.docs[0];
         const transaction = transactionDoc.data() as Transaction;
@@ -44,13 +49,13 @@ export async function POST(request: Request) {
         const orderRef = doc(db, 'orders', transaction.orderId);
         const orderDoc = await orderRef.get();
         if (orderDoc.exists() && orderDoc.data().status === 'completed') {
-            console.warn(`Order ${transaction.orderId} already completed. Ignoring callback for transaction ${transactionDoc.id}.`);
+            console.warn(`Idempotency check: Order ${transaction.orderId} already completed. Ignoring callback for transaction ${transactionDoc.id}.`);
             return NextResponse.json({ message: 'Order already processed.' });
         }
         
         // 2. Secondary check on the transaction itself.
         if (transaction.status === 'completed' || transaction.status === 'failed') {
-            console.warn(`Transaction ${transactionDoc.id} already processed with status: ${transaction.status}`);
+            console.warn(`Idempotency check: Transaction ${transactionDoc.id} already processed with status: ${transaction.status}. Ignoring callback.`);
             return NextResponse.json({ message: 'Transaction already processed' });
         }
         
@@ -59,6 +64,7 @@ export async function POST(request: Request) {
 
         if (resultCode === 0) {
             // Success
+            console.log(`Payment successful for ${checkoutRequestId}. ResultCode: 0.`);
             const updatePayload: any = {
                 status: 'completed',
                 mpesaCallbackData: stkCallback,
@@ -71,6 +77,7 @@ export async function POST(request: Request) {
                 updatePayload.mpesaConfirmationCode = metadataItem('MpesaReceiptNumber');
                 updatePayload.mpesaTransactionDate = metadataItem('TransactionDate');
                 updatePayload.mpesaPayerPhoneNumber = metadataItem('PhoneNumber');
+                console.log(`Extracted M-Pesa Receipt: ${updatePayload.mpesaConfirmationCode}`);
             }
             batch.update(transactionRef, updatePayload);
 
@@ -79,10 +86,12 @@ export async function POST(request: Request) {
             const merchOrderDoc = await getDoc(merchOrderRef);
 
             if (orderDoc.exists()) {
+                console.log(`Processing associated EVENT/TOUR order: ${orderDoc.id}`);
                 const order = { id: orderDoc.id, ...orderDoc.data() } as Order;
                 batch.update(orderRef, { status: 'completed', updatedAt: serverTimestamp() });
                 
                 if (order.paymentType === 'full') {
+                    console.log("Full payment detected. Generating tickets...");
                     const createdTickets: Omit<Ticket, 'id'>[] = [];
                     for (const ticketItem of order.tickets) {
                         for (let i = 0; i < ticketItem.quantity; i++) {
@@ -102,6 +111,8 @@ export async function POST(request: Request) {
                             createdTickets.push(newTicket);
                         }
                     }
+                    console.log(`Generated ${createdTickets.length} tickets. Preparing email.`);
+
                     let eventName = 'Your Booking';
                     const listingCollection = order.listingType === 'event' ? 'events' : 'tours';
                     try {
@@ -117,12 +128,15 @@ export async function POST(request: Request) {
                         eventName: eventName,
                         tickets: createdTickets.map(t => ({ ticketType: t.ticketType, qrCode: t.qrCode }))
                     });
+                    console.log(`Ticket email sent to ${order.userEmail}.`);
                 }
                 if (order.promocodeId) {
+                    console.log(`Updating usage count for promocode: ${order.promocodeId}`);
                     const promocodeRef = doc(db, 'promocodes', order.promocodeId);
                     batch.update(promocodeRef, { usageCount: increment(1), revenueGenerated: increment(order.total) });
                 }
                 if(order.trackingLinkId) {
+                     console.log(`Updating usage count for tracking link: ${order.trackingLinkId}`);
                     const collectionPath = order.promocodeId ? `promocodes/${order.promocodeId}/trackingLinks` : 'trackingLinks';
                     const trackingLinkRef = doc(db, collectionPath, order.trackingLinkId);
                     const trackingLinkDoc = await getDoc(trackingLinkRef);
@@ -130,6 +144,7 @@ export async function POST(request: Request) {
                 }
 
             } else if (merchOrderDoc.exists()) {
+                console.log(`Processing associated MERCH order: ${merchOrderDoc.id}`);
                 // This is a Merchandise Order
                 await runTransaction(db, async (firestoreTransaction) => {
                     const merchOrder = merchOrderDoc.data() as MerchOrder;
@@ -139,19 +154,21 @@ export async function POST(request: Request) {
                         if (!productDoc.exists()) { throw new Error(`Product ${item.productId} not found during stock update.`); }
                         const product = productDoc.data() as Product;
                         if (product.stock < item.quantity) { throw new Error(`Insufficient stock for ${product.name}.`); }
+                        console.log(`Decrementing stock for product ${item.productId} by ${item.quantity}.`);
                         firestoreTransaction.update(productRef, { stock: increment(-item.quantity) });
                     }
                     firestoreTransaction.update(merchOrderRef, { status: 'awaiting_pickup' });
                 });
 
             } else {
-                console.error(`Order or MerchOrder ${transaction.orderId} not found!`);
+                console.error(`Order or MerchOrder ${transaction.orderId} not found! This is a critical error.`);
                 await batch.commit(); // commit the transaction update at least
                 return NextResponse.json({ message: 'Order/MerchOrder not found' }, { status: 404 });
             }
 
         } else {
             // This is a failed transaction
+            console.warn(`Payment failed for ${checkoutRequestId}. ResultCode: ${resultCode}. Reason: ${resultDesc}`);
             if (orderDoc.exists()) {
                  batch.update(orderRef, { status: 'failed', updatedAt: serverTimestamp() });
             } else {
@@ -174,14 +191,12 @@ export async function POST(request: Request) {
         
         await batch.commit();
 
-        console.log(`Successfully processed callback for transaction ${transactionDoc.id}. Status: ${resultCode === 0 ? 'completed' : 'failed'}`);
+        console.log(`--- SUCCESSFULLY PROCESSED CALLBACK for transaction ${transactionDoc.id}. Status: ${resultCode === 0 ? 'completed' : 'failed'} ---`);
         return NextResponse.json({ message: 'Callback received successfully' });
 
     } catch (error) {
-        console.error('Error processing M-Pesa callback:', error);
+        console.error('!!! FATAL ERROR processing M-Pesa callback:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ message: 'Internal Server Error', error: errorMessage }, { status: 500 });
     }
 }
-
-    
