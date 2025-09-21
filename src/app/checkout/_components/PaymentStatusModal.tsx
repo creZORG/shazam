@@ -52,22 +52,6 @@ export function PaymentStatusModal({
     const [rating, setRating] = useState(0);
     const [feedback, setFeedback] = useState('');
     const [isSubmittingRating, startSubmittingRating] = useState(false);
-    const [logs, setLogs] = useState<string[]>([]);
-    const [showLogs, setShowLogs] = useState(false);
-
-    useEffect(() => {
-        if (stage) {
-            const timestamp = format(new Date(), 'HH:mm:ss');
-            const message = stageMessages[stage] + (stage === 'failed' && error ? ` | Error: ${error}` : '');
-            setLogs(prevLogs => [...prevLogs, `${timestamp}: ${message}`]);
-        }
-        // When the modal is first opened, clear previous logs.
-        if (stage === 'creating_order' && logs.length > 0) {
-            setLogs([`${format(new Date(), 'HH:mm:ss')}: ${stageMessages.creating_order}`]);
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [stage, error]);
-
 
     const handleRatingSubmit = async () => {
         if (rating === 0) {
@@ -170,12 +154,8 @@ export function PaymentStatusModal({
                     {/* Header is part of the conditional content */}
                 </DialogHeader>
                 {renderContent()}
-                 <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between items-center w-full pt-4">
-                     <Button variant="ghost" size="sm" onClick={() => setShowLogs(!showLogs)} className="text-muted-foreground">
-                        <List className="mr-2 h-4 w-4" />
-                        {showLogs ? 'Hide' : 'Show'} Logs
-                    </Button>
-                    <div className="flex justify-end gap-2">
+                 <DialogFooter>
+                    <div className="flex justify-end gap-2 w-full">
                         {stage === 'success' && (
                             <>
                                 <Button variant="outline" onClick={onClose}>Close</Button>
@@ -193,16 +173,6 @@ export function PaymentStatusModal({
                         )}
                     </div>
                 </DialogFooter>
-                {showLogs && (
-                    <div className="mt-4 border-t pt-4">
-                        <h4 className="font-semibold text-sm mb-2">Debug Log</h4>
-                        <ScrollArea className="h-32 w-full rounded-md border bg-muted p-2">
-                           {logs.map((log, index) => (
-                               <p key={index} className="text-xs font-mono text-muted-foreground">{log}</p>
-                           ))}
-                        </ScrollArea>
-                    </div>
-                )}
             </DialogContent>
         </Dialog>
     )
