@@ -49,7 +49,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!user || !dbUser || !['admin', 'super-admin'].includes(dbUser.role)) {
+  if (!user || !dbUser || !['admin', 'super-admin', 'developer'].includes(dbUser.role)) {
     notFound();
   }
 
@@ -88,6 +88,16 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </SidebarMenu>
       </Sidebar>
       <SidebarInset>
+        <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-4 border-b bg-background/95 px-4 backdrop-blur-sm sm:px-6">
+          <SidebarTrigger className="md:hidden" />
+          <div className="flex-1">
+            {/* You can add breadcrumbs or page titles here if needed */}
+          </div>
+          <div className="flex items-center gap-2">
+            <NotificationCenter />
+            <ThemeToggle />
+          </div>
+        </header>
         <VerificationGate>
           <main className="p-4 sm:p-6 lg:p-8">
               {children}
