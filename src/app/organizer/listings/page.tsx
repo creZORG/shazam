@@ -419,30 +419,36 @@ function MyListingsPageInternal() {
                     <TabsTrigger value="tours">Tours</TabsTrigger>
                 </TabsList>
                 <TabsContent value="events" className="mt-4">
-                     <div className="flex flex-wrap gap-2 pt-4 mb-8">
-                        {filterButtons.map(({ status, label }) => (
-                            <Button 
-                                key={status} 
-                                variant={activeStatusFilter === status ? 'default' : 'outline'}
-                                onClick={() => setActiveStatusFilter(status)}
-                            >
-                                {label} ({getCountForStatus(status, 'events')})
-                            </Button>
-                        ))}
+                     <div className="relative w-full overflow-auto">
+                        <div className="flex flex-nowrap gap-2 pt-4 mb-8">
+                            {filterButtons.map(({ status, label }) => (
+                                <Button 
+                                    key={status} 
+                                    variant={activeStatusFilter === status ? 'default' : 'outline'}
+                                    onClick={() => setActiveStatusFilter(status)}
+                                    className="flex-shrink-0"
+                                >
+                                    {label} ({getCountForStatus(status, 'events')})
+                                </Button>
+                            ))}
+                        </div>
                     </div>
                     <ListingsGrid listings={events} statusFilter={activeStatusFilter} onStatusChange={fetchAllListings} />
                 </TabsContent>
                 <TabsContent value="tours" className="mt-4">
-                      <div className="flex flex-wrap gap-2 pt-4 mb-8">
-                        {filterButtons.map(({ status, label }) => (
-                            <Button 
-                                key={status} 
-                                variant={activeStatusFilter === status ? 'default' : 'outline'}
-                                onClick={() => setActiveStatusFilter(status)}
-                            >
-                                {label} ({getCountForStatus(status, 'tours')})
-                            </Button>
-                        ))}
+                      <div className="relative w-full overflow-auto">
+                        <div className="flex flex-nowrap gap-2 pt-4 mb-8">
+                            {filterButtons.map(({ status, label }) => (
+                                <Button 
+                                    key={status} 
+                                    variant={activeStatusFilter === status ? 'default' : 'outline'}
+                                    onClick={() => setActiveStatusFilter(status)}
+                                    className="flex-shrink-0"
+                                >
+                                    {label} ({getCountForStatus(status, 'tours')})
+                                </Button>
+                            ))}
+                        </div>
                     </div>
                     <ListingsGrid listings={tours} statusFilter={activeStatusFilter} onStatusChange={fetchAllListings} />
                 </TabsContent>
