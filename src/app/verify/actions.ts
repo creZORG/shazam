@@ -4,11 +4,13 @@
 
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, getDoc, doc, Timestamp, orderBy, addDoc, serverTimestamp, writeBatch, documentId, updateDoc } from 'firebase/firestore';
-import type { Order, Ticket, Event, Tour, FirebaseUser, TicketDefinition } from '@/lib/types';
+import type { Order, Ticket, Event, Tour, FirebaseUser, TicketDefinition, SiteSettings } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { sendCheckInConfirmationEmail } from '@/services/email';
+import { getSettings } from '@/app/admin/settings/actions';
 
 export async function validateTicket(
   ticketId: string,
@@ -87,15 +89,15 @@ export async function validateTicket(
 
     // Fetch event and user details for the response
     const eventRef = doc(db, 'events', ticket.listingId);
-    const userRef = doc(db, 'users', ticket.userId as string);
+    const orderRef = doc(db, 'orders', ticket.orderId);
 
-    const [eventSnap, userSnap] = await Promise.all([
+    const [eventSnap, orderSnap] = await Promise.all([
       getDoc(eventRef),
-      getDoc(userRef)
+      getDoc(orderRef)
     ]);
 
     const eventName = eventSnap.exists() ? (eventSnap.data() as Event).name : 'Unknown Event';
-    const attendeeName = ticket.userName || (userSnap.exists() ? userSnap.data().name : 'Unknown Attendee');
+    const attendeeName = ticket.userName;
     const ticketType = ticket.ticketType;
     
     // Perform the update and log history
@@ -118,6 +120,20 @@ export async function validateTicket(
     await batch.commit();
     
     revalidatePath(`/verify/scan/${currentEventId}`);
+
+    // Post-validation actions (e.g., send email)
+    if (orderSnap.exists()) {
+        const orderData = orderSnap.data() as Order;
+        const { settings: siteSettings } = await getSettings();
+        await sendCheckInConfirmationEmail({
+            to: orderData.userEmail,
+            attendeeName: orderData.userName,
+            eventName: eventName,
+            eventId: ticket.listingId,
+            contactPhone: siteSettings?.contact?.phone
+        });
+    }
+
 
     return {
       success: true,

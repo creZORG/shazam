@@ -250,3 +250,35 @@ export async function sendTicketStatusUpdateEmail({ to, attendeeName, eventName,
         htmlbody: emailHtml,
     });
 }
+
+interface CheckInEmailPayload {
+  to: string;
+  attendeeName: string;
+  eventName: string;
+  eventId: string;
+  contactPhone?: string | null;
+}
+
+export async function sendCheckInConfirmationEmail({ to, attendeeName, eventName, eventId, contactPhone }: CheckInEmailPayload) {
+    const archiveUrl = `${process.env.NEXT_PUBLIC_APP_URL}/archives/${eventId}?type=event`;
+    const emailHtml = `
+        <h1>Welcome to ${eventName}!</h1>
+        <p>Hi ${attendeeName},</p>
+        <p>You're officially checked in. We hope you have an amazing time!</p>
+        <br/>
+        <p><strong>Had a great time?</strong> After the event, you can share your experience by rating it. Your feedback is valuable to the organizer and other attendees.</p>
+        <p><strong>Notice anything unusual?</strong> If you encounter any issues or have a lost & found inquiry, please don't hesitate to contact our on-site support at <strong>${contactPhone || 'the information desk'}</strong>.</p>
+        <br/>
+        <p>Once the event is over, you can view photos in the event gallery, which will be available at:</p>
+        <p><a href="${archiveUrl}">${archiveUrl}</a></p>
+        <p>Enjoy the show!</p>
+        <p>Best regards,<br/>The Mov33 Team</p>
+    `;
+
+    return sendZeptoMail({
+        from: { address: "noreply@kihumba.com", name: "Mov33" },
+        to: [{ email_address: { address: to, name: attendeeName } }],
+        subject: `You're checked in at ${eventName}!`,
+        htmlbody: emailHtml,
+    });
+}
