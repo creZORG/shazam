@@ -1,4 +1,5 @@
 
+
 'use server';
 
 interface ZeptoMailPayload {
@@ -218,4 +219,34 @@ export async function sendOtpEmail({ to, otp }: OtpEmailPayload) {
     subject: "Your Mov33 Verification Code",
     htmlbody: emailHtml,
   });
+}
+
+interface TicketStatusUpdatePayload {
+    to: string;
+    attendeeName: string;
+    eventName: string;
+    ticketType: string;
+    newStatus: 'valid' | 'invalid';
+}
+
+export async function sendTicketStatusUpdateEmail({ to, attendeeName, eventName, ticketType, newStatus }: TicketStatusUpdatePayload) {
+    const subject = `Update on your ticket for ${eventName}`;
+    const statusText = newStatus === 'valid' 
+        ? 'has been reinstated and is now valid for entry.'
+        : 'has been marked as invalid by an administrator. It can no longer be used for entry.';
+
+    const emailHtml = `
+        <h1>Ticket Status Update</h1>
+        <p>Hi ${attendeeName},</p>
+        <p>This is a notification to inform you that your <strong>${ticketType}</strong> ticket for the event <strong>${eventName}</strong> ${statusText}</p>
+        <p>If you believe this is in error, please contact our support team immediately by replying to this email or visiting our help center.</p>
+        <p>Thank you,<br/>The Mov33 Team</p>
+    `;
+
+    return sendZeptoMail({
+        from: { address: "support@mov33.com", name: "Mov33 Support" },
+        to: [{ email_address: { address: to, name: attendeeName } }],
+        subject,
+        htmlbody: emailHtml,
+    });
 }

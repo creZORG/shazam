@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, Timestamp, orderBy, doc, updateDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, orderBy, doc, updateDoc, writeBatch, addDoc, serverTimestamp, increment } from 'firebase/firestore';
 import type { PartnerRequest, AdSubmission, UserRole, SupportTicket, SupportTicketReply } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { revalidatePath } from 'next/cache';
@@ -87,6 +87,22 @@ export async function updateAdStatus(adId: string, status: 'approved' | 'rejecte
     } catch (error) {
         console.error("Error updating ad status:", error);
         return { success: false, error: 'Failed to update ad status.' };
+    }
+}
+
+export async function trackAdClick(adId: string): Promise<{ success: boolean }> {
+    if (!adId) return { success: false };
+
+    try {
+        const adRef = doc(db, 'adSubmissions', adId);
+        await updateDoc(adRef, {
+            clicks: increment(1)
+        });
+        return { success: true };
+    } catch (error) {
+        console.error(`Failed to track ad click for adId: ${adId}`, error);
+        // This is a non-critical action for the user, so we fail silently.
+        return { success: false };
     }
 }
 
