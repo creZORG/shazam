@@ -1,5 +1,4 @@
 
-
 export type EventTicketingType = 'naksyetu' | 'external';
 export type ExternalEventPricing = 'Free' | 'Paid' | 'RSVP' | 'Online';
 
@@ -69,6 +68,10 @@ export type Event = {
   };
   type: 'event';
   totalRevenue?: number;
+  // Football specific
+  homeTeam?: string;
+  awayTeam?: string;
+  league?: string;
 };
 
 export type Tour = {
