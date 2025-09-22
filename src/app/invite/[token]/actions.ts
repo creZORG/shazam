@@ -70,7 +70,7 @@ export async function acceptInvitation(token: string, uid: string): Promise<{ su
         // Update user's role if they don't already exist or if they are just an attendee
         if (!userDoc.exists() || userData?.role === 'attendee') {
             const updatePayload: { role: string, assignedEvents?: any } = { role: invite.role };
-            if (invite.role === 'verifier' && invite.eventId) {
+            if ((invite.role === 'verifier' || invite.role === 'developer') && invite.eventId && invite.eventId !== 'all') {
                 updatePayload.assignedEvents = arrayUnion(invite.eventId);
             }
              batch.set(userDocRef, updatePayload, { merge: true });
@@ -78,11 +78,11 @@ export async function acceptInvitation(token: string, uid: string): Promise<{ su
              if (userData?.role !== invite.role) {
                 // If user has a role other than 'attendee', don't automatically change it.
                 // Exception: a user can be a verifier AND another role.
-                if(invite.role !== 'verifier') {
+                if(invite.role !== 'verifier' && invite.role !== 'developer') {
                      return { success: false, error: `This user already has the role '${userData?.role}'. Role changes must be done manually.` };
                 }
             }
-             if (invite.role === 'verifier' && invite.eventId) {
+             if ((invite.role === 'verifier' || invite.role === 'developer') && invite.eventId && invite.eventId !== 'all') {
                 batch.update(userDocRef, { assignedEvents: arrayUnion(invite.eventId) });
             }
         }

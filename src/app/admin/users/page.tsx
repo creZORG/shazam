@@ -59,7 +59,7 @@ function InviteUserForm() {
     const selectedRole = form.watch('role');
 
     useEffect(() => {
-        if (selectedRole === 'verifier') {
+        if (selectedRole === 'verifier' || selectedRole === 'developer') {
             getPublishedEventsForSelect().then(result => {
                 if(result.success && result.data) {
                     setEvents(result.data);
@@ -105,16 +105,16 @@ function InviteUserForm() {
                              <FormItem><FormLabel>Email (optional)</FormLabel><FormControl><Input placeholder="user@example.com" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                          <FormField control={form.control} name="role" render={({field}) => (
-                             <FormItem><FormLabel>Assign Role</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{STAFF_ROLES.map(role => <SelectItem key={role} value={role} className="capitalize">{role}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                             <FormItem><FormLabel>Assign Role</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent>{STAFF_ROLES.map(role => <SelectItem key={role} value={role} className="capitalize">{role.replace('-', ' ')}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
                         )} />
                         
-                        {selectedRole === 'verifier' && (
+                        {(selectedRole === 'verifier' || selectedRole === 'developer') && (
                              <FormField control={form.control} name="eventId" render={({field}) => (
-                                <FormItem><FormLabel>Assign to Event (Optional)</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Global Verifier" /></SelectTrigger></FormControl><SelectContent>{events.map(event => <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
+                                <FormItem><FormLabel>Assign to Event (Optional)</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Global Verifier" /></SelectTrigger></FormControl><SelectContent><SelectItem value="all">All Events</SelectItem>{events.map(event => <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>
                             )} />
                         )}
 
-                        <div className={selectedRole === 'verifier' ? 'lg:col-span-3' : ''}>
+                        <div className={(selectedRole === 'verifier' || selectedRole === 'developer') ? 'lg:col-span-3' : ''}>
                              <Button type="submit" disabled={isPending} className="w-full">{isPending ? <Loader2 className="animate-spin mr-2"/> : <Send className="mr-2"/>}Generate Invite Link</Button>
                         </div>
                     </form>
@@ -124,7 +124,7 @@ function InviteUserForm() {
                         <AlertTitle>Share this Invitation Link</AlertTitle>
                         <AlertDescription className="flex items-center justify-between gap-4">
                             <Input value={inviteLink} readOnly className="flex-grow" />
-                            <Button variant="outline" size="icon" onClick={handleCopyLink}><Copy className="h-4 w-4"/></Button>
+                            <Button variant="outline" size="icon" onClick={handleCopyLink} type="button"><Copy className="h-4 w-4"/></Button>
                         </AlertDescription>
                     </Alert>
                 )}

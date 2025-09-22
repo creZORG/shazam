@@ -30,7 +30,7 @@ export default function VerifyLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!user || !dbUser || !['verifier', 'organizer', 'admin', 'super-admin'].includes(dbUser.role)) {
+  if (!user || !dbUser || !['verifier', 'organizer', 'admin', 'super-admin', 'developer'].includes(dbUser.role)) {
       notFound();
   }
 

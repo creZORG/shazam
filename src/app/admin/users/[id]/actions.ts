@@ -5,7 +5,7 @@
 import { db } from '@/lib/firebase/config';
 import { doc, getDoc, updateDoc, Timestamp, collection, query, where, orderBy, getDocs, limit } from 'firebase/firestore';
 import { revalidatePath } from 'next/cache';
-import type { FirebaseUser } from '@/lib/types';
+import type { FirebaseUser, Order, UserEvent } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { logAdminAction } from '@/services/audit-service';
 import { getAdminAuth } from '@/lib/firebase/server-auth';
@@ -161,7 +161,7 @@ export async function getUserActivity(userId: string) {
             success: true,
             data: { 
                 orders, 
-                interactions: interactions.sort((a,b) => b.timestamp - a.timestamp) 
+                interactions: interactions.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()) 
             }
         };
     } catch (error) {

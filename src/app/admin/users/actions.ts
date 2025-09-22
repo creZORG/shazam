@@ -142,7 +142,7 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
                 const userData = userDoc.data();
                 nameForEmail = userData.name;
                 const userRole = userData.role;
-                if (role === 'verifier' && userRole === 'verifier' && eventId) {
+                if ((role === 'verifier' || role === 'developer') && userRole === 'verifier' && eventId) {
                     // This is a common use case, we can proceed.
                 } else if (userRole !== 'attendee') {
                      return { success: false, error: `A user with this email already exists with the role '${userRole}'. You can change their role directly in the admin panel.` };
@@ -176,7 +176,7 @@ export async function generateInviteLink(payload: InvitationPayload): Promise<{ 
             createdAt: serverTimestamp(),
         };
 
-        if (eventId) {
+        if (eventId && eventId !== 'all') {
             inviteData.eventId = eventId;
         }
         if (listingName) {

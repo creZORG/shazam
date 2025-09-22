@@ -129,7 +129,7 @@ export default function OrganizerLayout({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!user || !dbUser || !['organizer', 'admin', 'super-admin'].includes(dbUser.role)) {
+  if (!user || !dbUser || !['organizer', 'admin', 'super-admin', 'developer'].includes(dbUser.role)) {
       notFound();
   }
 

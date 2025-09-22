@@ -29,7 +29,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useEffect, useState, useTransition } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-const roleOptions: UserRole[] = ['attendee', 'organizer', 'influencer', 'club', 'verifier', 'admin', 'super-admin'];
+const roleOptions: UserRole[] = ['attendee', 'organizer', 'influencer', 'club', 'verifier', 'admin', 'super-admin', 'developer'];
 
 function UserActions({ user, onStatusChange }: { user: FirebaseUser & { id: string }, onStatusChange: (newStatus: 'active' | 'suspended') => void }) {
     const { toast } = useToast();
