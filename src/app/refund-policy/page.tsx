@@ -12,7 +12,7 @@ export default function RefundPolicyPage() {
             <CardContent className="space-y-6">
                 <section>
                     <h3>1. General Policy: All Sales Are Final</h3>
-                    <p>When you purchase a ticket on NaksYetu, you are supporting an event organizer. Because NaksYetu passes funds directly to these organizers, we maintain a strict **no-refund policy**. All sales are considered final once a transaction is completed.</p>
+                    <p>When you purchase a ticket on Mov33, you are supporting an event organizer. Because Mov33 passes funds directly to these organizers, we maintain a strict **no-refund policy**. All sales are considered final once a transaction is completed.</p>
                     <p>We encourage you to double-check your order details, including the event date, time, and ticket quantity, before completing your purchase.</p>
                 </section>
 

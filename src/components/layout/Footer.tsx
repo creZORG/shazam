@@ -11,7 +11,7 @@ import { getSiteContent } from '@/app/admin/content/actions';
 import { Button } from '../ui/button';
 
 const companyLinks = [
-  { href: '/about', label: 'About NaksYetu' },
+  { href: '/about', label: 'About Mov33' },
   { href: '/contact', label: 'Contact Us' },
   { href: '/opportunities', label: 'Opportunities' },
   { href: '/blog', label: 'Blog' },
@@ -22,7 +22,7 @@ const forYouLinks = [
     { href: '/partner-with-us', label: 'Become an Influencer' },
     { href: '/influencers', label: 'Our Influencers' },
     { href: '/club', label: 'For Nightclubs' },
-    { href: '/advertising', label: 'Advertise on NaksYetu' },
+    { href: '/advertising', label: 'Advertise on Mov33' },
 ]
 
 const legalLinks = [
@@ -68,7 +68,7 @@ export function Footer() {
               <Logo variant="long" />
             </Link>
             <p className="text-sm text-muted-foreground">
-              Discover and book tickets for the best events in Nakuru.
+              Discover and book tickets for the best events in Kenya.
             </p>
              <div className="flex space-x-4 mt-4">
                 {socials.twitter && <Link href={socials.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground"><Twitter className="h-5 w-5" /></Link>}
@@ -123,13 +123,13 @@ export function Footer() {
         </div>
         <div className="mt-8 border-t pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground text-center sm:text-left">
-                &copy; {new Date().getFullYear()} NaksYetu. All rights reserved.
+                &copy; {new Date().getFullYear()} Mov33. All rights reserved.
             </p>
             <div className="flex items-center gap-4">
-                <a href="https://kihumba.com/clients/projects/naksyetu" target="_blank" rel="noopener noreferrer">
+                <a href="https://kihumba.com/clients/projects/mov33" target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" size="sm">
                         <Star className="h-4 w-4 mr-2 text-yellow-400 fill-current" />
-                        Rate NaksYetu
+                        Rate Mov33
                     </Button>
                 </a>
             </div>
