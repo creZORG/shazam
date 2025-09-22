@@ -66,7 +66,7 @@ export function ChatBubble({ user }: { user: FirebaseUser }) {
         onClick={() => setIsOpen(true)}
       >
         <Sparkles className="h-8 w-8" />
-        <span className="sr-only">Open NaksYetu AI</span>
+        <span className="sr-only">Open Mov33 AI</span>
       </Button>
     );
   }
@@ -80,7 +80,7 @@ export function ChatBubble({ user }: { user: FirebaseUser }) {
                 <AvatarFallback className="bg-gradient-to-r from-primary to-accent"><Sparkles className="text-white"/></AvatarFallback>
             </Avatar>
             <div>
-                 <CardTitle>NaksYetu AI</CardTitle>
+                 <CardTitle>Mov33 AI</CardTitle>
                  <CardDescription>Ask me anything about the platform.</CardDescription>
             </div>
           </div>

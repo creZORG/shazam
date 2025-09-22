@@ -60,9 +60,9 @@ export default function ShopPageClient({ initialProducts }: { initialProducts: P
     return (
         <div className="container mx-auto px-4 py-8 md:py-12">
             <div className="text-center mb-12">
-                <h1 className="text-4xl font-bold tracking-tight">NaksYetu Shop</h1>
+                <h1 className="text-4xl font-bold tracking-tight">Mov33 Shop</h1>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-2">
-                    Grab your official NaksYetu merchandise. All items are available for pickup at our events.
+                    Grab your official Mov33 merchandise. All items are available for pickup at our events.
                 </p>
             </div>
             

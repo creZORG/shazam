@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Suspense, useEffect, useState, useRef, useCallback } from 'react';
@@ -60,7 +59,7 @@ function TicketDisplay({ ticket, customization }: { ticket: TicketWithEvent, cus
              {/* Watermark */}
              <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
                 <div className="whitespace-nowrap text-[10px] font-black uppercase -rotate-45 text-primary/10 select-none">
-                    {Array(100).fill("TICKETED BY NAKSYETU").map((text, i) => (
+                    {Array(100).fill("TICKETED BY MOV33").map((text, i) => (
                         <p key={i} className="mb-1">{text}</p>
                     ))}
                 </div>
@@ -126,7 +125,7 @@ function TicketDisplay({ ticket, customization }: { ticket: TicketWithEvent, cus
                     </div>
                 </div>
                  <CardFooter className="bg-card/50 p-2 flex items-center justify-between">
-                    <p className='text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500'>Purchased from naksyetu.com</p>
+                    <p className='text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500'>Purchased from mov33.com</p>
                     <Logo variant='long' className="w-24 h-auto" />
                 </CardFooter>
             </div>

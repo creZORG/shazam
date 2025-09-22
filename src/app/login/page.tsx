@@ -181,7 +181,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-             {showResetForm ? "Reset Password" : "Welcome to NaksYetu"}
+             {showResetForm ? "Reset Password" : "Welcome to Mov33"}
           </CardTitle>
           <CardDescription>
             {showResetForm ? "Enter your email to receive a reset link" : "Sign in or create an account to get started"}

@@ -12,7 +12,7 @@ export default function PrivacyPolicyPage() {
             <CardContent className="space-y-6">
                 <section>
                     <h3>1. Introduction</h3>
-                    <p>NaksYetu ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and services (the "Platform").</p>
+                    <p>Mov33 ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and services (the "Platform").</p>
                 </section>
 
                 <section>

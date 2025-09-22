@@ -61,7 +61,7 @@ export async function sendTicketEmail(payload: TicketEmailPayload) {
     <p>Hi ${attendeeName},</p>
     <p>Thank you for your purchase! You can view, customize, and download your tickets at any time by clicking the button below:</p>
     <p style="text-align: center; margin: 30px 0;">
-      <a href="${ticketCenterUrl}" style="display: inline-block; padding: 12px 24px; background-color: #f97316; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">View My Tickets</a>
+      <a href="${ticketCenterUrl}" style="display: inline-block; padding: 12px 24px; background-color: #E76F51; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">View My Tickets</a>
     </p>
     <p>For your records, here is a summary of your tickets:</p>
     <ul>
@@ -72,7 +72,7 @@ export async function sendTicketEmail(payload: TicketEmailPayload) {
   `;
 
   return sendZeptoMail({
-      from: { address: "noreply@naksyetu.com", name: "NaksYetu Tickets" },
+      from: { address: "noreply@mov33.com", name: "Mov33 Tickets" },
       to: [{ email_address: { address: to, name: attendeeName } }],
       subject: `Your Tickets for ${eventName}`,
       htmlbody: emailHtml,
@@ -89,7 +89,7 @@ interface InviteEmailPayload {
 
 const getRoleBasedTemplate = ({ role, inviteLink, listingName, name }: Omit<InviteEmailPayload, 'to'>) => {
     const isNightlife = role === 'club';
-    const primaryColor = isNightlife ? `hsla(260, 100%, 60%, 1)` : `hsla(340, 82%, 52%, 1)`;
+    const primaryColor = isNightlife ? `hsla(260, 100%, 60%, 1)` : `hsla(14, 83%, 58%, 1)`;
     const accentColor = isNightlife ? `hsla(320, 100%, 55%, 1)` : `hsla(25, 95%, 53%, 1)`;
     const forEventText = listingName ? ` for the event: <strong>${listingName}</strong>` : '';
     const roleText = role.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -113,18 +113,18 @@ const getRoleBasedTemplate = ({ role, inviteLink, listingName, name }: Omit<Invi
                 <h1>You're Invited!</h1>
             </div>
             <div class="content">
-                <h2>Join NaksYetu as a ${roleText}</h2>
+                <h2>Join Mov33 as a ${roleText}</h2>
                 <p>Hello ${name || ''},</p>
-                <p>You have been invited to join the NaksYetu platform with the role of <strong>${roleText}</strong>${forEventText}.</p>
+                <p>You have been invited to join the Mov33 platform with the role of <strong>${roleText}</strong>${forEventText}.</p>
                 <p>To accept your invitation and create your account, please click the button below. This link is valid for the next 24 hours. Once you accept, you will be redirected to a helpful guide to get you started.</p>
                 <p style="text-align: center; margin: 30px 0;">
                     <a href="${inviteLink}" class="button">Accept Invitation</a>
                 </p>
                 <p>If you did not expect this invitation, you can safely ignore this email.</p>
-                <p>Best regards,<br/>The NaksYetu Team</p>
+                <p>Best regards,<br/>The Mov33 Team</p>
             </div>
             <div class="footer">
-                &copy; ${new Date().getFullYear()} NaksYetu. All rights reserved.
+                &copy; ${new Date().getFullYear()} Mov33. All rights reserved.
             </div>
         </div>
     </body>
@@ -137,9 +137,9 @@ export async function sendInvitationEmail({ to, name, role, inviteLink, listingN
    const emailHtml = getRoleBasedTemplate({ name, role, inviteLink, listingName });
 
    return sendZeptoMail({
-        from: { address: "noreply@naksyetu.com", name: "NaksYetu" },
+        from: { address: "noreply@mov33.com", name: "Mov33" },
         to: [{ email_address: { address: to, name: name || to } }],
-        subject: `You have been invited to become a ${role} on NaksYetu`,
+        subject: `You have been invited to become a ${role} on Mov33`,
         htmlbody: emailHtml,
    });
 }
@@ -157,11 +157,11 @@ export async function sendSupportReplyEmail({ to, ticketId, replyMessage }: Supp
         <blockquote style="border-left: 2px solid #ccc; padding-left: 1rem; margin-left: 1rem;">
             ${replyMessage}
         </blockquote>
-        <p>You can view the full conversation by logging into your NaksYetu account and visiting the support page.</p>
+        <p>You can view the full conversation by logging into your Mov33 account and visiting the support page.</p>
     `;
 
     return sendZeptoMail({
-        from: { address: "support@naksyetu.com", name: "NaksYetu Support" },
+        from: { address: "support@mov33.com", name: "Mov33 Support" },
         to: [{ email_address: { address: to, name: to } }],
         subject: `Re: Your Support Ticket #${ticketId.substring(0, 6)}...`,
         htmlbody: emailHtml,
@@ -174,24 +174,24 @@ interface WelcomeEmailPayload {
 }
 
 export async function sendWelcomeEmail({ to, name }: WelcomeEmailPayload) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://naksyetu.com";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://mov33.com";
   const exploreUrl = `${appUrl}/events`;
   const emailHtml = `
-    <h1>Welcome to NaksYetu, ${name}!</h1>
-    <p>We're thrilled to have you join the community. NaksYetu is your one-stop platform for the best events, tours, and nightlife in Nakuru.</p>
+    <h1>Welcome to Mov33, ${name}!</h1>
+    <p>We're thrilled to have you join the community. Mov33 is your one-stop platform for the best events, tours, and nightlife in Nakuru.</p>
     <h2>What's next?</h2>
     <p>Start by exploring the amazing experiences waiting for you:</p>
      <p style="text-align: center; margin: 30px 0;">
-      <a href="${exploreUrl}" style="display: inline-block; padding: 12px 24px; background-color: #f97316; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Explore Events</a>
+      <a href="${exploreUrl}" style="display: inline-block; padding: 12px 24px; background-color: #E76F51; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Explore Events</a>
     </p>
     <p>If you're an organizer, influencer, or club owner, check out our <a href="${appUrl}/partner-with-us">Partners Page</a> to see how you can benefit from our platform.</p>
     <p>Enjoy the vibes!</p>
   `;
 
   return sendZeptoMail({
-    from: { address: "noreply@naksyetu.com", name: "NaksYetu" },
+    from: { address: "noreply@mov33.com", name: "Mov33" },
     to: [{ email_address: { address: to, name: name } }],
-    subject: `Welcome to NaksYetu, ${name}!`,
+    subject: `Welcome to Mov33, ${name}!`,
     htmlbody: emailHtml,
   });
 }
@@ -204,7 +204,7 @@ interface OtpEmailPayload {
 export async function sendOtpEmail({ to, otp }: OtpEmailPayload) {
   const emailHtml = `
     <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
-        <h2>Your NaksYetu Verification Code</h2>
+        <h2>Your Mov33 Verification Code</h2>
         <p>Please use the following code to complete your login. This code is valid for 10 minutes.</p>
         <p style="font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0; padding: 10px; background-color: #f2f2f2; border-radius: 5px;">${otp}</p>
         <p>If you did not request this code, please ignore this email.</p>
@@ -212,9 +212,9 @@ export async function sendOtpEmail({ to, otp }: OtpEmailPayload) {
   `;
 
   return sendZeptoMail({
-    from: { address: "security@naksyetu.com", name: "NaksYetu Security" },
+    from: { address: "security@mov33.com", name: "Mov33 Security" },
     to: [{ email_address: { address: to, name: to } }],
-    subject: "Your NaksYetu Verification Code",
+    subject: "Your Mov33 Verification Code",
     htmlbody: emailHtml,
   });
 }
@@ -249,11 +249,11 @@ export async function sendTicketStatusUpdateEmail(payload: TicketStatusUpdatePay
     const emailHtml = `
         <h1>Ticket Status Update</h1>
         ${body}
-        <p>Thank you,<br/>The NaksYetu Team</p>
+        <p>Thank you,<br/>The Mov33 Team</p>
     `;
 
     return sendZeptoMail({
-        from: { address: "support@naksyetu.com", name: "NaksYetu Support" },
+        from: { address: "support@mov33.com", name: "Mov33 Support" },
         to: [{ email_address: { address: to, name: attendeeName } }],
         subject,
         htmlbody: emailHtml,

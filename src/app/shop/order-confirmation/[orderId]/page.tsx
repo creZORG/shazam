@@ -95,7 +95,7 @@ export default function MerchOrderConfirmationPage({ params }: { params: { order
                     </div>
 
                     <div className="text-center text-muted-foreground text-sm pt-4">
-                        <p>You can pick up your order at any official NaksYetu event by presenting your confirmation code to a staff member.</p>
+                        <p>You can pick up your order at any official Mov33 event by presenting your confirmation code to a staff member.</p>
                         <Link href="/shop">
                             <Button variant="outline" className="mt-6">
                                 <ShoppingBag className="mr-2" /> Continue Shopping

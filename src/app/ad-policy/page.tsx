@@ -12,7 +12,7 @@ export default function AdPolicyPage() {
             <CardContent className="space-y-6">
                 <section>
                     <h3>1. Introduction</h3>
-                    <p>This Advertising Policy outlines the standards and rules for all advertisements submitted to the NaksYetu platform. Our goal is to provide a safe, positive, and relevant experience for our users while enabling advertisers to reach their target audience effectively. All ads are subject to review and approval by NaksYetu.</p>
+                    <p>This Advertising Policy outlines the standards and rules for all advertisements submitted to the Mov33 platform. Our goal is to provide a safe, positive, and relevant experience for our users while enabling advertisers to reach their target audience effectively. All ads are subject to review and approval by Mov33.</p>
                 </section>
 
                 <section>
@@ -44,7 +44,7 @@ export default function AdPolicyPage() {
 
                 <section>
                     <h3>5. Our Right to Reject Ads</h3>
-                    <p>NaksYetu reserves the sole right to determine whether an ad violates our policies. We may reject, remove, or request modifications to any ad at our discretion, at any time. If your ad is rejected, you will be notified with a reason, and you may have the opportunity to edit and resubmit it for review.</p>
+                    <p>Mov33 reserves the sole right to determine whether an ad violates our policies. We may reject, remove, or request modifications to any ad at our discretion, at any time. If your ad is rejected, you will be notified with a reason, and you may have the opportunity to edit and resubmit it for review.</p>
                 </section>
 
             </CardContent>

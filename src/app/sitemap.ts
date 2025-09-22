@@ -2,7 +2,7 @@
 import { getListings } from '@/app/actions';
 import type { Event, Tour, NightlifeEvent } from '@/lib/types';
 
-const URL = 'https://naksyetu.com';
+const URL = 'https://mov33.com';
 
 export default async function sitemap() {
   const { listings: events } = await getListings('events');

@@ -6,7 +6,7 @@ import './globals.css';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Toaster } from '@/components/ui/toaster';
-import { Inter } from 'next/font/google'
+import { Montserrat, Poppins, Lato } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import { AuthProvider } from '@/hooks/use-auth';
@@ -16,7 +16,9 @@ import { useEffect, useState } from 'react';
 import { getSettings } from './admin/settings/actions';
 import { SeasonalBanner } from '@/components/layout/SeasonalBanner';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat', weight: ['700', '800'] });
+const poppins = Poppins({ subsets: ['latin'], variable: '--font-poppins', weight: ['500', '600'] });
+const lato = Lato({ subsets: ['latin'], variable: '--font-lato', weight: '400' });
 
 export default function RootLayout({
   children,
@@ -54,7 +56,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}>
+      <body className={cn("min-h-screen bg-background font-sans antialiased", montserrat.variable, poppins.variable, lato.variable)}>
           <AuthProvider>
             <AppProviders>
               <div className="flex flex-col min-h-screen">

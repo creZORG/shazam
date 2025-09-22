@@ -32,14 +32,14 @@ export default function CookiePolicyPage() {
                             <strong>Session Cookie (`session`):</strong> This is the primary cookie our platform uses. It is a strictly necessary cookie used to securely identify you after you log in. It allows us to know who is logged in and maintain your authentication state as you navigate through different pages, especially protected routes like your profile, organizer dashboard, or admin portal. This cookie is essential for the security and functionality of your account.
                         </li>
                         <li>
-                            <strong>Affiliate Tracking (`nak_affiliate_coupon`):</strong> We use local storage (which functions similarly to a persistent cookie) to temporarily store affiliate or coupon information if you arrive on our site through a special link. This allows us to apply discounts correctly at checkout and credit our influencer partners. This data is stored for 24 hours.
+                            <strong>Affiliate Tracking (`nak_tracker`):</strong> We use local storage (which functions similarly to a persistent cookie) to temporarily store affiliate or coupon information if you arrive on our site through a special link. This allows us to apply discounts correctly at checkout and credit our influencer partners. This data is stored for 24 hours.
                         </li>
                     </ul>
                 </section>
 
                 <section>
                     <h3>4. Third-Party Cookies</h3>
-                    <p>Currently, NaksYetu does not use third-party cookies for advertising or extensive analytics. Our cookie usage is limited to the first-party, essential functions described above.</p>
+                    <p>Currently, Mov33 does not use third-party cookies for advertising or extensive analytics. Our cookie usage is limited to the first-party, essential functions described above.</p>
                 </section>
                 
                 <section>

@@ -9,14 +9,14 @@ export default function AboutPage() {
     <div className="container mx-auto px-4 py-8 md:py-12">
       <Card className="max-w-4xl mx-auto">
         <CardHeader className="text-center">
-          <CardTitle className="text-4xl font-bold">About NaksYetu</CardTitle>
+          <CardTitle className="text-4xl font-bold">About Mov33</CardTitle>
           <CardDescription className="text-lg text-muted-foreground mt-2">
             The heart of Nakuru's culture and entertainment.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 text-base text-muted-foreground leading-relaxed">
           <p>
-            NaksYetu is a vibrant platform dedicated to showcasing the best of what Nakuru has to offer. Our mission is to connect people with unforgettable experiences, from sold-out concerts and thrilling tours to the hottest nightlife spots in every subcounty.
+            Mov33 is a vibrant platform dedicated to showcasing the best of what Nakuru has to offer. Our mission is to connect people with unforgettable experiences, from sold-out concerts and thrilling tours to the hottest nightlife spots in every subcounty.
           </p>
           <p>
             We believe in the power of community and the magic of shared moments. For event-goers, we are a trusted source for discovering and securing tickets to the most exciting events. For organizers, influencers, and club owners, we are a powerful partner, providing the tools and audience to ensure every event is a success.

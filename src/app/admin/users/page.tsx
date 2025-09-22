@@ -18,7 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import Link from "next/link";
+import Link from 'next/link';
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -96,7 +96,7 @@ function InviteUserForm() {
         <Card>
             <CardHeader>
                 <CardTitle>Invite New User</CardTitle>
-                <CardDescription>Generate a unique invitation short link for a new user to join NaksYetu with a specific role.</CardDescription>
+                <CardDescription>Generate a unique invitation short link for a new user to join Mov33 with a specific role.</CardDescription>
             </CardHeader>
             <CardContent>
                 <Form {...form}>

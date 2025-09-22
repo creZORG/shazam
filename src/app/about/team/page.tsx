@@ -44,7 +44,7 @@ export default async function TeamPage() {
             <div className="text-center mb-12">
                 <h1 className="text-4xl font-bold tracking-tight">Meet Our Team</h1>
                 <p className="text-lg text-muted-foreground max-w-3xl mx-auto mt-2">
-                    The passionate individuals behind NaksYetu, dedicated to bringing you the best of Nakuru.
+                    The passionate individuals behind Mov33, dedicated to bringing you the best of Nakuru.
                 </p>
             </div>
             

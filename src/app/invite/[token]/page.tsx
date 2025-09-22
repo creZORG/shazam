@@ -199,7 +199,7 @@ export default function AcceptInvitePage() {
                     <CardTitle className="text-2xl mt-4">Welcome, {invite?.email?.split('@')[0] || 'Guest'}!</CardTitle>
                     {invite && !error && (
                          <CardDescription>
-                            You have been invited to join NaksYetu as a <span className="font-bold capitalize text-primary">{invite.role.replace('-', ' ')}</span>
+                            You have been invited to join Mov33 as a <span className="font-bold capitalize text-primary">{invite.role.replace('-', ' ')}</span>
                             {invite.listingName && ` for the event "${invite.listingName}"`}.
                         </CardDescription>
                     )}

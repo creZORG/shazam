@@ -8,7 +8,7 @@ export default function OrganizerGuidePage() {
         <div className="space-y-8">
             <h1 className="text-3xl font-bold">Organizer Guide</h1>
             <p className="text-lg text-muted-foreground">
-                Welcome to your dashboard! Here's a quick guide to help you get the most out of NaksYetu.
+                Welcome to your dashboard! Here's a quick guide to help you get the most out of Mov33.
             </p>
 
             <Card>

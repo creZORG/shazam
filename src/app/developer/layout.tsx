@@ -41,7 +41,7 @@ export default function DeveloperLayout({ children }: { children: ReactNode }) {
         <SidebarHeader>
              <Link href="/" className="flex items-center space-x-2">
                 <Logo />
-                <span className="font-bold">NaksYetu</span>
+                <span className="font-bold">Mov33</span>
             </Link>
         </SidebarHeader>
         <SidebarMenu>

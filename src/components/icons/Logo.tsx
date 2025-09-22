@@ -48,7 +48,7 @@ export function Logo({ variant = 'brief', asLink = false, className, ...props }:
       ) : logoUrl ? (
           <Image
             src={logoUrl}
-            alt={`NaksYetu Logo - ${variant}`}
+            alt={`Mov33 Logo - ${variant}`}
             fill
             className="object-contain"
             priority

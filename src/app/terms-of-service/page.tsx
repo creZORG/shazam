@@ -12,13 +12,13 @@ export default function TermsOfServicePage() {
             <CardContent className="space-y-6">
                 <section>
                     <h3>1. Agreement to Terms</h3>
-                    <p>Welcome to NaksYetu ("we," "our," or "us"). These Terms of Service ("Terms") govern your access to and use of the NaksYetu website, mobile applications, and services (collectively, the "Platform"). By accessing or using our Platform, you agree to be bound by these Terms and our Privacy Policy. If you do not agree to these Terms, you may not access or use the Platform.</p>
+                    <p>Welcome to Mov33 ("we," "our," or "us"). These Terms of Service ("Terms") govern your access to and use of the Mov33 website, mobile applications, and services (collectively, the "Platform"). By accessing or using our Platform, you agree to be bound by these Terms and our Privacy Policy. If you do not agree to these Terms, you may not access or use the Platform.</p>
                     <p>We may amend these Terms at any time by posting the amended terms on our site. We may or may not post notices on the homepage when such changes occur.</p>
                 </section>
 
                 <section>
                     <h3>2. The Platform</h3>
-                    <p>NaksYetu provides an online platform that connects event organizers, tour operators, and clubs ("Partners") with users seeking to discover and book tickets for events, tours, and nightlife experiences ("Users" or "Attendees"). We also operate an online shop for official NaksYetu merchandise. We are not the creator, organizer, or owner of the events listed on the Platform, except for those explicitly hosted by NaksYetu. We provide the Platform, which allows Partners to manage their listings and ticket sales and allows users to purchase merchandise.</p>
+                    <p>Mov33 provides an online platform that connects event organizers, tour operators, and clubs ("Partners") with users seeking to discover and book tickets for events, tours, and nightlife experiences ("Users" or "Attendees"). We also operate an online shop for official Mov33 merchandise. We are not the creator, organizer, or owner of the events listed on the Platform, except for those explicitly hosted by Mov33. We provide the Platform, which allows Partners to manage their listings and ticket sales and allows users to purchase merchandise.</p>
                 </section>
 
                 <section>
@@ -34,8 +34,8 @@ export default function TermsOfServicePage() {
                     <h3>4. Purchases and Payments</h3>
                     <h4>4.1 Ticket Sales</h4>
                     <ul>
-                        <li><strong>Ticket Sales:</strong> All ticket purchases are a transaction between the Attendee and the respective Partner. NaksYetu facilitates this transaction as the Partner's limited payment collection agent.</li>
-                        <li><strong>Pricing and Fees:</strong> Prices for tickets are set by the Partners. NaksYetu may add service fees, processing fees, and any applicable taxes to the ticket price, which will be displayed to you before you complete your purchase. All prices are in Kenyan Shillings (Ksh).</li>
+                        <li><strong>Ticket Sales:</strong> All ticket purchases are a transaction between the Attendee and the respective Partner. Mov33 facilitates this transaction as the Partner's limited payment collection agent.</li>
+                        <li><strong>Pricing and Fees:</strong> Prices for tickets are set by the Partners. Mov33 may add service fees, processing fees, and any applicable taxes to the ticket price, which will be displayed to you before you complete your purchase. All prices are in Kenyan Shillings (Ksh).</li>
                         <li><strong>Payment:</strong> We use third-party payment processors (e.g., M-Pesa) to handle transactions. By making a purchase, you agree to be bound by the terms of service of our payment processors. We are not responsible for any errors by the payment processor.</li>
                         <li><strong>Refunds:</strong> All ticket sales are final. Refunds are only issued in the event of a full event cancellation by the Organizer, as detailed in our <a href="/refund-policy">Refund Policy</a>. Platform fees and processing fees are non-refundable.</li>
                     </ul>
@@ -44,8 +44,8 @@ export default function TermsOfServicePage() {
                     <ul>
                         <li><strong>Product Information:</strong> We strive to display product information, including colors and sizes, as accurately as possible. However, we cannot guarantee that your device's display will accurately reflect the actual product.</li>
                         <li><strong>Payment:</strong> All merchandise sales are final upon completion of payment.</li>
-                        <li><strong>Order Fulfillment:</strong> All merchandise purchased through the NaksYetu shop is for **PICKUP ONLY**. We do not offer shipping or delivery services.</li>
-                        <li><strong>Pickup Process:</strong> To collect your merchandise, you must present your official order confirmation (containing your unique confirmation code) to a designated NaksYetu staff member at any official NaksYetu-hosted event or a pre-communicated pickup point.</li>
+                        <li><strong>Order Fulfillment:</strong> All merchandise purchased through the Mov33 shop is for **PICKUP ONLY**. We do not offer shipping or delivery services.</li>
+                        <li><strong>Pickup Process:</strong> To collect your merchandise, you must present your official order confirmation (containing your unique confirmation code) to a designated Mov33 staff member at any official Mov33-hosted event or a pre-communicated pickup point.</li>
                         <li><strong>Refunds:</strong> All merchandise sales are final and non-refundable.</li>
                     </ul>
                 </section>
@@ -65,7 +65,7 @@ export default function TermsOfServicePage() {
 
                 <section>
                     <h3>7. Intellectual Property</h3>
-                    <p>The Platform and its original content (excluding content provided by users and Partners), features, and functionality are and will remain the exclusive property of NaksYetu and its licensors. The NaksYetu name, logo, and all related marks are trademarks of NaksYetu. You must not use such marks without our prior written permission.</p>
+                    <p>The Platform and its original content (excluding content provided by users and Partners), features, and functionality are and will remain the exclusive property of Mov33 and its licensors. The Mov33 name, logo, and all related marks are trademarks of Mov33. You must not use such marks without our prior written permission.</p>
                 </section>
 
                 <section>
@@ -75,9 +75,9 @@ export default function TermsOfServicePage() {
                 
                 <section>
                     <h3>9. Disclaimers and Limitation of Liability</h3>
-                    <p>THE PLATFORM IS PROVIDED "AS IS" AND "AS AVAILABLE." NAKSYETU MAKES NO WARRANTIES, EXPRESSED OR IMPLIED, REGARDING THE OPERATION OF THE PLATFORM OR THE INFORMATION, CONTENT, OR MATERIALS INCLUDED. YOUR USE OF THE PLATFORM IS AT YOUR SOLE RISK.</p>
-                    <p>TO THE FULLEST EXTENT PERMITTED BY LAW, NAKSYETU, ITS DIRECTORS, EMPLOYEES, PARTNERS, AND AGENTS DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, IN CONNECTION WITH THE PLATFORM AND YOUR USE THEREOF.</p>
-                     <p>IN NO EVENT SHALL NAKSYETU BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION, LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES, RESULTING FROM (I) YOUR ACCESS TO OR USE OF OR INABILITY TO ACCESS OR USE THE PLATFORM; (II) ANY CONDUCT OR CONTENT OF ANY THIRD PARTY ON THE PLATFORM; (III) ANY CONTENT OBTAINED FROM THE PLATFORM; AND (IV) UNAUTHORIZED ACCESS, USE OR ALTERATION OF YOUR TRANSMISSIONS OR CONTENT.</p>
+                    <p>THE PLATFORM IS PROVIDED "AS IS" AND "AS AVAILABLE." MOV33 MAKES NO WARRANTIES, EXPRESSED OR IMPLIED, REGARDING THE OPERATION OF THE PLATFORM OR THE INFORMATION, CONTENT, OR MATERIALS INCLUDED. YOUR USE OF THE PLATFORM IS AT YOUR SOLE RISK.</p>
+                    <p>TO THE FULLEST EXTENT PERMITTED BY LAW, MOV33, ITS DIRECTORS, EMPLOYEES, PARTNERS, AND AGENTS DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, IN CONNECTION WITH THE PLATFORM AND YOUR USE THEREOF.</p>
+                     <p>IN NO EVENT SHALL MOV33 BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION, LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES, RESULTING FROM (I) YOUR ACCESS TO OR USE OF OR INABILITY TO ACCESS OR USE THE PLATFORM; (II) ANY CONDUCT OR CONTENT OF ANY THIRD PARTY ON THE PLATFORM; (III) ANY CONTENT OBTAINED FROM THE PLATFORM; AND (IV) UNAUTHORIZED ACCESS, USE OR ALTERATION OF YOUR TRANSMISSIONS OR CONTENT.</p>
                 </section>
 
                 <section>

@@ -43,7 +43,7 @@ export function NewUserCouponModal() {
     
     const result = await createPromocode({
       ...welcomeCoupon,
-      organizerId: 'NAKSYETU_SYSTEM',
+      organizerId: 'MOV33_SYSTEM',
       userId: user.uid,
       code: `NEWUSER-${user.uid.substring(0, 5)}`,
       usageLimit: 1, 
@@ -89,7 +89,7 @@ export function NewUserCouponModal() {
             <Gift className="h-10 w-10 text-primary" />
           </div>
           <DialogTitle className="text-2xl">A Special Welcome Gift!</DialogTitle>
-          <DialogDescription>As a new member of the NaksYetu family, here's a special discount just for you.</DialogDescription>
+          <DialogDescription>As a new member of the Mov33 family, here's a special discount just for you.</DialogDescription>
         </DialogHeader>
         <div className="py-6 text-center px-6">
             <p className="text-sm text-muted-foreground">NEW USER ONLY</p>

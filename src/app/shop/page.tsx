@@ -10,26 +10,26 @@ import type { Metadata } from 'next';
 import ShopPageClient from './ShopPageClient';
 
 export const metadata: Metadata = {
-  title: 'NaksYetu Shop | Official Merchandise',
-  description: 'Grab your official NaksYetu merchandise. Hoodies, t-shirts, and more, available for pickup at our events.',
+  title: 'Mov33 Shop | Official Merchandise',
+  description: 'Grab your official Mov33 merchandise. Hoodies, t-shirts, and more, available for pickup at our events.',
   openGraph: {
-    title: 'NaksYetu Shop | Official Merchandise',
-    description: 'The official place to get your NaksYetu gear.',
-    url: 'https://naksyetu.com/shop',
+    title: 'Mov33 Shop | Official Merchandise',
+    description: 'The official place to get your Mov33 gear.',
+    url: 'https://mov33.com/shop',
     images: [
       {
         url: 'https://i.postimg.cc/4yK23PLk/download.png', // A generic brand image
         width: 1200,
         height: 630,
-        alt: 'NaksYetu Shop',
+        alt: 'Mov33 Shop',
       },
     ],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'NaksYetu Shop | Official Merchandise',
-    description: 'The official place to get your NaksYetu gear.',
+    title: 'Mov33 Shop | Official Merchandise',
+    description: 'The official place to get your Mov33 gear.',
     images: ['https://i.postimg.cc/4yK23PLk/download.png'],
   },
 };

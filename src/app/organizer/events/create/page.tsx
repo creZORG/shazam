@@ -225,7 +225,7 @@ const ImageUpload = ({ onUploadComplete, maxFiles = 1, formFieldName, onRemove, 
       onUploadComplete(allSuccessfulUrls);
     };
 
-    const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
+    const { getRootProps, getInputProps, open } = useDropzone({
         onDrop: (acceptedFiles) => {
             const currentSuccessfulUploads = uploads.filter(u => u.status === 'success').length;
             const filesToUpload = acceptedFiles.slice(0, maxFiles - currentSuccessfulUploads);
@@ -243,7 +243,7 @@ const ImageUpload = ({ onUploadComplete, maxFiles = 1, formFieldName, onRemove, 
 
     return (
       <div className="space-y-4">
-        <div {...getRootProps()} className={cn("border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary", isDragActive && "border-primary")}>
+        <div {...getRootProps()} className={cn("border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary")}>
             <input {...getInputProps()} />
             <Button type="button" onClick={open}>
                 <ImagePlus className="mr-2" /> Select Images
@@ -487,8 +487,8 @@ const EventCreationWizard = () => {
 
                           {/* Step 4 */}
                           {step === 4 && <Card><StepValidationTracker form={form as AnyForm} fields={stepFields[4]} title="Step 4: Review & Submit" /><CardContent className="space-y-6 pt-6">
-                              <FormField control={form.control} name="acceptTerms" render={({ field }) => ( <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange}/></FormControl><div className="space-y-1 leading-none"><FormLabel>I accept the NaksYetu Terms of Service for Organizers.</FormLabel><FormMessage /></div></FormItem> )}/>
-                              <FormField control={form.control} name="acceptRefundPolicy" render={({ field }) => ( <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange}/></FormControl><div className="space-y-1 leading-none"><FormLabel>I agree to the NaksYetu Refund Policy.</FormLabel><FormMessage /></div></FormItem> )}/>
+                              <FormField control={form.control} name="acceptTerms" render={({ field }) => ( <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange}/></FormControl><div className="space-y-1 leading-none"><FormLabel>I accept the Mov33 Terms of Service for Organizers.</FormLabel><FormMessage /></div></FormItem> )}/>
+                              <FormField control={form.control} name="acceptRefundPolicy" render={({ field }) => ( <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange}/></FormControl><div className="space-y-1 leading-none"><FormLabel>I agree to the Mov33 Refund Policy.</FormLabel><FormMessage /></div></FormItem> )}/>
                           </CardContent></Card>}
                         </div>
 
@@ -682,7 +682,7 @@ const TourCreationWizard = () => {
                             <Card>
                                 <StepValidationTracker form={form as AnyForm} fields={['acceptTerms']} title="Step 4: Review & Submit" />
                                 <CardContent className="space-y-6 pt-6">
-                                    <FormField control={form.control} name="acceptTerms" render={({ field }) => ( <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange}/></FormControl><div className="space-y-1 leading-none"><FormLabel>I accept the NaksYetu Terms of Service for Organizers.</FormLabel><FormMessage /></div></FormItem> )}/>
+                                    <FormField control={form.control} name="acceptTerms" render={({ field }) => ( <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange}/></FormControl><div className="space-y-1 leading-none"><FormLabel>I accept the Mov33 Terms of Service for Organizers.</FormLabel><FormMessage /></div></FormItem> )}/>
                                 </CardContent>
                             </Card>
                         )}

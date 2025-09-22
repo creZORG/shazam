@@ -63,7 +63,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <SidebarHeader>
              <Link href="/" className="flex items-center space-x-2">
                 <Logo />
-                <span className="font-bold">NaksYetu</span>
+                <span className="font-bold">Mov33</span>
             </Link>
         </SidebarHeader>
         <SidebarMenu>
@@ -89,7 +89,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-4 border-b bg-background/95 px-4 backdrop-blur-sm sm:px-6">
-          <SidebarTrigger className="md:hidden" />
+          <SidebarTrigger />
           <div className="flex-1">
             {/* You can add breadcrumbs or page titles here if needed */}
           </div>

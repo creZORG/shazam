@@ -1,5 +1,4 @@
 
-
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -16,25 +15,25 @@ import { HomeCarousel } from './_components/HomeCarousel';
 import { NewUserCouponModal } from './_components/NewUserCouponModal';
 
 export const metadata: Metadata = {
-  title: 'NaksYetu | Tickets for Events, Tours, and Nightlife in Nakuru',
+  title: 'Mov33 | Tickets for Events, Tours, and Nightlife in Nakuru',
   description: 'Your one-stop platform for tickets to the most exciting concerts, tours, and nightlife across all Nakuru subcounties. Discover what\'s hot and book your next experience!',
   openGraph: {
-    title: 'NaksYetu | The Heartbeat of Nakuru\'s Culture & Entertainment',
+    title: 'Mov33 | The Heartbeat of Nakuru\'s Culture & Entertainment',
     description: 'Find and buy tickets for the best events, tours, and nightlife in Nakuru.',
-    url: 'https://naksyetu.com',
+    url: 'https://mov33.com',
     images: [
       {
         url: 'https://i.postimg.cc/4yK23PLk/download.png', // Replace with a proper hero image URL
         width: 1200,
         height: 630,
-        alt: 'NaksYetu Logo',
+        alt: 'Mov33 Logo',
       },
     ],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'NaksYetu | Tickets for Events, Tours, and Nightlife in Nakuru',
+    title: 'Mov33 | Tickets for Events, Tours, and Nightlife in Nakuru',
     description: 'Discover and book tickets for the best events in Nakuru.',
     images: ['https://i.postimg.cc/4yK23PLk/download.png'], // Replace with a proper hero image URL
   },
@@ -102,7 +101,7 @@ const defaultFeatureCards: FeatureCardContent[] = [
 ];
 const defaultPartnerSection: PartnerSectionContent = {
   title: 'Launch Your Event to the Moon',
-  description: 'Are you an event organizer, tour operator, or influencer? NaksYetu provides the platform, tools, and audience to guarantee your success. Manage listings, sell tickets, and engage with your community—all in one place.',
+  description: 'Are you an event organizer, tour operator, or influencer? Mov33 provides the platform, tools, and audience to guarantee your success. Manage listings, sell tickets, and engage with your community—all in one place.',
   href: '/partner-with-us',
   cta: 'Start Selling Today',
   imageUrl: 'https://picsum.photos/seed/partner/800/600',
