@@ -1,8 +1,9 @@
 
+
 import Image from 'next/image';
 import { notFound, redirect } from 'next/navigation';
 import { format } from 'date-fns';
-import { Calendar, MapPin, Users, ArrowRight, Gift, Camera } from 'lucide-react';
+import { Calendar, MapPin, Users, ArrowRight, Gift, Camera, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -18,6 +19,7 @@ import { TicketSelection } from './_components/TicketSelection';
 import type { Metadata } from 'next';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Badge } from '@/components/ui/badge';
 
 type Props = {
   params: { id: string }
@@ -110,6 +112,11 @@ export default async function EventDetailPage({ params }: { params: { id: string
             <div className="absolute -inset-0.5 rounded-lg bg-gradient-to-r from-primary to-accent opacity-20 blur-lg animate-gradient-x group-hover:opacity-75 group-hover:duration-200"></div>
             <div className="relative grid md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
+                    {event.isVerified && (
+                      <Badge className="mb-2 bg-green-500/20 text-green-300 border-green-500/30">
+                        <ShieldCheck className="mr-2 h-4 w-4"/> Verified by Mov33
+                      </Badge>
+                    )}
                     <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{event.name}</h1>
                 </div>
                 <div className="space-y-4">

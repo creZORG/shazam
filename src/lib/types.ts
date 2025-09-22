@@ -74,6 +74,7 @@ export type Event = {
   awayTeam?: string;
   league?: string;
   lastUpdatedBy?: string; // Admin UID
+  isVerified?: boolean;
 };
 
 export type Tour = {
@@ -603,3 +604,4 @@ export type ShortLink = {
     trackingLinkId?: string;
     createdAt: any;
 }
+

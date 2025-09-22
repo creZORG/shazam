@@ -126,6 +126,11 @@ async function saveListing(
   const userRole = sessionUser.role;
   
   const { id, organizerId, ...listingDataPayload } = data;
+  const isNew = !id;
+
+  if (isNew && userRole === 'super-admin') {
+      return { success: false, error: 'Super Admins cannot create new listings directly. They can only edit and approve existing ones.' };
+  }
 
   const name = isEvent(data) ? data.name : data.name;
   const slug = name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -134,7 +139,6 @@ async function saveListing(
   const userDoc = await getDoc(userDocRef);
   const organizerName = userDoc.exists() ? userDoc.data().organizerName || userDoc.data().name : 'Unknown Organizer';
   
-  const isNew = !id;
   const docRef = isNew ? doc(collection(db, collectionName)) : doc(db, collectionName, id);
 
   // Determine the status based on the user's role

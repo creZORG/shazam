@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -325,5 +326,36 @@ export async function updateEventGallery(listingId: string, galleryUrls: string[
     } catch (error: any) {
         console.error("Error updating gallery:", error);
         return { success: false, error: "Failed to update event gallery." };
+    }
+}
+
+
+export async function updateVerificationStatus(listingId: string, type: 'event' | 'tour', isVerified: boolean) {
+    const sessionCookie = cookies().get('session')?.value;
+    if (!sessionCookie) return { success: false, error: 'Not authenticated.' };
+    const auth = await getAdminAuth();
+    
+    try {
+        if (!auth) throw new Error("Server auth not initialized");
+        const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+
+        const collectionName = type === 'event' ? 'events' : 'tours';
+        const listingDocRef = doc(db, collectionName, listingId);
+        await updateDoc(listingDocRef, { isVerified });
+
+        await logAdminAction({
+            adminId: decodedClaims.uid,
+            adminName: decodedClaims.name || 'Admin',
+            action: 'update_verification_status',
+            targetType: type,
+            targetId: listingId,
+            details: { isVerified }
+        });
+
+        revalidatePath(`/admin/listings/${listingId}`);
+        revalidatePath(`/${type}s/${listingId}`);
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, error: 'Failed to update verification status.' };
     }
 }
