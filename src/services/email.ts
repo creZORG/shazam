@@ -10,11 +10,11 @@ interface ZeptoMailPayload {
 }
 
 async function sendZeptoMail(payload: ZeptoMailPayload) {
-  const mailAgent = process.env.NEXT_PUBLIC_ZEPTO_MAIL_AGENT;
-  const apiKey = process.env.ZEPTO_MAIL_API_KEY;
+  // Hardcoding the API key as requested for immediate use.
+  const apiKey = "wSsVR61+qUT4X6oryWKqJuc8y11UAlygQUR83VfyvievG6vC8sdqkEOdBQbxH6NNGTNvFDcSoe0okUsE1TULjN8uz1EHDSiF9mqRe1U4J3x17qnvhDzPW2RbkBuKJY0OzwpunmNiEcAg+g==";
 
-  if (!mailAgent || !apiKey) {
-    console.error('ZeptoMail credentials are not configured in environment variables.');
+  if (!apiKey) {
+    console.error('ZeptoMail API Key is not configured.');
     return { success: false, error: 'Email service is not configured.' };
   }
 
@@ -73,7 +73,7 @@ export async function sendTicketEmail(payload: TicketEmailPayload) {
   `;
 
   return sendZeptoMail({
-      from: { address: "noreply@mov33.com", name: "Mov33 Tickets" },
+      from: { address: "noreply@kihumba.com", name: "Mov33 Tickets" },
       to: [{ email_address: { address: to, name: attendeeName } }],
       subject: `Your Tickets for ${eventName}`,
       htmlbody: emailHtml,
@@ -138,7 +138,7 @@ export async function sendInvitationEmail({ to, name, role, inviteLink, listingN
    const emailHtml = getRoleBasedTemplate({ name, role, inviteLink, listingName });
 
    return sendZeptoMail({
-        from: { address: "noreply@mov33.com", name: "Mov33" },
+        from: { address: "noreply@kihumba.com", name: "Mov33" },
         to: [{ email_address: { address: to, name: name || to } }],
         subject: `You have been invited to become a ${role} on Mov33`,
         htmlbody: emailHtml,
@@ -162,7 +162,7 @@ export async function sendSupportReplyEmail({ to, ticketId, replyMessage }: Supp
     `;
 
     return sendZeptoMail({
-        from: { address: "support@mov33.com", name: "Mov33 Support" },
+        from: { address: "support@kihumba.com", name: "Mov33 Support" },
         to: [{ email_address: { address: to, name: to } }],
         subject: `Re: Your Support Ticket #${ticketId.substring(0, 6)}...`,
         htmlbody: emailHtml,
@@ -191,7 +191,7 @@ export async function sendWelcomeEmail({ to, name }: WelcomeEmailPayload) {
   `;
 
   return sendZeptoMail({
-    from: { address: "noreply@mov33.com", name: "Mov33" },
+    from: { address: "noreply@kihumba.com", name: "Mov33" },
     to: [{ email_address: { address: to, name: name } }],
     subject: `Welcome to Mov33, ${name}!`,
     htmlbody: emailHtml,
@@ -214,7 +214,7 @@ export async function sendOtpEmail({ to, otp }: OtpEmailPayload) {
   `;
 
   return sendZeptoMail({
-    from: { address: "security@mov33.com", name: "Mov33 Security" },
+    from: { address: "security@kihumba.com", name: "Mov33 Security" },
     to: [{ email_address: { address: to, name: to } }],
     subject: "Your Mov33 Verification Code",
     htmlbody: emailHtml,
@@ -239,12 +239,12 @@ export async function sendTicketStatusUpdateEmail({ to, attendeeName, eventName,
         <h1>Ticket Status Update</h1>
         <p>Hi ${attendeeName},</p>
         <p>This is a notification to inform you that your <strong>${ticketType}</strong> ticket for the event <strong>${eventName}</strong> ${statusText}</p>
-        <p>If you believe this is in error, please contact our support team immediately by replying to this email or visiting our help center.</p>
+        <p>If you believe this is in error, please contact our support team by replying to this email or visiting our help center.</p>
         <p>Thank you,<br/>The Mov33 Team</p>
     `;
 
     return sendZeptoMail({
-        from: { address: "support@mov33.com", name: "Mov33 Support" },
+        from: { address: "support@kihumba.com", name: "Mov33 Support" },
         to: [{ email_address: { address: to, name: attendeeName } }],
         subject,
         htmlbody: emailHtml,
