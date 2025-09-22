@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { format } from 'date-fns';
-import { Camera, MapPin, Calendar, User } from 'lucide-react';
+import { Camera, MapPin, Calendar, User, Star } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getListingById, getOrganizerById } from '@/app/actions';
 import type { Event, Tour, Organizer } from '@/lib/types';
@@ -67,6 +67,9 @@ export default async function ArchivePage({ params, searchParams }: { params: { 
                 <div className="mt-4 flex items-center justify-center gap-x-6 gap-y-2 text-muted-foreground flex-wrap">
                     <span className="flex items-center gap-1.5"><Calendar className="h-4 w-4" />{format(new Date(listingDate), 'EEEE, MMMM d, yyyy')}</span>
                     <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" />{location}</span>
+                     {listing.rating && (
+                        <span className="flex items-center gap-1.5"><Star className="h-4 w-4 text-yellow-400 fill-current" />{listing.rating.average.toFixed(1)} ({listing.rating.count} reviews)</span>
+                    )}
                 </div>
             </div>
         </div>

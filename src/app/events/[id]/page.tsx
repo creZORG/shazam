@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { notFound, redirect } from 'next/navigation';
 import { format } from 'date-fns';
-import { Calendar, MapPin, Users, ArrowRight, Gift, Camera, ShieldCheck } from 'lucide-react';
+import { Calendar, MapPin, Users, ArrowRight, Gift, Camera, ShieldCheck, Star } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -20,6 +20,7 @@ import type { Metadata } from 'next';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Badge } from '@/components/ui/badge';
+import { EventRating } from './_components/EventRating';
 
 type Props = {
   params: { id: string }
@@ -134,6 +135,15 @@ export default async function EventDetailPage({ params }: { params: { id: string
                         <p className="text-sm text-muted-foreground">{event.county}</p>
                         </div>
                     </div>
+                    {event.rating && (
+                        <div className="flex items-center gap-3">
+                            <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                            <div>
+                                <p className="font-semibold">{event.rating.average.toFixed(1)} / 5</p>
+                                <p className="text-sm text-muted-foreground">({event.rating.count} reviews)</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
           </div>
@@ -158,12 +168,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
                 )}
 
                 {isPast ? (
-                  <Card>
-                    <CardHeader>
-                        <CardTitle>This Event has Passed</CardTitle>
-                        <CardDescription>This event is over. Check out the gallery below!</CardDescription>
-                    </CardHeader>
-                  </Card>
+                  <EventRating event={event} />
                 ) : (
                   <TicketSelection event={event} />
                 )}

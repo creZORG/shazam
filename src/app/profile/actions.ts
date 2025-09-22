@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -112,7 +113,7 @@ export async function getUserProfileData() {
     
     const purchasedTickets = allTickets.filter(t => t.status === 'valid');
 
-    const listingIds = [...new Set(purchasedTickets.map(t => t.listingId))].filter(Boolean);
+    const listingIds = [...new Set(allTickets.map(t => t.listingId))].filter(Boolean);
 
     const listings: Record<string, Event | Tour> = {};
     if (listingIds.length > 0) {
@@ -156,6 +157,22 @@ export async function getUserProfileData() {
   }
 }
 
+export async function canUserRateEvent(userId: string, eventId: string): Promise<boolean> {
+    if (!userId || !eventId) return false;
+
+    try {
+        const ticketsQuery = query(
+            collection(db, 'tickets'),
+            where('userId', '==', userId),
+            where('listingId', '==', eventId)
+        );
+        const snapshot = await getDocs(ticketsQuery);
+        return !snapshot.empty;
+    } catch {
+        return false;
+    }
+}
+
 
 export async function rateEvent(targetId: string, rating: number): Promise<{success: boolean, error?: string, newAverage?: number}> {
     const userId = await getUserIdFromSession();
@@ -167,13 +184,26 @@ export async function rateEvent(targetId: string, rating: number): Promise<{succ
         // Determine if it's an event or a tour
         let docRef = doc(db, 'events', targetId);
         let docSnap = await getDoc(docRef);
+        let isEvent = true;
 
         if (!docSnap.exists()) {
             docRef = doc(db, 'tours', targetId);
             docSnap = await getDoc(docRef);
+            isEvent = false;
             if (!docSnap.exists()) {
                  throw new Error("Listing not found.");
             }
+        }
+        
+        const listingData = docSnap.data() as Event | Tour;
+        const eventDate = new Date(isEvent ? (listingData as Event).date : (listingData as Tour).startDate);
+        if (eventDate > new Date()) {
+            return { success: false, error: 'You can only rate an event after it has occurred.' };
+        }
+
+        const canRate = await canUserRateEvent(userId, targetId);
+        if (!canRate) {
+            return { success: false, error: "You must have purchased a ticket to rate this event." };
         }
         
         const newAverage = await runTransaction(db, async (transaction) => {
