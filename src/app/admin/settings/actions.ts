@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -14,16 +15,19 @@ export async function getSettings(): Promise<{ settings: SiteSettings | null, er
         const settingsDocRef = doc(db, 'config', 'settings');
         const docSnap = await getDoc(settingsDocRef);
 
+        const defaultSettings: SiteSettings = {
+            platformFee: 5,
+            processingFee: 2.5,
+            processingFeePayer: 'customer',
+            influencerCut: 10,
+            loyaltyPointRate: 10, // Default: 1 point per 10 Ksh
+        };
+
         if (docSnap.exists()) {
-            return { settings: docSnap.data() as SiteSettings, error: null };
+            const settings = docSnap.data() as SiteSettings;
+            // Merge defaults with existing settings to ensure new fields are present
+            return { settings: { ...defaultSettings, ...settings }, error: null };
         } else {
-            // Return default settings if none are found
-            const defaultSettings: SiteSettings = {
-                platformFee: 5,
-                processingFee: 2.5,
-                processingFeePayer: 'customer',
-                influencerCut: 10,
-            };
             return { settings: defaultSettings, error: null };
         }
     } catch (error) {

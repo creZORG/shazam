@@ -1,10 +1,11 @@
 
+
 'use server';
 
 import { NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/server-config';
 import { FieldValue } from 'firebase-admin/firestore';
-import type { Order, Ticket, Transaction, Event, Tour, MerchOrder, Product } from '@/lib/types';
+import type { Order, Ticket, Transaction, Event, Tour, MerchOrder, Product, SiteSettings } from '@/lib/types';
 import { sendTicketEmail } from '@/services/email';
 
 export async function POST(request: Request, { params }: { params: { secret:string } }) {
@@ -57,13 +58,15 @@ export async function POST(request: Request, { params }: { params: { secret:stri
         
         const orderRef = db.collection('orders').doc(transaction.orderId);
         const merchOrderRef = db.collection('merchOrders').doc(transaction.orderId);
+        const settingsRef = db.collection('config').doc('settings');
 
         await db.runTransaction(async (firestoreTransaction) => {
             // --- READ PHASE ---
-            // Read all necessary documents first.
             const orderDoc = await firestoreTransaction.get(orderRef);
             const currentTransactionDoc = await firestoreTransaction.get(transactionDoc.ref);
             const merchOrderDoc = await firestoreTransaction.get(merchOrderRef);
+            const settingsDoc = await firestoreTransaction.get(settingsRef);
+            const settings = { loyaltyPointRate: 10, ...settingsDoc.data() } as SiteSettings;
 
             // --- VALIDATION PHASE ---
             if (orderDoc.exists && orderDoc.data()?.status === 'completed') {
@@ -104,10 +107,14 @@ export async function POST(request: Request, { params }: { params: { secret:stri
 
                     if (order.userId) {
                         const userRef = db.collection('users').doc(order.userId);
-                        firestoreTransaction.update(userRef, { 
-                            totalPurchases: FieldValue.increment(order.total),
-                            loyaltyPoints: FieldValue.increment(Math.floor(order.total / 10))
-                        });
+                        // Award loyalty points based on platform fee
+                        const pointsToAward = Math.floor(order.platformFee / (settings.loyaltyPointRate || 10));
+                        if(pointsToAward > 0) {
+                           firestoreTransaction.update(userRef, { 
+                                totalPurchases: FieldValue.increment(order.total),
+                                loyaltyPoints: FieldValue.increment(pointsToAward)
+                            });
+                        }
                     }
                     
                     if (order.paymentType === 'full' && order.listingType === 'event') {
@@ -151,9 +158,14 @@ export async function POST(request: Request, { params }: { params: { secret:stri
                     firestoreTransaction.update(merchOrderRef, { status: 'awaiting_pickup' });
                      if (merchOrder.userId) {
                         const userRef = db.collection('users').doc(merchOrder.userId);
-                        firestoreTransaction.update(userRef, {
-                            loyaltyPoints: FieldValue.increment(Math.floor(merchOrder.total / 10))
-                        });
+                        // Award loyalty points based on an estimated platform fee
+                        const estimatedPlatformFee = merchOrder.total * (settings.platformFee / 100);
+                        const pointsToAward = Math.floor(estimatedPlatformFee / (settings.loyaltyPointRate || 10));
+                         if (pointsToAward > 0) {
+                            firestoreTransaction.update(userRef, {
+                                loyaltyPoints: FieldValue.increment(pointsToAward)
+                            });
+                        }
                     }
                 }
 

@@ -1,4 +1,5 @@
 
+
 export type EventTicketingType = 'naksyetu' | 'external';
 export type ExternalEventPricing = 'Free' | 'Paid' | 'RSVP' | 'Online';
 
@@ -350,6 +351,7 @@ export type SiteSettings = {
     enableHolidayTheme?: boolean;
     logoBriefUrl?: string;
     logoLongUrl?: string;
+    loyaltyPointRate?: number;
     homepage?: {
       featureCards?: FeatureCardContent[];
       partnerSection?: PartnerSectionContent;

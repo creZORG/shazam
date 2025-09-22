@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -15,7 +16,7 @@ import * as z from 'zod';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { getSettings, updateSettings } from "./actions";
 import { useEffect, useState, useTransition } from "react";
-import { Loader2, UploadCloud, Home, ImageIcon, Gift } from "lucide-react";
+import { Loader2, UploadCloud, Home, ImageIcon, Gift, Award } from "lucide-react";
 import type { SiteSettings, FeatureCardContent, PartnerSectionContent } from "@/lib/types";
 import { useDropzone } from "react-dropzone";
 import { uploadImage } from "@/app/organizer/events/create/cloudinary-actions";
@@ -48,6 +49,7 @@ const settingsSchema = z.object({
     logoBriefUrl: z.string().url().optional(),
     logoLongUrl: z.string().url().optional(),
     enableHolidayTheme: z.boolean().optional(),
+    loyaltyPointRate: z.coerce.number().positive("Value must be a positive number."),
     homepage: z.object({
       featureCards: z.array(featureCardSchema).optional(),
       partnerSection: partnerSectionSchema.optional(),
@@ -152,6 +154,7 @@ export default function AdminSettingsPage() {
         logoBriefUrl: "",
         logoLongUrl: "",
         enableHolidayTheme: false,
+        loyaltyPointRate: 10,
         homepage: {
             featureCards: [
                 { title: "Events", description: "From music festivals to tech conferences, find your next experience.", href: "/events", cta: "Browse Events", imageUrl: "https://picsum.photos/seed/cat-event/800/600" },
@@ -220,7 +223,7 @@ export default function AdminSettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>System Settings</CardTitle>
-                    <CardDescription>Configure global settings for the NaksYetu platform.</CardDescription>
+                    <CardDescription>Configure global settings for the Mov33 platform.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
                     
@@ -343,6 +346,21 @@ export default function AdminSettingsPage() {
                                 </FormItem>
                             )}/>
                         </div>
+                    </div>
+                    
+                    <div className="p-6 border rounded-lg space-y-6">
+                        <div className="space-y-1">
+                            <h3 className="text-xl font-semibold flex items-center gap-2"><Award /> Loyalty Program</h3>
+                            <p className="text-sm text-muted-foreground">Configure the customer loyalty points system.</p>
+                        </div>
+                         <FormField control={form.control} name="loyaltyPointRate" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Ksh Spent per Loyalty Point</FormLabel>
+                                <FormControl><Input type="number" placeholder="e.g., 10" {...field} /></FormControl>
+                                <FormDescription>The amount a customer must spend (on platform fees) to earn one point.</FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}/>
                     </div>
 
                      <div className="p-6 border rounded-lg space-y-4">
