@@ -176,6 +176,7 @@ export type FirebaseUser = {
   bookmarkedEvents?: string[];
   assignedEvents?: string[]; // For event-specific verifiers
   totalPurchases?: number;
+  loyaltyPoints?: number;
   
   // Analytics fields
   userAgent?: string;

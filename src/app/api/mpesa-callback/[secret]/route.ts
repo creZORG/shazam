@@ -104,7 +104,10 @@ export async function POST(request: Request, { params }: { params: { secret:stri
 
                     if (order.userId) {
                         const userRef = db.collection('users').doc(order.userId);
-                        firestoreTransaction.update(userRef, { totalPurchases: FieldValue.increment(order.total) });
+                        firestoreTransaction.update(userRef, { 
+                            totalPurchases: FieldValue.increment(order.total),
+                            loyaltyPoints: FieldValue.increment(Math.floor(order.total / 10))
+                        });
                     }
                     
                     if (order.paymentType === 'full' && order.listingType === 'event') {
@@ -146,6 +149,12 @@ export async function POST(request: Request, { params }: { params: { secret:stri
                         firestoreTransaction.update(productRef, { stock: FieldValue.increment(-item.quantity) });
                     }
                     firestoreTransaction.update(merchOrderRef, { status: 'awaiting_pickup' });
+                     if (merchOrder.userId) {
+                        const userRef = db.collection('users').doc(merchOrder.userId);
+                        firestoreTransaction.update(userRef, {
+                            loyaltyPoints: FieldValue.increment(Math.floor(merchOrder.total / 10))
+                        });
+                    }
                 }
 
             } else {

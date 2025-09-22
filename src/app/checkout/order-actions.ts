@@ -273,7 +273,19 @@ export async function logCheckoutRating(rating: number, reason: string, orderId:
         if (reason) {
             feedback.reason = reason;
         }
-        await addDoc(collection(db, 'checkoutFeedback'), feedback);
+        
+        const batch = writeBatch(db);
+
+        const feedbackRef = doc(collection(db, 'checkoutFeedback'));
+        batch.set(feedbackRef, feedback);
+
+        if (userId) {
+            const userRef = doc(db, 'users', userId);
+            batch.update(userRef, { loyaltyPoints: increment(50) });
+        }
+        
+        await batch.commit();
+
         return { success: true };
     } catch (e: any) {
         console.error('Failed to log checkout rating', e);

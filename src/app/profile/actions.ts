@@ -106,22 +106,13 @@ export async function getUserProfileData() {
     
     const userData = userDoc.data() as FirebaseUser;
 
-    const [ticketsSnapshot, bookmarkedSnapshot] = await Promise.all([
-      getDocs(query(collection(db, 'tickets'), where('userId', '==', userId), orderBy('createdAt', 'desc'))),
-      userData.bookmarkedEvents && userData.bookmarkedEvents.length > 0
-        ? getDocs(query(collection(db, 'events'), where(documentId(), 'in', userData.bookmarkedEvents)))
-        : Promise.resolve(null),
-    ]);
-
+    const ticketsSnapshot = await getDocs(query(collection(db, 'tickets'), where('userId', '==', userId), orderBy('createdAt', 'desc')));
+    
     const allTickets = ticketsSnapshot.docs.map(doc => serializeData(doc) as Ticket);
     
     const purchasedTickets = allTickets.filter(t => t.status === 'valid');
-    const attendedTickets = allTickets.filter(t => t.status === 'used');
 
-    const listingIds = [...new Set([
-        ...purchasedTickets.map(t => t.listingId),
-        ...attendedTickets.map(t => t.listingId),
-    ])].filter(Boolean);
+    const listingIds = [...new Set(purchasedTickets.map(t => t.listingId))].filter(Boolean);
 
     const listings: Record<string, Event | Tour> = {};
     if (listingIds.length > 0) {
@@ -151,18 +142,11 @@ export async function getUserProfileData() {
       listing: listings[ticket.listingId],
     })).filter(t => t.listing);
     
-    const attended = attendedTickets.map(ticket => listings[ticket.listingId]).filter(Boolean);
-    const bookmarked = bookmarkedSnapshot ? bookmarkedSnapshot.docs.map(doc => {
-        const data = serializeData(doc);
-        return { ...data, type: 'venue' in data ? 'event' : 'tour' } as Event | Tour;
-    }) : [];
-
     return {
       success: true,
       data: {
         purchased,
-        attended,
-        bookmarked,
+        loyaltyPoints: userData.loyaltyPoints || 0,
       },
     };
 
