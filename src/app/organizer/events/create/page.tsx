@@ -44,7 +44,6 @@ import {
 import {
   ageCategories,
   eventCategories,
-  nakuruSubCounties,
 } from '@/lib/data';
 import { PlusCircle, Trash2, X, ArrowLeft, ArrowRight, Save, Loader2, ImagePlus, PartyPopper, Route, AlertCircle, ChevronsUpDown, Gift, Settings } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
@@ -88,7 +87,7 @@ const createEventSchema = z.object({
   startTime: z.string().min(1, 'Start time is required.'),
   endDate: z.string().optional(),
   endTime: z.string().optional(),
-  subCounty: z.string().min(1, 'Sub-county is required.'),
+  county: z.string().min(3, 'County is required.'),
   venue: z.string().min(3, 'Venue name is required.'),
   whatsappGroupLink: z.string().url({ message: "Please enter a valid WhatsApp group link." }).optional().or(z.literal('')),
   category: z.string().min(1, 'Category is required.'),
@@ -313,7 +312,7 @@ const EventCreationWizard = () => {
     const { fields, append, remove } = useFieldArray({ control: form.control, name: 'tickets' });
     
     const stepFields: { [key: number]: (keyof z.infer<typeof createEventSchema>)[] } = {
-      1: ['name', 'description', 'date', 'startTime', 'subCounty', 'venue', 'category', 'ageCategory'],
+      1: ['name', 'description', 'date', 'startTime', 'county', 'venue', 'category', 'ageCategory'],
       2: ['imageUrl'],
       3: ['tickets'],
       4: ['acceptTerms', 'acceptRefundPolicy']
@@ -417,7 +416,7 @@ const EventCreationWizard = () => {
                         <div className="space-y-8">
                           {/* Step 1 */}
                           {step === 1 && <Card><StepValidationTracker form={form as AnyForm} fields={stepFields[1]} title="Step 1: Event Details" /><CardContent className="space-y-6 pt-6">
-                              <FormField control={form.control} name="name" render={({ field }) => ( <FormItem> <FormLabel>Event Name</FormLabel> <FormControl> <Input placeholder="e.g., NaxVegas Vibez" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
+                              <FormField control={form.control} name="name" render={({ field }) => ( <FormItem> <FormLabel>Event Name</FormLabel> <FormControl> <Input placeholder="e.g., Mov33 Fest" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
                               <FormField control={form.control} name="description" render={({ field }) => ( <FormItem> <FormLabel>Description</FormLabel> <FormControl> <Textarea placeholder="Tell attendees all about your event..." rows={5} {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
                               <div className="grid md:grid-cols-2 gap-6">
                                   <FormField control={form.control} name="date" render={({ field }) => ( <FormItem> <FormLabel>Start Date</FormLabel> <FormControl><Input type="date" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
@@ -426,8 +425,8 @@ const EventCreationWizard = () => {
                                   <FormField control={form.control} name="endTime" render={({ field }) => ( <FormItem> <FormLabel>End Time (Optional)</FormLabel> <FormControl><Input type="time" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
                               </div>
                               <div className="grid md:grid-cols-2 gap-6">
-                                  <FormField control={form.control} name="subCounty" render={({ field }) => ( <FormItem> <FormLabel>Sub-county</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select a sub-county" /></SelectTrigger></FormControl> <SelectContent> {nakuruSubCounties.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)} </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
-                                  <FormField control={form.control} name="venue" render={({ field }) => ( <FormItem> <FormLabel>Venue Name</FormLabel> <FormControl><Input placeholder="e.g., Nakuru Athletics Club" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
+                                  <FormField control={form.control} name="county" render={({ field }) => ( <FormItem> <FormLabel>County</FormLabel> <FormControl><Input placeholder="e.g., Nairobi, Mombasa" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
+                                  <FormField control={form.control} name="venue" render={({ field }) => ( <FormItem> <FormLabel>Venue Name</FormLabel> <FormControl><Input placeholder="e.g., KICC" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
                               </div>
                               <FormField control={form.control} name="whatsappGroupLink" render={({ field }) => ( <FormItem> <FormLabel>WhatsApp Group Link (Optional)</FormLabel> <FormControl> <Input placeholder="https://chat.whatsapp.com/..." {...field} /> </FormControl> <FormDescription>Attendees will see this link after purchasing a ticket.</FormDescription> <FormMessage /> </FormItem> )}/>
                               <div className="grid md:grid-cols-2 gap-6">

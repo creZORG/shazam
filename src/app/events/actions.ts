@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -34,7 +35,7 @@ export async function getFilteredEvents(filters: FilterState): Promise<{ success
         q = query(q, where('status', '==', 'published'));
 
         if (filters.location && filters.location !== 'all') {
-            q = query(q, where('subCounty', '==', filters.location));
+            q = query(q, where('county', '==', filters.location));
         }
         if (filters.category && filters.category !== 'all') {
             q = query(q, where('category', '==', filters.category));
@@ -98,7 +99,7 @@ export async function getFilteredEvents(filters: FilterState): Promise<{ success
                 return priceA - priceB;
             }
             if (filters.sort === 'price-desc') {
-                return priceB - priceA;
+                return priceB - a.price;
             }
             // Default to date sort
             return new Date(a.date).getTime() - new Date(b.date).getTime();

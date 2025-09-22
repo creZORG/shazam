@@ -2,20 +2,6 @@
 import type { Event, Organizer, Tour, NightlifeEvent } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 
-export const nakuruSubCounties = [
-  "Nakuru Town East",
-  "Nakuru Town West",
-  "Njoro",
-  "Molo",
-  "Gilgil",
-  "Kuresoi South",
-  "Kuresoi North",
-  "Subukia",
-  "Rongai",
-  "Bahati",
-  "Naivasha",
-];
-
 export const eventCategories = [
     "Music",
     "Food & Drink",

@@ -1,4 +1,5 @@
 
+
 export type EventTicketingType = 'naksyetu' | 'external';
 export type ExternalEventPricing = 'Free' | 'Paid' | 'RSVP' | 'Online';
 
@@ -40,7 +41,7 @@ export type Event = {
   endDate?: string;
   endTime?: string;
   venue: string;
-  subCounty: string;
+  county: string;
   price: number;
   remainingTickets: number;
   imageUrl: string;

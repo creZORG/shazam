@@ -33,10 +33,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
   }
   
-  const eventUrl = `https://naksyetu.com/events/${event.slug || event.id}`;
+  const eventUrl = `https://mov33.com/events/${event.slug || event.id}`;
 
   return {
-    title: `${event.name} | NaksYetu`,
+    title: `${event.name} | Mov33`,
     description: event.description.substring(0, 160),
     openGraph: {
       title: event.name,
@@ -123,8 +123,8 @@ export default async function EventDetailPage({ params }: { params: { id: string
                     <div className="flex items-center gap-3">
                         <MapPin className="w-5 h-5 text-muted-foreground" />
                         <div>
-                        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venue + ', ' + event.subCounty)}`} target="_blank" rel="noopener noreferrer" className="font-semibold hover:underline">{event.venue}</a>
-                        <p className="text-sm text-muted-foreground">{event.subCounty}</p>
+                        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venue + ', ' + event.county)}`} target="_blank" rel="noopener noreferrer" className="font-semibold hover:underline">{event.venue}</a>
+                        <p className="text-sm text-muted-foreground">{event.county}</p>
                         </div>
                     </div>
                 </div>

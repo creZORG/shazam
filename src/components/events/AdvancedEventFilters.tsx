@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { nakuruSubCounties, eventCategories, ageCategories } from '@/lib/data';
+import { eventCategories, ageCategories } from '@/lib/data';
 import { Button } from '../ui/button';
 import { Loader2, Search } from 'lucide-react';
 import type { FilterState } from '@/app/events/actions';
@@ -50,17 +50,13 @@ export function AdvancedEventFilters({ onFilterChange, isSearching }: AdvancedEv
             </div>
              <div >
                 <label htmlFor="location" className="text-sm font-medium text-muted-foreground">Location</label>
-                <Select onValueChange={(value) => handleInputChange('location', value)} value={filters.location}>
-                    <SelectTrigger id="location" className="w-full mt-1 border-pink-500/50 focus:ring-pink-500">
-                        <SelectValue placeholder="All Sub-counties" />
-                    </SelectTrigger>
-                    <SelectContent>
-                    <SelectItem value="all">All Sub-counties</SelectItem>
-                    {nakuruSubCounties.map(county => (
-                        <SelectItem key={county} value={county}>{county}</SelectItem>
-                    ))}
-                    </SelectContent>
-                </Select>
+                <Input
+                    id="location"
+                    placeholder="Enter county..."
+                    className="mt-1"
+                    value={filters.location || ''}
+                    onChange={(e) => handleInputChange('location', e.target.value)}
+                />
             </div>
              <div>
                 <label htmlFor="category" className="text-sm font-medium text-muted-foreground">Category</label>
