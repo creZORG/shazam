@@ -600,5 +600,3 @@ export type ShortLink = {
     trackingLinkId?: string;
     createdAt: any;
 }
-
-    

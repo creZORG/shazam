@@ -30,7 +30,7 @@ export default async function ArchivePage({ params, searchParams }: { params: { 
 
   const isEvent = 'venue' in listing;
   const listingDate = isEvent ? (listing as Event).date : (listing as Tour).startDate;
-  const location = isEvent ? `${(listing as Event).venue}, ${(listing as Event).subCounty}` : (listing as Tour).destination;
+  const location = isEvent ? `${(listing as Event).venue}, ${(listing as Event).county}` : (listing as Tour).destination;
 
   return (
     <div className="flex flex-col min-h-screen bg-muted/40">
