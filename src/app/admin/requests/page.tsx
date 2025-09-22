@@ -3,8 +3,8 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Handshake, Megaphone, Check, X, User, Mail, Calendar, LifeBuoy, Loader2, Send, BarChart2, Eye, ExternalLink } from "lucide-react";
-import { getAdRequests, getPartnerRequests, approvePartnerRequest, denyPartnerRequest, getSupportTickets, updateSupportTicketStatus, replyToSupportTicket, updateAdStatus } from "./actions";
+import { Handshake, Megaphone, Check, X, User, Mail, Calendar, LifeBuoy, Loader2, Send } from "lucide-react";
+import { getAdRequests, getPartnerRequests, approvePartnerRequest, denyPartnerRequest, getSupportTickets, updateSupportTicketStatus, replyToSupportTicket } from "./actions";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Image from "next/image";
 
 function PartnerRequestActionButton({ requestId, newRole, userId, actionType }: { requestId: string, newRole: string, userId: string, actionType: 'approve' | 'deny' }) {
     const [isPending, startTransition] = useTransition();
@@ -39,45 +38,16 @@ function PartnerRequestActionButton({ requestId, newRole, userId, actionType }: 
     );
 }
 
-function AdRequestCard({ ad, onAction }: { ad: AdSubmission; onAction: (adId: string, status: 'approved' | 'rejected') => void; }) {
-    const [isPending, startTransition] = useTransition();
-    const {toast} = useToast();
-
-    const handleStatusUpdate = (status: 'approved' | 'rejected') => {
-        startTransition(async () => {
-            const result = await updateAdStatus(ad.id, status);
-            if (result.success) {
-                toast({ title: `Ad ${status}!`});
-                onAction(ad.id, status);
-            } else {
-                toast({ variant: 'destructive', title: 'Error', description: result.error });
-            }
-        });
-    }
-
+function AdRequestCard({ ad }: { ad: AdSubmission }) {
+    // This can be expanded to show more details or have approve/reject actions
     return (
         <Card>
-            <CardHeader className="flex-row justify-between items-start">
-                 <div>
-                    <CardTitle>{ad.campaignName}</CardTitle>
-                    <CardDescription>Submitted on {format(new Date(ad.createdAt), 'PP')}</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                    <Button size="sm" onClick={() => handleStatusUpdate('approved')} disabled={isPending}><Check className="mr-2"/>Approve</Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleStatusUpdate('rejected')} disabled={isPending}><X className="mr-2"/>Reject</Button>
-                </div>
+            <CardHeader>
+                <CardTitle>{ad.campaignName}</CardTitle>
+                <CardDescription>Submitted on {format(new Date(ad.createdAt), 'PP')}</CardDescription>
             </CardHeader>
-            <CardContent className="grid md:grid-cols-3 gap-4">
-                <div className="md:col-span-1 grid grid-cols-2 gap-2">
-                    {ad.imageUrls.map(url => <Image key={url} src={url} alt="Ad image" width={150} height={150} className="rounded-md object-cover" />)}
-                </div>
-                 <div className="md:col-span-2 space-y-3 text-sm">
-                    <p><strong>CTA Text:</strong> <Badge variant="outline">{ad.ctaText}</Badge></p>
-                    <p><strong>CTA Link:</strong> <a href={ad.ctaLink} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1">{ad.ctaLink} <ExternalLink className="h-4 w-4"/></a></p>
-                    <p><strong>Priority:</strong> {ad.priority}</p>
-                    <p><strong>Duration:</strong> {ad.duration.replace('_', ' ')}</p>
-                    {ad.isAdultContent && <Badge variant="destructive">Adult Content</Badge>}
-                </div>
+            <CardContent>
+                <p>Status: <Badge variant={ad.status === 'pending' ? 'secondary' : ad.status === 'approved' ? 'default' : 'destructive'}>{ad.status}</Badge></p>
             </CardContent>
         </Card>
     );
@@ -189,7 +159,7 @@ function AdminRequestsPageContent() {
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = () => {
+  useEffect(() => {
     setLoading(true);
     Promise.all([
         getPartnerRequests(),
@@ -201,10 +171,6 @@ function AdminRequestsPageContent() {
         if(supportRes.success && supportRes.data) setSupportTickets(supportRes.data);
         setLoading(false);
     })
-  }
-
-  useEffect(() => {
-    fetchData();
   }, []);
   
   const handleTicketStatusChange = (ticketId: string, newStatus: 'closed' | 'open') => {
@@ -223,17 +189,6 @@ function AdminRequestsPageContent() {
     }));
   };
 
-  const handleAdAction = (adId: string, newStatus: 'approved' | 'rejected') => {
-      setAdRequests(currentAds => {
-          return currentAds.map(ad => 
-              ad.id === adId ? { ...ad, status: newStatus } : ad
-          );
-      });
-  };
-  
-  const pendingAds = adRequests.filter(ad => ad.status === 'pending');
-  const pastAds = adRequests.filter(ad => ad.status !== 'pending');
-
   return (
     <Card>
       <CardHeader>
@@ -249,7 +204,7 @@ function AdminRequestsPageContent() {
             </TabsTrigger>
             <TabsTrigger value="ads">
                 <Megaphone className="mr-2" />
-                Ads ({pendingAds?.length || 0})
+                Ads ({adRequests?.filter(ad => ad.status === 'pending').length || 0})
             </TabsTrigger>
             <TabsTrigger value="support">
                 <LifeBuoy className="mr-2" />
@@ -292,43 +247,18 @@ function AdminRequestsPageContent() {
                 </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="ads" className="mt-4 space-y-6">
-             <Card>
+          <TabsContent value="ads" className="mt-4">
+            <Card>
                 <CardHeader>
-                    <CardTitle>Pending Ad Submissions</CardTitle>
-                    <CardDescription>Review, approve, or reject ad campaigns submitted by advertisers.</CardDescription>
+                    <CardTitle>Ad Submissions</CardTitle>
+                    <CardDescription>Review and approve ad campaigns.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {loading ? <Loader2 className="animate-spin" /> : pendingAds.length > 0 ? (
-                        pendingAds.map(ad => <AdRequestCard key={ad.id} ad={ad} onAction={handleAdAction} />)
-                    ) : (
-                        <p className="text-center text-muted-foreground py-12">No pending ad submissions.</p>
-                    )}
-                </CardContent>
-            </Card>
-             <Card>
-                <CardHeader>
-                    <CardTitle>Live & Past Campaigns</CardTitle>
-                    <CardDescription>Performance overview of all approved or rejected ad campaigns.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {loading ? <Loader2 className="animate-spin" /> : pastAds.length > 0 ? (
-                        <Table>
-                            <TableHeader><TableRow><TableHead>Campaign</TableHead><TableHead>Status</TableHead><TableHead>Impressions</TableHead><TableHead>Clicks</TableHead></TableRow></TableHeader>
-                            <TableBody>
-                                {pastAds.map(ad => (
-                                    <TableRow key={ad.id}>
-                                        <TableCell className="font-medium">{ad.campaignName}</TableCell>
-                                        <TableCell><Badge variant={ad.status === 'approved' ? 'default' : 'destructive'} className="capitalize">{ad.status}</Badge></TableCell>
-                                        <TableCell>{ad.impressions || 0}</TableCell>
-                                        <TableCell>{ad.clicks || 0}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    ) : (
-                        <p className="text-center text-muted-foreground py-12">No historical ad data.</p>
-                    )}
+                     {loading ? <Loader2 className="animate-spin" /> : adRequests && adRequests.length > 0 ? (
+                        adRequests.map(ad => <AdRequestCard key={ad.id} ad={ad} />)
+                     ) : (
+                        <p className="text-center text-muted-foreground py-12">No ad submissions found.</p>
+                     )}
                 </CardContent>
             </Card>
           </TabsContent>

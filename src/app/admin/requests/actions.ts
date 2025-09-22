@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, Timestamp, orderBy, doc, updateDoc, writeBatch, addDoc, serverTimestamp, increment } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, orderBy, doc, updateDoc, writeBatch, addDoc, serverTimestamp } from 'firebase/firestore';
 import type { PartnerRequest, AdSubmission, UserRole, SupportTicket, SupportTicketReply } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { revalidatePath } from 'next/cache';
@@ -274,16 +274,5 @@ export async function replyToSupportTicket(payload: { ticketId: string, message:
         return { success: true, data: createdReply as SupportTicketReply };
     } catch (error: any) {
         return { success: false, error: `Failed to send reply. Details: ${error.message}` };
-    }
-}
-
-export async function trackAdClick(adId: string) {
-    try {
-        const adRef = doc(db, 'adSubmissions', adId);
-        await updateDoc(adRef, { clicks: increment(1) });
-        return { success: true };
-    } catch (error) {
-        console.error('Failed to track ad click:', error);
-        return { success: false };
     }
 }
