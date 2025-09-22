@@ -27,12 +27,13 @@ import { logAdminAction } from '@/services/audit-service';
 
 type WithOrganizer = {
   organizerId: string;
-  status: 'draft' | 'submitted for review' | 'published' | 'rejected' | 'archived' | 'taken-down';
+  status: 'draft' | 'submitted for review' | 'pending_admin_approval' | 'published' | 'rejected' | 'archived' | 'taken-down';
   createdAt: any;
   updatedAt: any;
+  lastUpdatedBy?: string;
 };
 
-async function getUserIdFromSession(): Promise<string | null> {
+async function getSessionUser(): Promise<{uid: string, role: UserRole} | null> {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) {
         return null;
@@ -41,9 +42,9 @@ async function getUserIdFromSession(): Promise<string | null> {
         const auth = await getAdminAuth();
         if (!auth) throw new Error("Server auth not initialized");
         const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
-        return decodedClaims.uid;
+        return { uid: decodedClaims.uid, role: (decodedClaims.role as UserRole) || 'attendee' };
     } catch (error) {
-        console.error("Error verifying session cookie in getUserIdFromSession:", error);
+        console.error("Error verifying session cookie:", error);
         return null;
     }
 }
@@ -99,7 +100,7 @@ export async function getListings(organizerId: string) {
         all: allListings,
         published: allListings.filter(l => l.status === 'published'),
         drafts: allListings.filter(l => l.status === 'draft'),
-        review: allListings.filter(l => l.status === 'submitted for review'),
+        review: allListings.filter(l => l.status === 'submitted for review' || l.status === 'pending_admin_approval'),
         rejected: allListings.filter(l => l.status === 'rejected'),
         archived: allListings.filter(l => l.status === 'archived'),
     };
@@ -116,11 +117,13 @@ async function saveListing(
   data: (Partial<Event & Tour> & { id?: string; organizerId?: string }),
   status: 'draft' | 'submitted for review'
 ) {
-  const userId = await getUserIdFromSession();
+  const sessionUser = await getSessionUser();
 
-  if (!userId) {
+  if (!sessionUser) {
      return { success: false, error: 'User not authenticated.' };
   }
+  const userId = sessionUser.uid;
+  const userRole = sessionUser.role;
   
   const { id, organizerId, ...listingDataPayload } = data;
 
@@ -134,13 +137,20 @@ async function saveListing(
   const isNew = !id;
   const docRef = isNew ? doc(collection(db, collectionName)) : doc(db, collectionName, id);
 
+  // Determine the status based on the user's role
+  let finalStatus: WithOrganizer['status'] = status;
+  if (status === 'submitted for review' && (userRole === 'admin' || userRole === 'super-admin')) {
+      finalStatus = 'pending_admin_approval';
+  }
+
   const listingData: Omit<WithOrganizer, 'createdAt'> & Partial<Event & Tour> & { createdAt?: any, slug?: string, organizerName?: string, ticketingType?: EventTicketingType } = {
     ...listingDataPayload,
     organizerId: userId,
     organizerName,
     slug,
-    status: status,
+    status: finalStatus,
     updatedAt: serverTimestamp(),
+    lastUpdatedBy: userId, // Track who made the last change
   };
 
   if (isNew) {
@@ -155,6 +165,7 @@ async function saveListing(
   try {
     await setDoc(docRef, listingData, { merge: true });
     revalidatePath('/organizer/listings');
+    revalidatePath('/admin/events');
     return { success: true, id: docRef.id };
   } catch (error: any) {
     console.error(`Error saving ${collectionName}:`, error);
@@ -208,23 +219,28 @@ export async function updateListingStatus(listingId: string, type: 'event' | 'to
     if (!listingId || !status) {
         return { success: false, error: 'Listing ID and status are required.' };
     }
-    const organizerId = await getUserIdFromSession();
-    if (!organizerId) return { success: false, error: 'Not authenticated' };
+    const sessionUser = await getSessionUser();
+    if (!sessionUser) return { success: false, error: 'Not authenticated' };
 
     try {
         const collectionName = type === 'event' ? 'events' : 'tours';
         const listingDocRef = doc(db, collectionName, listingId);
         
         const docSnap = await getDoc(listingDocRef);
-        if(!docSnap.exists() || docSnap.data().organizerId !== organizerId) {
-            return { success: false, error: 'Permission denied.' };
+        if(!docSnap.exists() || docSnap.data().organizerId !== sessionUser.uid) {
+            // Allow admins to perform this action too
+            if (!['admin', 'super-admin'].includes(sessionUser.role)) {
+                return { success: false, error: 'Permission denied.' };
+            }
         }
 
         await updateDoc(listingDocRef, {
             status: status,
             updatedAt: serverTimestamp(),
+            lastUpdatedBy: sessionUser.uid
         });
         revalidatePath('/organizer/listings');
+        revalidatePath('/admin/events');
         return { success: true };
     } catch (error: any) {
         console.error("Error updating listing status:", error);
@@ -245,22 +261,12 @@ function serializeData(doc: any) {
 export async function getOrganizerGlobalStats() {
     noStore();
     
-    const sessionCookie = cookies().get('session')?.value;
-    if (!sessionCookie) {
+    const sessionUser = await getSessionUser();
+    if (!sessionUser) {
         return { success: false, error: 'Not authenticated. Please log in.' };
     }
-    const auth = await getAdminAuth();
 
-    let decodedClaims;
-    try {
-        if (!auth) throw new Error("Server auth not initialized");
-        decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
-    } catch (error) {
-        console.error("Error verifying session cookie in getOrganizerGlobalStats:", error);
-        return { success: false, error: 'Authentication failed. Please log in again.' };
-    }
-
-    const organizerId = decodedClaims.uid;
+    const organizerId = sessionUser.uid;
 
 
     try {
@@ -315,18 +321,10 @@ export async function getOrganizerGlobalStats() {
 export async function getOrganizerTourStats() {
     noStore();
     
-    const sessionCookie = cookies().get('session')?.value;
-    if (!sessionCookie) return { success: false, error: 'Not authenticated.' };
-    const auth = await getAdminAuth();
-
-    let decodedClaims;
-    try {
-        if (!auth) throw new Error("Server auth not initialized");
-        decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
-    } catch (error) {
-        return { success: false, error: 'Authentication failed.' };
-    }
-    const organizerId = decodedClaims.uid;
+    const sessionUser = await getSessionUser();
+    if (!sessionUser) return { success: false, error: 'Not authenticated.' };
+    
+    const organizerId = sessionUser.uid;
 
     try {
         const toursQuery = query(collection(db, 'tours'), where('organizerId', '==', organizerId), where('status', '==', 'published'));
@@ -383,18 +381,10 @@ interface AssignVerifierPayload {
 export async function assignVerifier(payload: AssignVerifierPayload) {
     const { username, eventId } = payload;
     
-    const sessionCookie = cookies().get('session')?.value;
-    if (!sessionCookie) return { success: false, error: 'Not authenticated' };
-    const auth = await getAdminAuth();
-
-    let decodedClaims;
-    try {
-        if (!auth) throw new Error("Server auth not initialized");
-        decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
-    } catch(e) {
-        return { success: false, error: 'Authentication failed. Please log in again.' };
-    }
-    const organizerId = decodedClaims.uid;
+    const sessionUser = await getSessionUser();
+    if (!sessionUser) return { success: false, error: 'Not authenticated' };
+    
+    const organizerId = sessionUser.uid;
 
     try {
         // 1. Check if organizer has permissions
@@ -439,3 +429,5 @@ export async function assignVerifier(payload: AssignVerifierPayload) {
         return { success: false, error: errorMessage };
     }
 }
+
+    

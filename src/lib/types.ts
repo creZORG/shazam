@@ -19,7 +19,7 @@ type GalleryImage = {
     imageHint: string;
 }
 
-type ListingStatus = 'draft' | 'submitted for review' | 'published' | 'rejected' | 'archived' | 'taken-down';
+type ListingStatus = 'draft' | 'submitted for review' | 'pending_admin_approval' | 'published' | 'rejected' | 'archived' | 'taken-down';
 
 export type TicketDefinition = {
     name: string;
@@ -72,6 +72,7 @@ export type Event = {
   homeTeam?: string;
   awayTeam?: string;
   league?: string;
+  lastUpdatedBy?: string; // Admin UID
 };
 
 export type Tour = {
@@ -104,6 +105,7 @@ export type Tour = {
   };
   type: 'tour';
   totalRevenue?: number;
+  lastUpdatedBy?: string; // Admin UID
 };
 
 export type NightlifeEvent = {
@@ -598,3 +600,5 @@ export type ShortLink = {
     trackingLinkId?: string;
     createdAt: any;
 }
+
+    
