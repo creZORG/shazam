@@ -260,19 +260,38 @@ interface CheckInEmailPayload {
 }
 
 export async function sendCheckInConfirmationEmail({ to, attendeeName, eventName, eventId, contactPhone }: CheckInEmailPayload) {
-    const archiveUrl = `${process.env.NEXT_PUBLIC_APP_URL}/archives/${eventId}?type=event`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://mov33.com';
+    const archiveUrl = `${appUrl}/archives/${eventId}?type=event`;
+    
     const emailHtml = `
-        <h1>Welcome to ${eventName}!</h1>
-        <p>Hi ${attendeeName},</p>
-        <p>You're officially checked in. We hope you have an amazing time!</p>
-        <br/>
-        <p><strong>Had a great time?</strong> After the event, you can share your experience by rating it. Your feedback is valuable to the organizer and other attendees.</p>
-        <p><strong>Notice anything unusual?</strong> If you encounter any issues or have a lost & found inquiry, please don't hesitate to contact our on-site support at <strong>${contactPhone || 'the information desk'}</strong>.</p>
-        <br/>
-        <p>Once the event is over, you can view photos in the event gallery, which will be available at:</p>
-        <p><a href="${archiveUrl}">${archiveUrl}</a></p>
-        <p>Enjoy the show!</p>
-        <p>Best regards,<br/>The Mov33 Team</p>
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px;">
+        <div style="background-color: #2a2a2a; color: white; padding: 20px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+            <h1>Welcome to ${eventName}!</h1>
+        </div>
+        <div style="padding: 20px 30px;">
+            <p>Hi ${attendeeName},</p>
+            <p>You're officially checked in. We hope you have an amazing time!</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+            <h3>Enjoying the Event?</h3>
+            <p>After the event, you can share your experience by rating it. Your feedback is valuable to the organizer and other attendees.</p>
+            <h3>Need Help On-site?</h3>
+            <p>
+                If you encounter any issues or have a lost & found inquiry, please don't hesitate to contact our on-site support.
+                ${contactPhone ? `You can reach them at: <strong><a href="tel:${contactPhone}">${contactPhone}</a></strong>.` : 'Please find a staff member at the information desk.'}
+            </p>
+             <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+            <h3>Event Gallery</h3>
+            <p>Once the event is over, you can view photos in the event gallery, which will be available at:</p>
+            <p style="text-align: center; margin: 20px 0;">
+                <a href="${archiveUrl}" style="display: inline-block; padding: 10px 20px; background-color: #E76F51; color: white; text-decoration: none; border-radius: 5px;">View Event Archive</a>
+            </p>
+            <p>Enjoy the show!</p>
+            <p>Best regards,<br/>The Mov33 Team</p>
+        </div>
+        <div style="background-color: #f8f8f8; padding: 15px; text-align: center; font-size: 12px; color: #777; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+            &copy; ${new Date().getFullYear()} Mov33. All rights reserved.
+        </div>
+      </div>
     `;
 
     return sendZeptoMail({
