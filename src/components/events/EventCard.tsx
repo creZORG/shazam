@@ -136,14 +136,14 @@ export function EventCard({ event }: EventCardProps) {
         if (prices.length > 0) {
             const minPrice = Math.min(...prices);
             return (
-              <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+              <span className="text-lg font-bold text-primary">
                   From Ksh {minPrice.toLocaleString()}
               </span>
             );
         }
     }
     return (
-      <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+      <span className="text-lg font-bold text-primary">
         Free
       </span>
     );

@@ -130,7 +130,7 @@ export function TourCard({ tour }: TourCardProps) {
           </div>
         </div>
         <div className="flex items-center justify-between mt-4">
-            <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+            <span className="text-lg font-bold text-primary">
               {`Ksh ${tour.price.toLocaleString()}`}
           </span>
             <div className="flex items-center text-sm font-medium text-muted-foreground">

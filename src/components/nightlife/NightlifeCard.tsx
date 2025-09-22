@@ -52,7 +52,7 @@ export function NightlifeCard({ event }: NightlifeCardProps) {
             </div>
           </div>
           <div className="flex items-center justify-between mt-4">
-             <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+             <span className="text-lg font-bold text-primary">
                 {event.entranceFee}
             </span>
             <div className="flex items-center text-sm font-medium text-pink-400">

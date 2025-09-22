@@ -24,7 +24,7 @@ const publicNavLinks = [
 ];
 
 const roleBasedLinks = [
-  { href: '/organizer', label: 'For Organizers', roles: ['organizer', 'admin', 'super-admin'] },
+  { href: '/organizer', label: 'For Organizers', roles: ['organizer', 'admin', 'super-admin', 'developer'] },
   { href: '/club', label: 'For Clubs', roles: ['club', 'admin', 'super-admin'] },
   { href: '/influencer', label: 'For Influencers', roles: ['influencer', 'admin', 'super-admin'] },
   { href: '/verify', label: 'Verification', icon: QrCode, roles: ['verifier', 'organizer', 'admin', 'super-admin'] },
@@ -59,7 +59,7 @@ export function Header() {
                 ? "text-lg p-3" 
                 : "text-sm font-medium px-3 py-1.5",
               isActive
-                ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground'
+                ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
             )}
           >
@@ -134,7 +134,7 @@ export function Header() {
                     <span>Profile</span>
                   </DropdownMenuItem>
                 </Link>
-                {dbUser && ['organizer', 'admin', 'super-admin'].includes(dbUser.role) && (
+                {dbUser && ['organizer', 'admin', 'super-admin', 'developer'].includes(dbUser.role) && (
                   <Link href="/organizer">
                     <DropdownMenuItem>
                       <LayoutDashboard className="mr-2 h-4 w-4" />

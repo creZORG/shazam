@@ -69,7 +69,7 @@ function HotListingCard({ listing, rank }: { listing: HotListing, rank: number }
                     <Image src={listing.imageUrl} alt={listing.name} fill className="object-cover transition-transform group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                      <div className="absolute top-2 right-2">
-                        <Badge variant="destructive" className="flex items-center gap-1 bg-gradient-to-r from-primary to-accent border-none text-white">
+                        <Badge variant="destructive" className="flex items-center gap-1 bg-primary border-none text-white">
                             <Award className="h-4 w-4" /> Top #{rank + 1}
                         </Badge>
                     </div>
@@ -82,7 +82,7 @@ function HotListingCard({ listing, rank }: { listing: HotListing, rank: number }
             <CardContent className="p-4 flex-grow flex flex-col justify-between">
                 <div className="flex justify-between items-center text-lg font-bold">
                     <p>Price</p>
-                    <p className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{renderPrice()}</p>
+                    <p className="text-primary">{renderPrice()}</p>
                 </div>
                 <Link href={isEvent ? `/events/${listing.slug || listing.id}` : `/tours/${listing.slug || listing.id}`} className="w-full mt-4">
                     <Button className="w-full">
@@ -135,7 +135,7 @@ export default async function Home() {
             <div className="container mx-auto px-4">
                  <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">What's Hot</span> Right Now
+                        <span className="text-primary">What's Hot</span> Right Now
                     </h2>
                     <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">Don't miss out on the most popular events and tours people are booking.</p>
                 </div>
@@ -194,7 +194,7 @@ export default async function Home() {
                 {partnerSection.description}
               </p>
               <Link href={partnerSection.href} className="mt-8 inline-block">
-                <Button size="lg" className="bg-gradient-to-r from-primary to-accent text-white shadow-lg">
+                <Button size="lg" className="shadow-lg">
                     <Briefcase className="mr-2"/>
                     {partnerSection.cta}
                 </Button>

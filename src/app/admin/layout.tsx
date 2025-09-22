@@ -69,7 +69,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <SidebarMenu>
           {adminNavLinks.map((link) => {
             const finalHref = link.href === '/admin/listings' ? '/admin/events' : link.href;
-            const isActive = pathname.startsWith(finalHref);
+            const isActive = pathname.startsWith(link.href);
 
              return (
              <SidebarMenuItem key={link.href}>

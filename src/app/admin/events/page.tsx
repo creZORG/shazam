@@ -24,13 +24,18 @@ import {
   FileText,
   Loader2,
   Settings,
+  ShieldCheck,
+  UserCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { Event } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 
 const statusConfig: Record<
   string,
@@ -58,6 +63,12 @@ const statusConfig: Record<
     className: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
     label: 'In Review',
     icon: Clock,
+  },
+    'pending_admin_approval': {
+    variant: 'secondary',
+    className: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+    label: 'Pending Admin Approval',
+    icon: UserCheck,
   },
   rejected: {
     variant: 'destructive',
@@ -99,11 +110,15 @@ function ActionButton({
   targetStatus,
   onActionComplete,
   children,
+  disabled = false,
+  tooltipContent,
 }: {
   eventId: string;
   targetStatus: 'published' | 'rejected' | 'taken-down' | 'archived';
   onActionComplete: () => void;
   children: React.ReactNode;
+  disabled?: boolean;
+  tooltipContent?: string;
 }) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -131,13 +146,13 @@ function ActionButton({
   if (targetStatus === 'published') variant = 'default';
   if (targetStatus === 'rejected') variant = 'destructive';
 
-  return (
+  const button = (
     <Button
       size="sm"
       variant={variant}
       className="w-full"
       onClick={handleAction}
-      disabled={isPending}
+      disabled={isPending || disabled}
     >
       {isPending ? (
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -146,30 +161,46 @@ function ActionButton({
       )}
     </Button>
   );
+
+  if (tooltipContent) {
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>{button}</TooltipTrigger>
+                <TooltipContent>
+                    <p>{tooltipContent}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
+  }
+
+  return button;
 }
 
 function ManageActions({
-  eventId,
-  status,
+  event,
   onActionComplete,
 }: {
-  eventId: string;
-  status: string;
+  event: Event & { id: string; status: string, lastUpdatedBy?: string };
   onActionComplete: () => void;
 }) {
-  switch (status) {
+  const { user } = useAuth();
+  const isSelfApprove = user?.uid === event.lastUpdatedBy;
+
+  switch (event.status) {
     case 'submitted for review':
       return (
         <div className="grid grid-cols-2 gap-2">
           <ActionButton
-            eventId={eventId}
+            eventId={event.id}
             targetStatus="published"
             onActionComplete={onActionComplete}
           >
             <Check className="mr-2 h-4 w-4" /> Approve
           </ActionButton>
           <ActionButton
-            eventId={eventId}
+            eventId={event.id}
             targetStatus="rejected"
             onActionComplete={onActionComplete}
           >
@@ -177,10 +208,31 @@ function ManageActions({
           </ActionButton>
         </div>
       );
+    case 'pending_admin_approval':
+         return (
+             <div className="grid grid-cols-2 gap-2">
+                 <ActionButton
+                    eventId={event.id}
+                    targetStatus="published"
+                    onActionComplete={onActionComplete}
+                    disabled={isSelfApprove}
+                    tooltipContent={isSelfApprove ? "Another admin must approve your changes." : undefined}
+                >
+                    <ShieldCheck className="mr-2 h-4 w-4" /> Approve
+                </ActionButton>
+                <ActionButton
+                    eventId={event.id}
+                    targetStatus="rejected"
+                    onActionComplete={onActionComplete}
+                >
+                    <X className="mr-2 h-4 w-4" /> Reject
+                </ActionButton>
+            </div>
+        );
     case 'published':
       return (
         <ActionButton
-          eventId={eventId}
+          eventId={event.id}
           targetStatus="taken-down"
           onActionComplete={onActionComplete}
         >
@@ -190,7 +242,7 @@ function ManageActions({
     case 'rejected':
       return (
         <ActionButton
-          eventId={eventId}
+          eventId={event.id}
           targetStatus="published"
           onActionComplete={onActionComplete}
         >
@@ -200,7 +252,7 @@ function ManageActions({
     case 'taken-down':
       return (
         <ActionButton
-          eventId={eventId}
+          eventId={event.id}
           targetStatus="published"
           onActionComplete={onActionComplete}
         >
@@ -210,7 +262,7 @@ function ManageActions({
     case 'archived':
       return (
         <ActionButton
-          eventId={eventId}
+          eventId={event.id}
           targetStatus="published"
           onActionComplete={onActionComplete}
         >
@@ -244,13 +296,12 @@ function EventCard({ event, onActionComplete }: { event: Event & { id: string; s
       </CardHeader>
       <CardContent className="flex-grow space-y-4">
         <ManageActions
-          eventId={event.id}
-          status={event.status || 'draft'}
+          event={event}
           onActionComplete={onActionComplete}
         />
       </CardContent>
       <CardFooter>
-         <Link href={`/admin/listings/${event.id}?type=event`} className="w-full">
+         <Link href={`/organizer/events/create?id=${event.id}&type=event`} className="w-full">
             <Button variant="outline" className="w-full">
                 <Settings className="mr-2" /> Manage
             </Button>
@@ -266,6 +317,7 @@ export default function AdminEventsPage() {
   >({
     all: [],
     review: [],
+    admin_approval: [],
     published: [],
     'taken-down': [],
     rejected: [],
@@ -282,11 +334,12 @@ export default function AdminEventsPage() {
         const sortedEvents = [...events].sort((a, b) => {
             const statusOrder: Record<string, number> = {
                 'submitted for review': 0,
-                'published': 1,
-                'taken-down': 2,
-                'rejected': 3,
-                'archived': 4,
-                'draft': 5,
+                'pending_admin_approval': 1,
+                'published': 2,
+                'taken-down': 3,
+                'rejected': 4,
+                'archived': 5,
+                'draft': 6,
             };
             return (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99);
         });
@@ -295,6 +348,9 @@ export default function AdminEventsPage() {
           all: sortedEvents,
           review: sortedEvents.filter(
             (e) => e.status === 'submitted for review'
+          ),
+          admin_approval: sortedEvents.filter(
+            (e) => e.status === 'pending_admin_approval'
           ),
           published: sortedEvents.filter((e) => e.status === 'published'),
           'taken-down': sortedEvents.filter((e) => e.status === 'taken-down'),
@@ -310,18 +366,15 @@ export default function AdminEventsPage() {
     fetchEvents();
   }, []);
 
-  const tabItems: {
-    value: string;
-    label: string;
-    icon: React.ElementType;
-  }[] = [
-    { value: 'review', label: 'In Review', icon: Clock },
-    { value: 'published', label: 'Published', icon: Check },
-    { value: 'taken-down', label: 'Taken Down', icon: EyeOff },
-    { value: 'rejected', label: 'Rejected', icon: X },
-    { value: 'archived', label: 'Archived', icon: Archive },
-    { value: 'all', label: 'All', icon: FileText },
-  ];
+  const tabItems = useMemo(() => [
+    { value: 'review', label: 'Organizer Submissions', icon: Clock, count: eventsByStatus.review.length },
+    { value: 'admin_approval', label: 'Admin Approval', icon: UserCheck, count: eventsByStatus.admin_approval.length },
+    { value: 'published', label: 'Published', icon: Check, count: eventsByStatus.published.length },
+    { value: 'taken-down', label: 'Taken Down', icon: EyeOff, count: eventsByStatus['taken-down'].length },
+    { value: 'rejected', label: 'Rejected', icon: X, count: eventsByStatus.rejected.length },
+    { value: 'archived', label: 'Archived', icon: Archive, count: eventsByStatus.archived.length },
+    { value: 'all', label: 'All', icon: FileText, count: eventsByStatus.all.length },
+  ], [eventsByStatus]);
 
   return (
     <div className="space-y-8">
@@ -346,7 +399,7 @@ export default function AdminEventsPage() {
                   value={tab.value}
                   className={cn(
                     'rounded-full px-3 py-1.5 flex items-center gap-2 transition-all duration-300',
-                    'data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm',
+                    'data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm',
                     'data-[state=inactive]:text-muted-foreground',
                     'sm:w-auto',
                     activeTab === tab.value
@@ -362,7 +415,7 @@ export default function AdminEventsPage() {
                       activeTab === tab.value ? 'max-w-xs' : 'max-w-0 sm:max-w-0'
                     )}
                   >
-                    {tab.label} ({eventsByStatus[tab.value]?.length || 0})
+                    {tab.label} ({tab.count || 0})
                   </span>
                 </TabsTrigger>
               ))}
