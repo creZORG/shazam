@@ -1,6 +1,5 @@
 
 
-
 'use client';
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -357,7 +356,7 @@ export default function AdminSettingsPage() {
                             <FormItem>
                                 <FormLabel>Ksh Spent per Loyalty Point</FormLabel>
                                 <FormControl><Input type="number" placeholder="e.g., 10" {...field} /></FormControl>
-                                <FormDescription>The amount a customer must spend (on platform fees) to earn one point.</FormDescription>
+                                <FormDescription>The total amount a customer must spend to earn one point.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}/>
@@ -424,3 +423,5 @@ export default function AdminSettingsPage() {
     </Form>
   );
 }
+
+    

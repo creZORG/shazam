@@ -107,8 +107,8 @@ export async function POST(request: Request, { params }: { params: { secret:stri
 
                     if (order.userId) {
                         const userRef = db.collection('users').doc(order.userId);
-                        // Award loyalty points based on platform fee
-                        const pointsToAward = Math.floor(order.platformFee / (settings.loyaltyPointRate || 10));
+                        // Award loyalty points based on total amount spent
+                        const pointsToAward = Math.floor(order.total / (settings.loyaltyPointRate || 10));
                         if(pointsToAward > 0) {
                            firestoreTransaction.update(userRef, { 
                                 totalPurchases: FieldValue.increment(order.total),
@@ -158,9 +158,8 @@ export async function POST(request: Request, { params }: { params: { secret:stri
                     firestoreTransaction.update(merchOrderRef, { status: 'awaiting_pickup' });
                      if (merchOrder.userId) {
                         const userRef = db.collection('users').doc(merchOrder.userId);
-                        // Award loyalty points based on an estimated platform fee
-                        const estimatedPlatformFee = merchOrder.total * (settings.platformFee / 100);
-                        const pointsToAward = Math.floor(estimatedPlatformFee / (settings.loyaltyPointRate || 10));
+                        // Award loyalty points based on total amount spent
+                        const pointsToAward = Math.floor(merchOrder.total / (settings.loyaltyPointRate || 10));
                          if (pointsToAward > 0) {
                             firestoreTransaction.update(userRef, {
                                 loyaltyPoints: FieldValue.increment(pointsToAward)
@@ -220,3 +219,5 @@ export async function POST(request: Request, { params }: { params: { secret:stri
         return NextResponse.json({ ResultCode: 1, ResultDesc: "Internal Server Error" }, { status: 500 });
     }
 }
+
+    
