@@ -3,6 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { getSiteContent } from "@/app/admin/content/actions";
 import { Phone, Mail, MapPin } from "lucide-react";
 import Link from "next/link";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Contact Us | Mov33',
+  description: 'Get in touch with the Mov33 team. Find our contact details or submit a support ticket for direct assistance.',
+};
 
 export default async function ContactPage() {
   const { data: content, error } = await getSiteContent();

@@ -17,7 +17,7 @@ const roles = [
     { 
         key: 'organizer',
         title: 'Become an Organizer',
-        description: 'Bring your events to life on NaksYetu.',
+        description: 'Bring your events to life on Mov33.',
         icon: Briefcase,
         features: [
             { text: 'Create and manage your own event pages.', icon: Briefcase },
@@ -139,7 +139,7 @@ export default function PartnerWithUsPage() {
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold tracking-tight">Partner with NaksYetu</h1>
+            <h1 className="text-4xl font-bold tracking-tight">Partner with Mov33</h1>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto mt-4">
                 Join our growing community of event organizers, influencers, and clubs. Choose the path that's right for you and start making an impact.
             </p>

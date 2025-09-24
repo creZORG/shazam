@@ -5,6 +5,13 @@ import { CheckCircle, Briefcase, Handshake, Users } from "lucide-react";
 import { getOpportunities } from "../admin/content/actions";
 import Link from "next/link";
 import type { Opportunity } from "@/lib/types";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Opportunities | Mov33',
+  description: 'Explore career, partnership, and volunteer opportunities with Mov33. Join our team and help shape the future of entertainment in Nakuru.',
+};
+
 
 function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
     const icons: Record<Opportunity['type'], React.ElementType> = {
@@ -44,7 +51,7 @@ export default async function OpportunitiesPage() {
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <div className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight mb-4">Partner with NaksYetu</h1>
+        <h1 className="text-4xl font-bold tracking-tight mb-4">Partner with Mov33</h1>
         <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
           We provide a comprehensive suite of services to make your event a success. Whether you're an organizer looking for skilled professionals or an individual looking for an opportunity, we have something for you.
         </p>

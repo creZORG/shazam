@@ -11,12 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Loader2, AlertCircle, CheckCircle, Mail, User as UserIcon, Info, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import type { Metadata } from 'next';
 
 const createAccountSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters."),

@@ -1,5 +1,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy | Mov33',
+  description: 'Read the Mov33 Privacy Policy to understand how we collect, use, and protect your personal information when you use our platform.',
+};
 
 export default function PrivacyPolicyPage() {
   return (
@@ -37,7 +43,6 @@ export default function PrivacyPolicyPage() {
                         <li>Monitor and analyze usage and trends to improve your experience with the Platform.</li>
                         <li>Provide and deliver the services you request, and send you related information, including confirmations and receipts.</li>
                         <li>Respond to your comments, questions, and requests and provide customer service.</li>
-                        <li>Notify you about changes to our services.</li>
                     </ul>
                 </section>
 

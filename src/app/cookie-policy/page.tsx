@@ -1,5 +1,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Cookie Policy | Mov33',
+  description: 'Learn how Mov33 uses cookies to provide essential functionality for authentication and a seamless user experience.',
+};
 
 export default function CookiePolicyPage() {
   return (

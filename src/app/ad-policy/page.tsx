@@ -1,5 +1,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Advertising Policy | Mov33',
+  description: 'Understand the rules and guidelines for advertising on the Mov33 platform, including prohibited content and ad quality standards.',
+};
 
 export default function AdPolicyPage() {
   return (

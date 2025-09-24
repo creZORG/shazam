@@ -10,8 +10,41 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 
 type Listing = Event | Tour;
+
+export async function generateMetadata({ params, searchParams }: { params: { id: string }, searchParams: { type: 'event' | 'tour' } }): Promise<Metadata> {
+  const { data: listingData } = await getListingById(searchParams.type || 'event', params.id);
+  const listing = listingData as Listing;
+
+  if (!listing) {
+    return {
+      title: 'Archive Not Found',
+    }
+  }
+  
+  const eventUrl = `https://mov33.com/archives/${listing.id}?type=${searchParams.type}`;
+
+  return {
+    title: `Archive: ${listing.name} | Mov33`,
+    description: `See the gallery and details from the past event: ${listing.name}. ${listing.description.substring(0, 100)}...`,
+    openGraph: {
+      title: `Archive: ${listing.name}`,
+      description: `Photos and memories from ${listing.name}.`,
+      url: eventUrl,
+      images: [
+        {
+          url: listing.imageUrl,
+          width: 1200,
+          height: 630,
+          alt: `Archive of ${listing.name}`,
+        },
+      ],
+      type: 'website',
+    },
+  }
+}
 
 export default async function ArchivePage({ params, searchParams }: { params: { id: string }, searchParams: { type: 'event' | 'tour' } }) {
   

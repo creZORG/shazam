@@ -11,6 +11,12 @@ import { format } from 'date-fns';
 import type { AdSubmission } from '@/lib/types';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import type { Metadata } from 'next';
+
+// export const metadata: Metadata = {
+//   title: 'Ad Dashboard | Mov33',
+//   description: 'Track the status and performance of your ad campaigns on Mov33.',
+// };
 
 const statusConfig: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className: string }> = {
     approved: { variant: 'default', className: 'bg-green-500/20 text-green-300 border-green-500/30' },

@@ -1,5 +1,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Refund Policy | Mov33',
+  description: 'Read the Mov33 Refund Policy. All sales are final, with exceptions only for event cancellations.',
+};
 
 export default function RefundPolicyPage() {
   return (

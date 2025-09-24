@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
@@ -25,6 +24,12 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import type { Metadata } from 'next';
+
+// export const metadata: Metadata = {
+//   title: 'Advertise on Mov33',
+//   description: 'Reach a targeted audience of event-goers in Nakuru. Promote your event or brand on our platform for maximum visibility.',
+// };
 
 const adOptions = [
     {
@@ -138,7 +143,7 @@ export default function AdvertisingPage() {
     <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-                Advertise on <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">NaksYetu</span>
+                Advertise on <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Mov33</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
                 Reach a targeted audience of event-goers in Nakuru. Our platform offers various advertising solutions to help you sell more tickets and grow your brand.
@@ -312,13 +317,13 @@ export default function AdvertisingPage() {
                                             className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2"
                                         >
                                             <Label htmlFor="audience-general" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
-                                                <RadioGroupItem value="false" id="audience-general" className="sr-only" />
+                                                <RadioGroupItem value="false" id="audience-general" className="peer sr-only" />
                                                 <Users className="mb-3 h-6 w-6" />
                                                 Safe for All Audiences
                                                 <FormDescription className="text-center mt-2">Will appear on the main Events page.</FormDescription>
                                             </Label>
                                             <Label htmlFor="audience-adult" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer">
-                                                <RadioGroupItem value="true" id="audience-adult" className="sr-only" />
+                                                <RadioGroupItem value="true" id="audience-adult" className="peer sr-only" />
                                                 <Shield className="mb-3 h-6 w-6" />
                                                 Adults Only
                                                 <FormDescription className="text-center mt-2">For nightlife, parties, and restricted content. Will appear on the Nightlife page.</FormDescription>

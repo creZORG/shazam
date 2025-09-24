@@ -15,6 +15,16 @@ import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import type { Metadata } from 'next';
+import Link from "next/link";
+
+// This page is a client component, so we can't export metadata directly.
+// We'd set this in a parent layout if we needed dynamic metadata based on auth state.
+// For now, a static title can be set in the root layout or here for documentation.
+// export const metadata: Metadata = {
+//   title: 'Login or Sign Up | Mov33',
+// };
+
 
 const signInSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),

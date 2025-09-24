@@ -3,6 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "About Mov33 | The Heart of Nakuru's Entertainment",
+  description: "Learn about Mov33's mission to connect people with unforgettable experiences across Nakuru, from concerts and tours to vibrant nightlife.",
+};
+
 
 export default function AboutPage() {
   return (

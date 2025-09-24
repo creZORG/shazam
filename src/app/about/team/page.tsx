@@ -3,6 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { getTeamMembers } from "@/app/admin/content/actions";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { TeamMember } from "@/lib/types";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Meet the Team | Mov33",
+  description: "Meet the passionate individuals behind Mov33, dedicated to bringing you the best of Nakuru's entertainment scene.",
+};
 
 function TeamMemberCard({ member }: { member: TeamMember }) {
     return (

@@ -1,5 +1,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service | Mov33',
+  description: 'Read the Mov33 Terms of Service to understand the rules and guidelines for using our platform for events, tours, and nightlife.',
+};
 
 export default function TermsOfServicePage() {
   return (

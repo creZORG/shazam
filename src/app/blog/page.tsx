@@ -4,6 +4,13 @@ import { getBlogPosts } from "@/app/admin/content/actions";
 import { format } from "date-fns";
 import type { BlogPost } from "@/lib/types";
 import { ExternalLink } from "@/components/layout/ExternalLink";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Blog | Mov33',
+  description: 'News, stories, and updates from the heart of Nakuru\'s entertainment scene.',
+};
+
 
 function BlogPostCard({ post }: { post: BlogPost }) {
     const hasExpired = post.expiresAt && new Date(post.expiresAt) < new Date();
@@ -41,7 +48,7 @@ export default async function BlogPage() {
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold tracking-tight">NaksYetu Blog</h1>
+        <h1 className="text-4xl font-bold tracking-tight">Mov33 Blog</h1>
         <p className="text-lg text-muted-foreground max-w-3xl mx-auto mt-2">
             News, stories, and updates from the heart of Nakuru's entertainment scene.
         </p>

@@ -133,7 +133,7 @@ function MerchCheckoutComponent() {
         stage={paymentStage}
         error={paymentError}
         orderPayload={{ total } as any} // Simplified for merch
-        listingName={product.name}
+        listing={null}
         orderId={orderId}
         retryCount={1} // Disable retry for now
         onRetry={() => {}} // No retry logic for now
@@ -199,7 +199,7 @@ function MerchCheckoutComponent() {
                       Pay Ksh {total.toLocaleString()}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center px-4">
-                      You will receive an order confirmation to present at NaksYetu events for pickup.
+                      You will receive an order confirmation to present at Mov33 events for pickup.
                   </p>
               </CardFooter>
             </Card>
