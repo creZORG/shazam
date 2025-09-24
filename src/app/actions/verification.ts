@@ -73,3 +73,52 @@ export async function isVerificationRequired() {
         return { required: false };
     }
 }
+
+/**
+ * Verifies a reCAPTCHA token with Google's servers.
+ * @param token The token received from the reCAPTCHA component on the client-side.
+ * @returns An object indicating if the verification was successful.
+ */
+export async function verifyRecaptcha(token: string | null): Promise<{ success: boolean; error?: string }> {
+  if (!token) {
+    return { success: false, error: "reCAPTCHA verification failed. Please try again." };
+  }
+
+  const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+  if (!secretKey) {
+    console.error("RECAPTCHA_SECRET_KEY is not set.");
+    // In production, this should be a hard failure. In dev, we might allow it to pass.
+    if (process.env.NODE_ENV === 'production') {
+      return { success: false, error: "Server configuration error." };
+    }
+    return { success: true }; 
+  }
+
+  const ip = headers().get('x-forwarded-for');
+  
+  const params = new URLSearchParams();
+  params.append('secret', secretKey);
+  params.append('response', token);
+  if (ip) {
+    params.append('remoteip', ip);
+  }
+
+  try {
+    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      body: params,
+    });
+    
+    const data = await response.json();
+
+    if (data.success) {
+      return { success: true };
+    } else {
+      console.warn("reCAPTCHA verification failed:", data['error-codes']);
+      return { success: false, error: "Failed to verify you are human." };
+    }
+  } catch (error) {
+    console.error("Error during reCAPTCHA verification request:", error);
+    return { success: false, error: "Could not contact reCAPTCHA service." };
+  }
+}
