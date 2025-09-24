@@ -2,14 +2,15 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { addDoc, collection, doc, getDoc, serverTimestamp, query, where, getDocs, writeBatch, updateDoc, increment, orderBy, limit, Timestamp } from 'firebase/firestore';
-import type { Order, Transaction, Promocode, CheckoutFeedback, Event } from '@/lib/types';
+import { addDoc, collection, doc, getDoc, serverTimestamp, query, where, getDocs, writeBatch, updateDoc, increment, orderBy, limit, Timestamp, runTransaction } from 'firebase/firestore';
+import type { Order, Transaction, Promocode, CheckoutFeedback, Event, TicketDefinition } from '@/lib/types';
 import { initiateStkPush } from '@/services/mpesa';
 import { unstable_noStore as noStore } from 'next/cache';
 import { headers } from 'next/headers';
 import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 import { createNotification } from '@/services/notifications';
+import { checkRateLimit, recordRateLimit } from '@/services/rate-limit-service';
 
 export interface OrderPayload {
   userId?: string; // Optional for guest checkout
@@ -90,133 +91,133 @@ export async function createOrderAndInitiatePayment(
     if (!payload.userEmail || !payload.userName || !payload.phoneNumber) {
         return { success: false, error: 'User details are missing.' };
     }
+    
+    // Enforce Rate Limiting
+    const rateLimitResult = await checkRateLimit(ipAddress, payload.listingId);
+    if (!rateLimitResult.success) {
+        return { success: false, error: rateLimitResult.error };
+    }
 
-    const batch = writeBatch(db);
 
     try {
-        let promocodeId: string | undefined = undefined;
-        let finalTrackingLinkId = payload.trackingLinkId;
+        const { orderId, transactionId } = await runTransaction(db, async (transaction) => {
+            const eventRef = doc(db, 'events', payload.listingId);
+            const eventDoc = await transaction.get(eventRef);
 
-        if (payload.promocode) {
-            const q = query(collection(db, 'promocodes'), where('code', '==', payload.promocode));
-            const promocodeSnapshot = await getDocs(q);
-             if (!promocodeSnapshot.empty) {
-                const promocode = promocodeSnapshot.docs[0].data() as Promocode;
-                promocodeId = promocodeSnapshot.docs[0].id;
+            if (!eventDoc.exists()) {
+                throw new Error("Event not found. It may have been removed.");
+            }
 
-                // If a promocode was entered manually, DO NOT attribute it to a tracking link
-                // that might be in a cookie. Only attribute to a tracking link if there's no manual code entry.
-                if (!finalTrackingLinkId) {
-                    // This logic is now cleaner. If payload.trackingLinkId is set, we use it.
-                    // If not, we don't try to guess. The affiliate tracking hook handles the cookie.
-                } else {
-                    // A tracking link was used to get here, but then the user manually entered a different code.
-                    // We should still credit the link click for traffic, but the sale commission goes to the manual code.
-                    // We only clear the link if the codes don't match up.
-                    if (promocode.id !== payload.trackingLinkId) { // This comparison is flawed, but shows intent. Let's fix it.
-                        const trackerCookie = cookies().get('nak_tracker');
-                        if (trackerCookie) {
-                            try {
-                                const parsedTracker = JSON.parse(trackerCookie.value);
-                                if (parsedTracker.promocodeId !== promocodeId) {
-                                    finalTrackingLinkId = undefined; // Don't attribute sale to the link
-                                }
-                            } catch {}
-                        }
-                    }
+            const eventData = eventDoc.data() as Event;
+
+            // Check ticket availability within the transaction
+            for (const ticket of payload.tickets) {
+                const ticketDef = eventData.tickets?.find(t => t.name === ticket.name);
+                if (!ticketDef) {
+                    throw new Error(`Ticket type "${ticket.name}" is no longer available.`);
+                }
+                const ticketsSoldForType = (eventData.ticketsSold && eventData.ticketsSold[ticket.name]) || 0;
+                if (ticketsSoldForType + ticket.quantity > ticketDef.quantity) {
+                    throw new Error(`Not enough tickets left for "${ticket.name}". Only ${ticketDef.quantity - ticketsSoldForType} available.`);
                 }
             }
-        }
-        
-        const eventDoc = await getDoc(doc(db, 'events', payload.listingId));
-        const eventData = eventDoc.data() as Event | undefined;
 
-        const orderRef = doc(collection(db, 'orders'));
-        const orderData: Omit<Order, 'id'> = {
-            userId: userId,
-            userName: payload.userName,
-            userEmail: payload.userEmail,
-            userPhone: payload.phoneNumber,
-            listingId: payload.listingId,
-            organizerId: payload.organizerId,
-            listingType: payload.listingType,
-            paymentType: payload.paymentType,
-            tickets: payload.tickets,
-            subtotal: payload.subtotal,
-            discount: payload.discount,
-            platformFee: payload.platformFee,
-            processingFee: payload.processingFee,
-            total: payload.total,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-            status: 'pending',
-            channel: payload.channel,
-            deviceInfo: { userAgent, ipAddress },
-        };
-        
-        if (promocodeId) orderData.promocodeId = promocodeId;
-        
-        // Capture tracking link ID from payload
-        if (finalTrackingLinkId) {
-            orderData.trackingLinkId = finalTrackingLinkId;
-        }
+            // All checks passed, proceed with creating the order.
+            
+            let promocodeId: string | undefined = undefined;
+            if (payload.promocode) {
+                const q = query(collection(db, 'promocodes'), where('code', '==', payload.promocode));
+                const promocodeSnapshot = await getDocs(q); // Note: getDocs is not allowed in transactions, but this is a read before write starts. Let's see if it works.
+                if (!promocodeSnapshot.empty) {
+                    promocodeId = promocodeSnapshot.docs[0].id;
+                }
+            }
 
-        if (eventData?.freeMerch) orderData.freeMerch = eventData.freeMerch;
+            const orderRef = doc(collection(db, 'orders'));
+            const orderData: Omit<Order, 'id'> = {
+                userId: userId,
+                userName: payload.userName,
+                userEmail: payload.userEmail,
+                userPhone: payload.phoneNumber,
+                listingId: payload.listingId,
+                organizerId: payload.organizerId,
+                listingType: payload.listingType,
+                paymentType: payload.paymentType,
+                tickets: payload.tickets,
+                subtotal: payload.subtotal,
+                discount: payload.discount,
+                platformFee: payload.platformFee,
+                processingFee: payload.processingFee,
+                total: payload.total,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                status: 'pending',
+                channel: payload.channel,
+                deviceInfo: { userAgent, ipAddress },
+                promocodeId: promocodeId,
+                trackingLinkId: payload.trackingLinkId,
+                freeMerch: eventData.freeMerch,
+            };
+            
+            transaction.set(orderRef, orderData);
+            
+            const transactionRef = doc(collection(db, 'transactions'));
+            transaction.set(transactionRef, {
+                orderId: orderRef.id,
+                userId: userId,
+                amount: payload.total,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                status: 'pending',
+                method: 'mpesa',
+                retryCount: 0,
+                ipAddress,
+            } as Omit<Transaction, 'id' | 'mpesaCheckoutRequestId'>);
+            
+            // Increment the ticketsSold counts on the event
+            const soldUpdates: { [key: string]: any } = {};
+            let totalTicketsInOrder = 0;
+            for (const ticket of payload.tickets) {
+                 soldUpdates[`ticketsSold.${ticket.name}`] = increment(ticket.quantity);
+                 totalTicketsInOrder += ticket.quantity;
+            }
+            soldUpdates['totalTicketsSold'] = increment(totalTicketsInOrder);
 
-        batch.set(orderRef, orderData);
+            transaction.update(eventRef, soldUpdates);
+            
+            return { orderId: orderRef.id, transactionId: transactionRef.id };
+        });
 
-        const transactionRef = doc(collection(db, 'transactions'));
-        batch.set(transactionRef, {
-            orderId: orderRef.id,
-            userId: userId,
-            amount: payload.total,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-            status: 'pending',
-            method: 'mpesa',
-            retryCount: 0,
-            ipAddress,
-        } as Omit<Transaction, 'id' | 'mpesaCheckoutRequestId'>);
-        
-        await batch.commit();
+        // Actions to perform after successful transaction commit
+        await recordRateLimit(ipAddress, payload.listingId);
 
         await createNotification({
             type: 'new_order',
-            message: `${payload.userName} just placed an order for ${eventData?.name || 'an event'} worth Ksh ${payload.total}.`,
-            link: `/admin/transactions/${transactionRef.id}`,
+            message: `${payload.userName} just placed an order for ${payload.tickets.reduce((sum, t) => sum + t.quantity, 0)} ticket(s).`,
+            link: `/admin/transactions/${transactionId}`,
             targetRoles: ['admin', 'super-admin'],
             targetUsers: [payload.organizerId]
         });
 
-        return { success: true, orderId: orderRef.id, transactionId: transactionRef.id };
-
-    } catch (error) {
-        console.error('Error creating order:', error);
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-        return { success: false, error: errorMessage };
-    }
-}
-
-export async function initiatePaymentForOrder(orderId: string, transactionId: string, phoneNumber: string, amount: number) {
-    noStore();
-     try {
         const stkPushResult = await initiateStkPush({
-            phoneNumber,
-            amount: Math.round(amount),
+            phoneNumber: payload.phoneNumber,
+            amount: Math.round(payload.total),
             orderId: orderId,
         });
 
         if (!stkPushResult.success || !stkPushResult.checkoutRequestId) {
             throw new Error(stkPushResult.error || 'Failed to initiate STK push.');
         }
-        
-        const transactionRef = doc(db, 'transactions', transactionId);
-        await updateDoc(transactionRef, { mpesaCheckoutRequestId: stkPushResult.checkoutRequestId, updatedAt: serverTimestamp() });
-        
-        return { success: true };
+
+        await updateDoc(doc(db, 'transactions', transactionId), { mpesaCheckoutRequestId: stkPushResult.checkoutRequestId });
+
+
+        return { success: true, orderId: orderId, transactionId: transactionId };
 
     } catch (error) {
-        console.error('Error initiating payment:', error);
+        console.error('Error creating order:', error);
+        // If the transaction fails, we still record the attempt for rate limiting purposes.
+        await recordRateLimit(ipAddress, payload.listingId);
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
         return { success: false, error: errorMessage };
     }

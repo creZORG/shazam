@@ -55,6 +55,8 @@ export type Event = {
   organizerId?: string;
   gallery?: string[];
   tickets?: TicketDefinition[];
+  ticketsSold?: { [ticketName: string]: number };
+  totalTicketsSold?: number;
   slug?: string;
   organizerName?: string;
   status?: ListingStatus;
@@ -605,3 +607,9 @@ export type ShortLink = {
     createdAt: any;
 }
 
+export type RateLimit = {
+    id?: string;
+    key: string; // e.g., `${ip}_${eventId}`
+    count: number;
+    expiresAt: any;
+}
