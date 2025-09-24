@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { getFinancialReport, getEventPerformanceReport, getUserReport } from "./actions";
+import { getFinancialReport, getEventPerformanceReport, getUserReport, getLostAndFoundReport } from "./actions";
 
 function downloadCSV(data: any[], filename: string) {
     if (data.length === 0) return;
@@ -37,7 +37,7 @@ function downloadCSV(data: any[], filename: string) {
 export default function AdminReportsPage() {
     const [loadingReport, setLoadingReport] = useState<string | null>(null);
 
-    const handleGenerate = async (reportType: 'financial' | 'events' | 'users') => {
+    const handleGenerate = async (reportType: 'financial' | 'events' | 'users' | 'lost_and_found') => {
         setLoadingReport(reportType);
         let result;
         let filename = `${reportType}_report_${new Date().toISOString().split('T')[0]}.csv`;
@@ -52,6 +52,9 @@ export default function AdminReportsPage() {
                     break;
                 case 'users':
                     result = await getUserReport();
+                    break;
+                case 'lost_and_found':
+                    result = await getLostAndFoundReport();
                     break;
             }
 
@@ -71,6 +74,7 @@ export default function AdminReportsPage() {
     { type: 'financial', title: 'Financial Report', description: 'Download a CSV of all completed orders, including amounts, fees, and user details.' },
     { type: 'events', title: 'Event Performance Report', description: 'Get a summary of each event, including total revenue and tickets sold.' },
     { type: 'users', title: 'User List', description: 'Export a complete list of all registered users with their roles and join dates.' },
+    { type: 'lost_and_found', title: 'Lost & Found Report', description: 'Download an aggregated report of all items reported as lost and found via support tickets.' },
   ];
 
   return (

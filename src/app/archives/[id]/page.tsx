@@ -1,6 +1,8 @@
 
+'use client';
+
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
+import { notFound, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { Camera, MapPin, Calendar, User, Star } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,54 +13,64 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { useEffect, useState } from 'react';
+import { EventRating } from '@/app/events/[id]/_components/EventRating';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 type Listing = Event | Tour;
 
-export async function generateMetadata({ params, searchParams }: { params: { id: string }, searchParams: { type: 'event' | 'tour' } }): Promise<Metadata> {
-  const { data: listingData } = await getListingById(searchParams.type || 'event', params.id);
-  const listing = listingData as Listing;
+export default function ArchivePage() {
+  const params = useSearchParams();
+  const eventId = params.get('id');
+  const eventType = params.get('type') || 'event';
+  const tab = params.get('tab') || 'gallery';
 
-  if (!listing) {
-    return {
-      title: 'Archive Not Found',
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [organizer, setOrganizer] = useState<Organizer | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+        if (!eventId) {
+            notFound();
+            return;
+        }
+
+      setLoading(true);
+      const { data: listingData, error } = await getListingById(eventType as 'event' | 'tour', eventId);
+      
+      if (error || !listingData) {
+        notFound();
+      }
+      
+      const currentListing = listingData as Listing;
+      setListing(currentListing);
+
+      if (currentListing.organizerId) {
+          const organizerData = await getOrganizerById(currentListing.organizerId);
+          setOrganizer(organizerData);
+      }
+
+      setLoading(false);
     }
-  }
-  
-  const eventUrl = `https://mov33.com/archives/${listing.id}?type=${searchParams.type}`;
+    fetchData();
+  }, [eventId, eventType]);
 
-  return {
-    title: `Archive: ${listing.name} | Mov33`,
-    description: `See the gallery and details from the past event: ${listing.name}. ${listing.description.substring(0, 100)}...`,
-    openGraph: {
-      title: `Archive: ${listing.name}`,
-      description: `Photos and memories from ${listing.name}.`,
-      url: eventUrl,
-      images: [
-        {
-          url: listing.imageUrl,
-          width: 1200,
-          height: 630,
-          alt: `Archive of ${listing.name}`,
-        },
-      ],
-      type: 'website',
-    },
-  }
-}
 
-export default async function ArchivePage({ params, searchParams }: { params: { id: string }, searchParams: { type: 'event' | 'tour' } }) {
-  
-  const { data: listingData, error } = await getListingById(searchParams.type || 'event', params.id);
-  
-  if (error || !listingData) {
-    notFound();
-  }
-  
-  const listing = listingData as Listing;
-  const organizerId = listing.organizerId;
-  let organizer: Organizer | null = null;
-  if(organizerId) {
-      organizer = await getOrganizerById(organizerId);
+  if (loading || !listing) {
+    return (
+        <div className="container mx-auto px-4 py-8 md:py-12">
+            <Skeleton className="h-[50vh] w-full" />
+            <div className="max-w-4xl mx-auto -mt-24 relative z-20">
+                <Skeleton className="h-48 w-full rounded-xl" />
+            </div>
+             <div className="container mx-auto max-w-5xl px-4 py-12">
+                <Skeleton className="h-96 w-full" />
+             </div>
+        </div>
+    );
   }
 
   const isEvent = 'venue' in listing;
@@ -107,46 +119,56 @@ export default async function ArchivePage({ params, searchParams }: { params: { 
             </div>
         </div>
 
-        {/* Gallery Section */}
+        {/* Gallery & Rating Section */}
         <div className="container mx-auto max-w-5xl px-4 py-12">
-            <h2 className="text-3xl font-bold text-center mb-8">See How It Went</h2>
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Camera /> Event Gallery</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {listing.gallery && listing.gallery.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {listing.gallery?.map((imgUrl, index) => (
-                        <Dialog key={index}>
-                            <DialogTrigger asChild>
-                            <div className="relative aspect-square rounded-lg overflow-hidden cursor-pointer group">
-                                <Image src={imgUrl} alt={`${listing.name} gallery image ${index + 1}`} fill className="object-cover transition-transform group-hover:scale-110" />
-                            </div>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-4xl h-[90vh]">
-                            <Carousel className="w-full h-full" opts={{startIndex: index}}>
-                                <CarouselContent className="h-full">
-                                    {listing.gallery?.map((url, i) => (
-                                        <CarouselItem key={i} className="h-full">
-                                            <div className="relative h-full">
-                                                <Image src={url} alt={`${listing.name} gallery image ${i + 1}`} fill className="object-contain" />
-                                            </div>
-                                        </CarouselItem>
-                                    ))}
-                                </CarouselContent>
-                                <CarouselPrevious />
-                                <CarouselNext />
-                            </Carousel>
-                            </DialogContent>
-                        </Dialog>
-                        ))}
-                        </div>
-                    ) : (
-                        <p className="text-muted-foreground text-center py-8">The organizer has not uploaded any gallery images for this event yet.</p>
-                    )}
-                </CardContent>
-            </Card>
+             <Tabs defaultValue={tab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="gallery">Gallery</TabsTrigger>
+                    <TabsTrigger value="rating">Rate Event</TabsTrigger>
+                </TabsList>
+                <TabsContent value="gallery" className="mt-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><Camera /> Event Gallery</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {listing.gallery && listing.gallery.length > 0 ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {listing.gallery?.map((imgUrl, index) => (
+                                <Dialog key={index}>
+                                    <DialogTrigger asChild>
+                                    <div className="relative aspect-square rounded-lg overflow-hidden cursor-pointer group">
+                                        <Image src={imgUrl} alt={`${listing.name} gallery image ${index + 1}`} fill className="object-cover transition-transform group-hover:scale-110" />
+                                    </div>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-4xl h-[90vh]">
+                                    <Carousel className="w-full h-full" opts={{startIndex: index}}>
+                                        <CarouselContent className="h-full">
+                                            {listing.gallery?.map((url, i) => (
+                                                <CarouselItem key={i} className="h-full">
+                                                    <div className="relative h-full">
+                                                        <Image src={url} alt={`${listing.name} gallery image ${i + 1}`} fill className="object-contain" />
+                                                    </div>
+                                                </CarouselItem>
+                                            ))}
+                                        </CarouselContent>
+                                        <CarouselPrevious />
+                                        <CarouselNext />
+                                    </Carousel>
+                                    </DialogContent>
+                                </Dialog>
+                                ))}
+                                </div>
+                            ) : (
+                                <p className="text-muted-foreground text-center py-8">The organizer has not uploaded any gallery images for this event yet.</p>
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="rating" className="mt-6">
+                     {isEvent && <EventRating event={listing as Event} />}
+                </TabsContent>
+            </Tabs>
         </div>
     </div>
   )

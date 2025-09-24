@@ -2,8 +2,8 @@
 'use server';
 
 import { db } from '@/lib/firebase/config';
-import { collection, query, where, getDocs, Timestamp, orderBy } from 'firebase/firestore';
-import type { Order, Event, FirebaseUser } from '@/lib/types';
+import { collection, query, where, getDocs, Timestamp, orderBy, getCountFromServer } from 'firebase/firestore';
+import type { Order, Event, FirebaseUser, SupportTicket } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 
 function serializeData(doc: any) {
@@ -83,6 +83,21 @@ export async function getUserReport() {
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(serializeData);
         return { success: true, data };
+    } catch (e: any) {
+        return { success: false, error: e.message };
+    }
+}
+
+
+export async function getLostAndFoundReport() {
+    noStore();
+    try {
+        const q = query(collection(db, 'supportTickets'), where('subject', '==', 'Lost & Found'));
+        const snapshot = await getCountFromServer(q);
+        const count = snapshot.data().count;
+        // In a real scenario, we would generate a more detailed report.
+        // For this, we're just returning the count. A CSV could be generated here.
+        return { success: true, data: [{ total_items_reported: count }] };
     } catch (e: any) {
         return { success: false, error: e.message };
     }
