@@ -2,9 +2,9 @@
 'use client';
 
 import Image from 'next/image';
-import { notFound, useSearchParams } from 'next/navigation';
+import { notFound, useParams, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
-import { Camera, MapPin, Calendar, User, Star } from 'lucide-react';
+import { Camera, MapPin, Calendar, Star } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getListingById, getOrganizerById } from '@/app/actions';
 import type { Event, Tour, Organizer } from '@/lib/types';
@@ -12,20 +12,19 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
-import type { Metadata } from 'next';
 import { useEffect, useState } from 'react';
 import { EventRating } from '@/app/events/[id]/_components/EventRating';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 
-
 type Listing = Event | Tour;
 
 export default function ArchivePage() {
-  const params = useSearchParams();
-  const eventId = params.get('id');
-  const eventType = params.get('type') || 'event';
-  const tab = params.get('tab') || 'gallery';
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const eventId = params.id as string;
+  const eventType = searchParams.get('type') || 'event';
+  const tab = searchParams.get('tab') || 'gallery';
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [organizer, setOrganizer] = useState<Organizer | null>(null);
@@ -43,6 +42,7 @@ export default function ArchivePage() {
       
       if (error || !listingData) {
         notFound();
+        return;
       }
       
       const currentListing = listingData as Listing;
