@@ -90,6 +90,9 @@ export async function createMerchOrder(payload: MerchOrderPayload) {
             // Link transaction to merch order
             transaction.update(orderRef, { transactionId: transactionRef.id });
 
+            // Decrement the stock within the transaction
+            transaction.update(productRef, { stock: product.stock - requestedQuantity });
+
             return { orderId: orderRef.id, transactionId: transactionRef.id };
         });
 
