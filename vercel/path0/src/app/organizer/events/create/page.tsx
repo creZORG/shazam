@@ -745,4 +745,3 @@ export default function CreateListingPage() {
         </React.Suspense>
     )
 }
-
