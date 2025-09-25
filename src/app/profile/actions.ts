@@ -21,8 +21,9 @@ import {
 } from 'firebase/firestore';
 import { cookies } from 'next/headers';
 import { getAdminAuth } from '@/lib/firebase/server-auth';
-import type { FirebaseUser, Ticket, Event, UserEvent, Order, Tour } from '@/lib/types';
+import type { FirebaseUser, Ticket, Event, UserEvent, Order, Tour, RatingToken, Rating } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
+import { randomBytes } from 'crypto';
 
 async function getUserIdFromSession(): Promise<string | null> {
     const sessionCookie = cookies().get('session')?.value;

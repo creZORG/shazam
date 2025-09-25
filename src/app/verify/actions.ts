@@ -1,16 +1,16 @@
 
-
 'use server';
 
 import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, getDoc, doc, Timestamp, orderBy, addDoc, serverTimestamp, writeBatch, documentId, updateDoc } from 'firebase/firestore';
-import type { Order, Ticket, Event, Tour, FirebaseUser, TicketDefinition, SiteSettings } from '@/lib/types';
+import type { Order, Ticket, Event, Tour, FirebaseUser, TicketDefinition, SiteSettings, RatingToken } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
 import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { sendCheckInConfirmationEmail } from '@/services/email';
 import { getSettings } from '@/app/admin/settings/actions';
+import { randomBytes } from 'crypto';
 
 export async function validateTicket(
   ticketId: string,
@@ -96,9 +96,14 @@ export async function validateTicket(
       getDoc(orderRef)
     ]);
 
-    const eventName = eventSnap.exists() ? (eventSnap.data() as Event).name : 'Unknown Event';
+    const eventData = eventSnap.data() as Event;
+    const eventName = eventData.name;
     const attendeeName = ticket.userName;
     const ticketType = ticket.ticketType;
+    
+    // Create a unique rating token
+    const ratingToken = randomBytes(20).toString('hex');
+    const ratingTokenRef = doc(db, 'ratingTokens', ratingToken);
     
     // Perform the update and log history
     const batch = writeBatch(db);
@@ -117,6 +122,20 @@ export async function validateTicket(
         details: { eventName, attendeeName, ticketType },
         timestamp: serverTimestamp()
     });
+
+    // Create the rating token document
+    const ratingTokenPayload: RatingToken = {
+        listingId: ticket.listingId,
+        listingType: 'event', // Assuming only events are verifiable for now
+        organizerId: eventData.organizerId || '',
+        userId: ticket.userId,
+        orderId: ticket.orderId,
+        used: false,
+        createdAt: serverTimestamp(),
+        expiresAt: Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)), // Expires in 7 days
+    };
+    batch.set(ratingTokenRef, ratingTokenPayload);
+
     await batch.commit();
     
     revalidatePath(`/verify/scan/${currentEventId}`);
@@ -130,7 +149,8 @@ export async function validateTicket(
             attendeeName: orderData.userName,
             eventName: eventName,
             eventId: ticket.listingId,
-            contactPhone: siteSettings?.contact?.phone
+            contactPhone: siteSettings?.contact?.phone,
+            ratingToken: ratingToken,
         });
     }
 

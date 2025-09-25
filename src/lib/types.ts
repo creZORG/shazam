@@ -110,6 +110,10 @@ export type Tour = {
   type: 'tour';
   totalRevenue?: number;
   lastUpdatedBy?: string; // Admin UID
+  rating?: {
+    average: number;
+    count: number;
+  };
 };
 
 export type NightlifeEvent = {
@@ -358,6 +362,12 @@ export type SiteSettings = {
     homepage?: {
       featureCards?: FeatureCardContent[];
       partnerSection?: PartnerSectionContent;
+    };
+    contact?: {
+        phone?: string;
+        email?: string;
+        location?: string;
+        mapsLink?: string;
     };
 }
     
@@ -613,3 +623,24 @@ export type RateLimit = {
     count: number;
     expiresAt: any;
 }
+
+export type RatingToken = {
+    listingId: string;
+    listingType: 'event' | 'tour';
+    organizerId: string;
+    userId?: string;
+    orderId: string;
+    used: boolean;
+    createdAt: any;
+    expiresAt: any;
+};
+
+export type Rating = {
+    listingId: string;
+    organizerId: string;
+    rating: number;
+    comment: string | null;
+    imageUrls: string[];
+    createdAt: any;
+    userId: string; // Can be 'anonymous'
+};

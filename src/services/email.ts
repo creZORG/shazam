@@ -1,5 +1,4 @@
 
-
 'use server';
 
 interface ZeptoMailPayload {
@@ -249,4 +248,57 @@ export async function sendTicketStatusUpdateEmail({ to, attendeeName, eventName,
         subject,
         htmlbody: emailHtml,
     });
+}
+
+interface CheckInConfirmationPayload {
+  to: string;
+  attendeeName: string;
+  eventName: string;
+  eventId: string;
+  contactPhone?: string | null;
+  ratingToken: string;
+}
+
+export async function sendCheckInConfirmationEmail(payload: CheckInConfirmationPayload) {
+  const { to, attendeeName, eventName, eventId, contactPhone, ratingToken } = payload;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://mov33.com";
+  const ratingUrl = `${appUrl}/rate/${ratingToken}`;
+  const archiveUrl = `${appUrl}/archives/${eventId}?type=event`;
+  
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px;">
+        <div style="background-color: #2a2a2a; color: white; padding: 20px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+            <h1>Welcome to ${eventName}!</h1>
+        </div>
+        <div style="padding: 20px 30px;">
+            <p>Hi ${attendeeName},</p>
+            <p>You're officially checked in. We hope you have an amazing time!</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+            <h3>Need Help On-site?</h3>
+            <p>
+                If you encounter any issues or have a lost & found inquiry, please don't hesitate to contact our on-site support.
+                ${contactPhone ? `You can reach them at: <strong><a href="tel:${contactPhone}">${contactPhone}</a></strong>.` : 'Please find a member of staff for assistance.'}
+            </p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+            <h3>How was your experience?</h3>
+            <p>After the event, we'd love to hear your feedback. Your rating helps our community and the organizers.</p>
+            <p style="text-align: center; margin: 20px 0;">
+                <a href="${ratingUrl}" style="display: inline-block; padding: 10px 20px; background-color: #E76F51; color: white; text-decoration: none; border-radius: 5px;">Rate This Event</a>
+            </p>
+            <p>You can also view the event's archive page for photos and updates later at: <a href="${archiveUrl}">${archiveUrl}</a></p>
+            <p>Enjoy the show!</p>
+            <p>Best regards,<br/>The Mov33 Team</p>
+        </div>
+        <div style="background-color: #f8f8f8; padding: 15px; text-align: center; font-size: 12px; color: #777; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+            &copy; ${new Date().getFullYear()} Mov33. All rights reserved.
+        </div>
+    </div>
+  `;
+
+  return sendZeptoMail({
+    from: { address: "noreply@kihumba.com", name: "Mov33" },
+    to: [{ email_address: { address: to, name: attendeeName } }],
+    subject: `You're checked in at ${eventName}!`,
+    htmlbody: emailHtml,
+  });
 }

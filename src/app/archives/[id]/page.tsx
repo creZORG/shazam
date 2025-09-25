@@ -13,7 +13,6 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { EventRating } from '@/app/events/[id]/_components/EventRating';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -124,7 +123,7 @@ export default function ArchivePage() {
              <Tabs defaultValue={tab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="gallery">Gallery</TabsTrigger>
-                    <TabsTrigger value="rating">Rate Event</TabsTrigger>
+                    <TabsTrigger value="rating">Reviews</TabsTrigger>
                 </TabsList>
                 <TabsContent value="gallery" className="mt-6">
                     <Card>
@@ -166,7 +165,7 @@ export default function ArchivePage() {
                     </Card>
                 </TabsContent>
                 <TabsContent value="rating" className="mt-6">
-                     {isEvent && <EventRating event={listing as Event} />}
+                     <p className="text-center text-muted-foreground py-8">Attendees will be sent a link to rate this event after it concludes.</p>
                 </TabsContent>
             </Tabs>
         </div>
