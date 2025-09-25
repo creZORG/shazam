@@ -199,7 +199,7 @@ export async function generateManualTicketForAdmin(
         batch.set(orderRef, {
             userId: admin.uid,
             userName: 'Gate Sale (Admin)',
-            userEmail: 'admin@naksyetu.com',
+            userEmail: 'admin@mov33.com',
             userPhone: 'N/A',
             listingId: eventId,
             organizerId: eventData.organizerId,

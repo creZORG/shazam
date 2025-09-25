@@ -5,13 +5,14 @@ import { db } from '@/lib/firebase/config';
 import { collection, query, where, getDocs, Timestamp, orderBy } from 'firebase/firestore';
 import type { AdSubmission } from '@/lib/types';
 import { unstable_noStore as noStore } from 'next/cache';
-import { auth } from '@/lib/firebase/server-auth';
+import { getAdminAuth } from '@/lib/firebase/server-auth';
 import { cookies } from 'next/headers';
 
 export async function getMyAdSubmissions(): Promise<{ success: boolean; data?: AdSubmission[]; error?: string; }> {
     noStore();
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated.' };
+    const auth = await getAdminAuth();
 
     let userId;
     try {

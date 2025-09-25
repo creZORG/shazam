@@ -12,7 +12,7 @@ import { createNotification } from '@/services/notifications';
 export async function submitAdForReview(data: Omit<AdSubmission, 'id' | 'userId' | 'status' | 'createdAt'>) {
     const sessionCookie = cookies().get('session')?.value;
     if (!sessionCookie) return { success: false, error: 'Not authenticated. Please log in to submit an ad.' };
-
+    
     let decodedClaims;
     try {
         const auth = await getAdminAuth();
