@@ -55,9 +55,9 @@ import { cn } from '@/lib/utils';
 import { saveEvent, saveTour, getListingById } from '@/app/organizer/actions';
 import { useAuth } from '@/hooks/use-auth';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { uploadImage } from '@/app/organizer/events/create/cloudinary-actions';
+import { uploadImage } from './cloudinary-actions';
 import { Progress } from '@/components/ui/progress';
-import { getProductsForSelect } from '@/app/organizer/events/create/actions';
+import { getProductsForSelect } from './actions';
 import type { Product } from '@/lib/types';
 import { CheckCircle } from 'lucide-react';
 
@@ -344,7 +344,6 @@ const EventCreationWizard = () => {
             }
         }
         return true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [form, step, stepFields, form.watch()]); // Added form.watch() to re-evaluate on every form change
 
 

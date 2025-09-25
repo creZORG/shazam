@@ -302,3 +302,33 @@ export async function sendCheckInConfirmationEmail(payload: CheckInConfirmationP
     htmlbody: emailHtml,
   });
 }
+
+interface PaymentFailedPayload {
+  to: string;
+  name: string;
+  orderId: string;
+}
+
+export async function sendPaymentFailedEmail({ to, name, orderId }: PaymentFailedPayload) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://mov33.com";
+  const supportUrl = `${appUrl}/support`;
+  const emailHtml = `
+    <h1>There was an issue with your payment</h1>
+    <p>Hi ${name},</p>
+    <p>We're sorry, but we were unable to process the payment for your recent order (ID: ${orderId}). This could be due to a number of reasons, such as insufficient funds or a timeout from M-Pesa.</p>
+    <p>Your tickets have not been issued for this order.</p>
+    <p>If you believe this is in error, or if you need assistance completing your purchase, please don't hesitate to contact our support team. As a token of our apology for the inconvenience, you may be eligible for a discount on your next purchase.</p>
+     <p style="text-align: center; margin: 30px 0;">
+      <a href="${supportUrl}" style="display: inline-block; padding: 12px 24px; background-color: #E76F51; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Contact Support</a>
+    </p>
+    <p>We apologize for any inconvenience this may have caused.</p>
+    <p>Sincerely,<br/>The Mov33 Team</p>
+  `;
+
+  return sendZeptoMail({
+      from: { address: "support@kihumba.com", name: "Mov33 Support" },
+      to: [{ email_address: { address: to, name: name } }],
+      subject: `Issue with your Mov33 Order #${orderId.substring(0, 6)}`,
+      htmlbody: emailHtml,
+  });
+}

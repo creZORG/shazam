@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/server-config';
 import { FieldValue } from 'firebase-admin/firestore';
 import type { Order, Ticket, Transaction, Event, Tour, MerchOrder, Product, SiteSettings } from '@/lib/types';
-import { sendTicketEmail } from '@/services/email';
+import { sendTicketEmail, sendPaymentFailedEmail } from '@/services/email';
 
 export async function POST(request: Request, { params }: { params: { secret:string } }) {
     console.log("--- M-PESA CALLBACK ENDPOINT HIT ---");
@@ -59,6 +59,8 @@ export async function POST(request: Request, { params }: { params: { secret:stri
         const orderRef = db.collection('orders').doc(transaction.orderId);
         const merchOrderRef = db.collection('merchOrders').doc(transaction.orderId);
         const settingsRef = db.collection('config').doc('settings');
+        let orderDataForEmail: Order | null = null;
+
 
         await db.runTransaction(async (firestoreTransaction) => {
             // --- READ PHASE ---
@@ -172,6 +174,7 @@ export async function POST(request: Request, { params }: { params: { secret:stri
                 console.warn(`Payment failed for ${checkoutRequestId}. ResultCode: ${resultCode}. Reason: ${resultDesc}`);
                 if (orderDoc.exists) {
                      firestoreTransaction.update(orderRef, { status: 'failed', updatedAt: FieldValue.serverTimestamp() });
+                     orderDataForEmail = orderDoc.data() as Order;
                 } else if (merchOrderDoc.exists) {
                     firestoreTransaction.update(merchOrderRef, { status: 'failed', updatedAt: FieldValue.serverTimestamp() });
                 }
@@ -188,7 +191,7 @@ export async function POST(request: Request, { params }: { params: { secret:stri
         // POST-TRANSACTION ACTIONS (e.g., sending emails)
         if (resultCode === 0) {
             const finalOrderDoc = await orderRef.get();
-            if (finalOrderDoc.exists) {
+            if (finalOrderDoc.exists()) {
                 const orderData = finalOrderDoc.data() as Order;
                 if (orderData.paymentType === 'full' && orderData.listingType === 'event') {
                     const ticketsSnapshot = await db.collection('tickets').where('orderId', '==', orderData.id).get();
@@ -209,6 +212,14 @@ export async function POST(request: Request, { params }: { params: { secret:stri
                     }
                 }
             }
+        } else if (orderDataForEmail) {
+            // Send payment failure email
+            await sendPaymentFailedEmail({
+                to: orderDataForEmail.userEmail,
+                name: orderDataForEmail.userName,
+                orderId: orderDataForEmail.id
+            });
+            console.log(`Payment failure email sent to ${orderDataForEmail.userEmail}.`);
         }
         
         console.log(`--- SUCCESSFULLY PROCESSED CALLBACK for transaction ${transactionDoc.id}. Status: ${resultCode === 0 ? 'completed' : 'failed'} ---`);
@@ -219,5 +230,3 @@ export async function POST(request: Request, { params }: { params: { secret:stri
         return NextResponse.json({ ResultCode: 1, ResultDesc: "Internal Server Error" }, { status: 500 });
     }
 }
-
-    
