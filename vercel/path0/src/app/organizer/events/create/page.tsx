@@ -52,12 +52,12 @@ import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { saveEvent, saveTour, getListingById } from '../../actions';
+import { saveEvent, saveTour, getListingById } from '@/app/organizer/actions';
 import { useAuth } from '@/hooks/use-auth';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { uploadImage } from './cloudinary-actions';
+import { uploadImage } from '@/app/organizer/events/create/cloudinary-actions';
 import { Progress } from '@/components/ui/progress';
-import { getProductsForSelect } from './actions';
+import { getProductsForSelect } from '@/app/organizer/events/create/actions';
 import type { Product } from '@/lib/types';
 import { CheckCircle } from 'lucide-react';
 
@@ -344,6 +344,7 @@ const EventCreationWizard = () => {
             }
         }
         return true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [form, step, stepFields, form.watch()]); // Added form.watch() to re-evaluate on every form change
 
 
@@ -501,8 +502,8 @@ const EventCreationWizard = () => {
 
                           {/* Step 4 */}
                           {step === 4 && <Card><StepValidationTracker form={form as AnyForm} fields={stepFields[4]} title="Step 4: Review & Submit" /><CardContent className="space-y-6 pt-6">
-                              <FormField control={form.control} name="acceptTerms" render={({ field }) => ( <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange}/></FormControl><div className="space-y-1 leading-none"><FormLabel>I accept the NaksYetu Terms of Service for Organizers.</FormLabel><FormMessage /></div></FormItem> )}/>
-                              <FormField control={form.control} name="acceptRefundPolicy" render={({ field }) => ( <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange}/></FormControl><div className="space-y-1 leading-none"><FormLabel>I agree to the NaksYetu Refund Policy.</FormLabel><FormMessage /></div></FormItem> )}/>
+                              <FormField control={form.control} name="acceptTerms" render={({ field }) => ( <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange}/></FormControl><div className="space-y-1 leading-none"><FormLabel>I accept the Mov33 Terms of Service for Organizers.</FormLabel><FormMessage /></div></FormItem> )}/>
+                              <FormField control={form.control} name="acceptRefundPolicy" render={({ field }) => ( <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange}/></FormControl><div className="space-y-1 leading-none"><FormLabel>I agree to the Mov33 Refund Policy.</FormLabel><FormMessage /></div></FormItem> )}/>
                           </CardContent></Card>}
                         </div>
 
