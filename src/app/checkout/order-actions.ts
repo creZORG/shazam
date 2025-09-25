@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { db } from '@/lib/firebase/config';
@@ -156,7 +157,7 @@ export async function createOrderAndInitiatePayment(
                 deviceInfo: { userAgent, ipAddress },
                 ...(promocodeId && { promocodeId }), // Conditionally add promocodeId
                 ...(payload.trackingLinkId && { trackingLinkId: payload.trackingLinkId }), // Conditionally add trackingLinkId
-                freeMerch: eventData.freeMerch,
+                ...(eventData.freeMerch && { freeMerch: eventData.freeMerch }), // Conditionally add freeMerch
             };
             
             transaction.set(orderRef, orderData);
