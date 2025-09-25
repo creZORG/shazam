@@ -100,6 +100,15 @@ export async function createOrderAndInitiatePayment(
 
 
     try {
+        let promocodeId: string | undefined;
+        if (payload.promocode) {
+            const q = query(collection(db, 'promocodes'), where('code', '==', payload.promocode));
+            const promocodeSnapshot = await getDocs(q);
+            if (!promocodeSnapshot.empty) {
+                promocodeId = promocodeSnapshot.docs[0].id;
+            }
+        }
+
         const { orderId, transactionId } = await runTransaction(db, async (transaction) => {
             const eventRef = doc(db, 'events', payload.listingId);
             const eventDoc = await transaction.get(eventRef);
@@ -124,15 +133,6 @@ export async function createOrderAndInitiatePayment(
 
             // All checks passed, proceed with creating the order.
             
-            let promocodeId: string | undefined = undefined;
-            if (payload.promocode) {
-                const q = query(collection(db, 'promocodes'), where('code', '==', payload.promocode));
-                const promocodeSnapshot = await getDocs(q); // Note: getDocs is not allowed in transactions, but this is a read before write starts. Let's see if it works.
-                if (!promocodeSnapshot.empty) {
-                    promocodeId = promocodeSnapshot.docs[0].id;
-                }
-            }
-
             const orderRef = doc(collection(db, 'orders'));
             const orderData: Omit<Order, 'id'> = {
                 userId: userId,
@@ -154,8 +154,8 @@ export async function createOrderAndInitiatePayment(
                 status: 'pending',
                 channel: payload.channel,
                 deviceInfo: { userAgent, ipAddress },
-                promocodeId: promocodeId,
-                trackingLinkId: payload.trackingLinkId,
+                ...(promocodeId && { promocodeId }), // Conditionally add promocodeId
+                ...(payload.trackingLinkId && { trackingLinkId: payload.trackingLinkId }), // Conditionally add trackingLinkId
                 freeMerch: eventData.freeMerch,
             };
             
