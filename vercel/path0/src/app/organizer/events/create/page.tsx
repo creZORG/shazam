@@ -52,7 +52,7 @@ import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { saveEvent, saveTour, getListingById } from '@/app/organizer/actions';
+import { saveEvent, saveTour, getListingById } from '../../actions';
 import { useAuth } from '@/hooks/use-auth';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { uploadImage } from './cloudinary-actions';
@@ -745,3 +745,4 @@ export default function CreateListingPage() {
         </React.Suspense>
     )
 }
+
