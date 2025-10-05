@@ -6,19 +6,19 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/icons/Logo";
 
-const nakuruFacts = [
-  "Lake Nakuru is famous for its vast flocks of flamingos that line its shores.",
-  "The name 'Nakuru' means 'Place of the Dust Devil' in the Maasai language.",
-  "Menengai Crater, one of the world's largest volcanic calderas, is located in Nakuru.",
-  "Nakuru was granted city status in 2021, making it Kenya's fourth city.",
-  "The prehistoric site of Hyrax Hill, a museum and archaeological site, is located in Nakuru.",
-  "Nakuru is the capital of Nakuru County and a key agricultural hub in Kenya."
+const genericFacts = [
+  "The world's largest concert was held in Moscow in 1997, with over 3.5 million attendees.",
+  "The term 'DJ' stands for 'Disc Jockey'.",
+  "The most expensive concert ticket was for a private show by the Eagles, costing over $6 million.",
+  "The longest concert by a single artist lasted for 27 hours, 3 minutes, and 44 seconds.",
+  "Early versions of tickets were often clay tokens or pieces of bone.",
+  "The first-ever online ticket was sold in 1994."
 ];
 
 const loadingMessages = [
     "Fetching the fun...",
     "Lining up the events...",
-    "Polishing the gems of Nakuru...",
+    "Polishing the gems...",
     "Tuning the guitars...",
     "Warming up the engines..."
 ]
@@ -29,7 +29,7 @@ export default function Loading() {
 
   useEffect(() => {
     // Select a random fact and message on the client side to avoid hydration mismatch
-    setFact(nakuruFacts[Math.floor(Math.random() * nakuruFacts.length)]);
+    setFact(genericFacts[Math.floor(Math.random() * genericFacts.length)]);
     setMessage(loadingMessages[Math.floor(Math.random() * loadingMessages.length)]);
   }, []);
 

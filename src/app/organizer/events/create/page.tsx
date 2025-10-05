@@ -57,7 +57,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { uploadImage } from '@/app/organizer/events/create/cloudinary-actions';
 import { Progress } from '@/components/ui/progress';
-import { getProductsForSelect } from './actions';
+import { getProductsForSelect } from '@/app/organizer/events/create/actions';
 import type { Product } from '@/lib/types';
 import { CheckCircle } from 'lucide-react';
 
