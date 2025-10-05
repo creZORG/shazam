@@ -72,8 +72,20 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="w-full px-4 flex h-14 items-center justify-between">
-        <div className="flex items-center">
-           <div className="md:hidden">
+        <div className="flex items-center gap-4">
+           <Link href="/" className="flex items-center">
+              <Logo variant="long" className="h-8 w-auto hidden md:block" />
+              <Logo variant="brief" className="h-10 w-10 md:hidden" />
+            </Link>
+            <div className="hidden md:flex">
+                <nav className="flex items-center gap-1 p-1 rounded-full bg-muted/50 border shadow-sm">
+                    {renderNavLinks()}
+                </nav>
+            </div>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -81,7 +93,7 @@ export function Header() {
                   <span className="sr-only">Toggle Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left">
+              <SheetContent side="right">
                 <SheetHeader>
                   <SheetTitle>
                     <Link href="/" className="flex items-center space-x-2 mb-6">
@@ -95,18 +107,6 @@ export function Header() {
               </SheetContent>
             </Sheet>
           </div>
-           <Link href="/" className="flex items-center">
-              <Logo variant="long" className="h-8 w-auto hidden md:block" />
-              <Logo variant="brief" className="h-10 w-10 md:hidden" />
-            </Link>
-        </div>
-
-        <div className="flex items-center gap-1">
-            <div className="hidden md:flex">
-                <nav className="flex items-center gap-1 p-1 rounded-full bg-muted/50 border shadow-sm">
-                    {renderNavLinks()}
-                </nav>
-            </div>
           {user && <NotificationCenter />}
           <ThemeToggle />
           {user ? (
