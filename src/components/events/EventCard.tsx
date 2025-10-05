@@ -190,9 +190,9 @@ export function EventCard({ event }: EventCardProps) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
         
-        <div className="absolute top-2 left-2 bg-background/80 backdrop-blur-sm rounded-lg p-2 text-center shadow-lg w-14">
+        <div className="absolute top-2 left-2 bg-background/80 backdrop-blur-sm rounded-lg p-1 text-center shadow-lg w-12">
             <p className="text-xs font-bold uppercase text-red-500">{format(eventDate, 'eee')}</p>
-            <p className="text-2xl font-extrabold">{format(eventDate, 'd')}</p>
+            <p className="text-xl font-extrabold">{format(eventDate, 'd')}</p>
             <p className="text-xs font-bold uppercase text-muted-foreground">{format(eventDate, 'MMM')}</p>
         </div>
 
