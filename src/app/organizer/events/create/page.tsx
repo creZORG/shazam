@@ -435,7 +435,7 @@ const EventCreationWizard = () => {
                               </div>
                                <div className="grid md:grid-cols-2 gap-6">
                                   <FormField control={form.control} name="category" render={({ field }) => ( <FormItem> <FormLabel>Event Category</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger></FormControl> <SelectContent> {eventCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)} </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
-                                  <FormField control={form.control} name="ageCategory" render={({ field }) => ( <FormItem> <FormLabel>Age Category</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select an age group" /></SelectTrigger></FormControl> <SelectContent> {ageCategories.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)} </SelectContent> </Select> <FormMessage /> </FormItem> )}/>
+                                  <FormField control={form.control} name="ageCategory" render={({ field }) => ( <FormItem> <FormLabel>Age Category</FormLabel> <Select onValueChange={field.onChange} defaultValue={field.value}> <FormControl><SelectTrigger><SelectValue placeholder="Select an age group" /></SelectTrigger></FormControl> <SelectContent> {ageCategories.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)} </Select> <FormMessage /> </FormItem> )}/>
                               </div>
                                {selectedCategory === 'Sports & Fitness' && (
                                 <div className="p-4 border rounded-md space-y-4 bg-muted/50">
@@ -745,3 +745,5 @@ export default function CreateListingPage() {
         </React.Suspense>
     )
 }
+
+    
