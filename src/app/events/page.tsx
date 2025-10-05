@@ -138,7 +138,6 @@ export default function EventsPage() {
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [carouselPosters, setCarouselPosters] = useState<Poster[]>([]);
-  const [otherPosters, setOtherPosters] = useState<Poster[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterState>({});
@@ -160,7 +159,6 @@ export default function EventsPage() {
 
       if (postersResult.data) {
         setCarouselPosters(postersResult.data.filter(p => p.title.toLowerCase().includes('carousel')));
-        setOtherPosters(postersResult.data.filter(p => !p.title.toLowerCase().includes('carousel')));
       }
 
       if (adsResult.data && adsResult.data.length > 0) {
@@ -196,42 +194,29 @@ export default function EventsPage() {
     handleFilterChange(newFilters);
   };
 
-  const { naksyetuEvents, pastEvents } = useMemo(() => {
+  const { upcomingEvents, pastEvents } = useMemo(() => {
     const upcoming: Event[] = [];
     const past: Event[] = [];
 
     allEvents.forEach(event => {
-      if (event.status === 'archived' || new Date(event.date) < new Date()) {
+      const isEventPast = new Date(event.date) < new Date();
+      if (event.status === 'archived' || isEventPast) {
         past.push(event);
-      } else if(event.ticketingType === 'naksyetu') {
+      } else {
         upcoming.push(event);
       }
     });
     
     return {
-      naksyetuEvents: upcoming,
+      upcomingEvents: upcoming,
       pastEvents: past,
     };
   }, [allEvents]);
   
   const hasActiveFilters = Object.keys(activeFilters).length > 0;
-  
-  const otherEventsItems = useMemo(() => {
-    const items: (Poster | AdSubmission | { type: 'ad_placeholder' })[] = [...otherPosters];
-    const adToDisplay = approvedAds.length > 0 ? approvedAds[Math.floor(Math.random() * approvedAds.length)] : null;
-    
-    if (adToDisplay) {
-        items.unshift(adToDisplay);
-    } else {
-        items.unshift({ type: 'ad_placeholder' });
-    }
-    
-    return items;
-}, [otherPosters, approvedAds]);
-
 
   const renderSkeletons = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {[...Array(8)].map((_, i) => <EventCardSkeleton key={i} />)}
     </div>
   );
@@ -296,52 +281,34 @@ export default function EventsPage() {
 
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4">
-            <Tabs defaultValue="naksyetu" className="w-full">
+            <Tabs defaultValue="upcoming" className="w-full">
               <TabsList className="grid w-full grid-cols-2 max-w-lg mx-auto">
-                <TabsTrigger value="naksyetu">Ticketed by NaksYetu</TabsTrigger>
-                <TabsTrigger value="other">Other Events in Nakuru</TabsTrigger>
+                <TabsTrigger value="upcoming">Upcoming Events</TabsTrigger>
+                <TabsTrigger value="past">Past Events</TabsTrigger>
               </TabsList>
-              <TabsContent value="naksyetu" className="mt-8">
+              <TabsContent value="upcoming" className="mt-8">
                 {loading || isSearching ? renderSkeletons() :
-                naksyetuEvents.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {naksyetuEvents.map((item, index) => <EventCard key={(item as Event).id || index} event={item as Event} />)}
+                upcomingEvents.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {upcomingEvents.map((item, index) => <EventCard key={(item as Event).id || index} event={item as Event} />)}
                     </div>
                 ) : (
-                    <p className="text-center text-muted-foreground py-12">No events ticketed by NaksYetu match your criteria.</p>
+                    <p className="text-center text-muted-foreground py-12">No upcoming events match your criteria.</p>
                 )}
               </TabsContent>
-              <TabsContent value="other" className="mt-8">
-                {loading || isSearching ? renderSkeletons() :
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {otherEventsItems.map((item) => {
-                        if ('type' in item && item.type === 'ad_placeholder') return <AdPlaceholderCard key="ad-placeholder" />;
-                        if ('campaignName' in item) return <AdCard key={(item as AdSubmission).id} ad={item as AdSubmission} />;
-                        return <PosterCard key={(item as Poster).id} poster={item as Poster} />
-                    })}
-                 </div>
-                }
-                 {!loading && !isSearching && otherPosters.length === 0 && (
-                    <p className="text-center text-muted-foreground py-12">No other events or promotions match your criteria.</p>
+              <TabsContent value="past" className="mt-8">
+                 {loading || isSearching ? renderSkeletons() :
+                 pastEvents.length > 0 ? (
+                     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {pastEvents.map((item) => <EventCard key={(item as Event).id} event={item as Event} />)}
+                     </div>
+                 ) : (
+                    <p className="text-center text-muted-foreground py-12">No past events found.</p>
                  )}
               </TabsContent>
             </Tabs>
         </div>
       </section>
-      
-      {pastEvents.length > 0 && (
-        <section className="py-8 md:py-12 bg-secondary/50">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-8">Past & Archived Events</h2>
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {pastEvents.map((event) => (
-                <EventCard key={event.id} event={event as Event} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
     </div>
   );
 }

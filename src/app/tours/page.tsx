@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { TourCard } from "@/components/tours/TourCard";
@@ -128,15 +129,15 @@ export default function ToursPage() {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold mb-8">Available Tours</h2>
           {loading ? (
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[...Array(4)].map((_, i) => <TourCardSkeleton key={i} />)}
             </div>
           ) : isSearching ? (
-             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[...Array(4)].map((_, i) => <TourCardSkeleton key={i} />)}
             </div>
           ) : filteredTours.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredTours.map((tour) => (
                 <TourCard key={tour.id} tour={tour as Tour} />
                 ))}
