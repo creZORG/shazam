@@ -73,6 +73,28 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="w-full px-4 flex h-14 items-center justify-between">
         <div className="flex items-center">
+           <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle Menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left">
+                <SheetHeader>
+                  <SheetTitle>
+                    <Link href="/" className="flex items-center space-x-2 mb-6">
+                      <Logo variant="long" />
+                    </Link>
+                  </SheetTitle>
+                </SheetHeader>
+                <nav className="flex flex-col space-y-2">
+                  {renderNavLinks(true)}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          </div>
            <Link href="/" className="flex items-center">
               <Logo variant="long" className="h-8 w-auto hidden md:block" />
               <Logo variant="brief" className="h-10 w-10 md:hidden" />
@@ -170,36 +192,12 @@ export function Header() {
                 </Link>
                  <Link href="/login" passHref className="md:hidden">
                     <Button variant="ghost" size="icon">
-                        <Ticket className="h-5 w-5" />
+                        <User className="h-5 w-5" />
                         <span className="sr-only">Login</span>
                     </Button>
                 </Link>
             </>
           )}
-
-           {/* Mobile Menu */}
-           <div className="md:hidden">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Toggle Menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right">
-                <SheetHeader>
-                  <SheetTitle>
-                    <Link href="/" className="flex items-center space-x-2 mb-6">
-                      <Logo variant="long" />
-                    </Link>
-                  </SheetTitle>
-                </SheetHeader>
-                <nav className="flex flex-col space-y-2">
-                  {renderNavLinks(true)}
-                </nav>
-              </SheetContent>
-            </Sheet>
-          </div>
 
         </div>
       </div>
