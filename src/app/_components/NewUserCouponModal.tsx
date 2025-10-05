@@ -25,7 +25,7 @@ export function NewUserCouponModal() {
   useEffect(() => {
     const hasSeen = localStorage.getItem(NEW_USER_COUPON_FLAG);
     if (!hasSeen) {
-      getPromocodeById('NAKSYETU_WELCOME_GIFT').then(result => {
+      getPromocodeById('MOV33_WELCOME_GIFT').then(result => {
         if (result.success && result.data) {
           setWelcomeCoupon(result.data);
           const timer = setTimeout(() => {

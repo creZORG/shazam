@@ -15,11 +15,11 @@ import { HomeCarousel } from './_components/HomeCarousel';
 import { NewUserCouponModal } from './_components/NewUserCouponModal';
 
 export const metadata: Metadata = {
-  title: 'Mov33 | Tickets for Events, Tours, and Nightlife in Nakuru',
-  description: 'Your one-stop platform for tickets to the most exciting concerts, tours, and nightlife across all Nakuru subcounties. Discover what\'s hot and book your next experience!',
+  title: 'Mov33 | Tickets for Events, Tours, and Nightlife',
+  description: 'Your one-stop platform for tickets to the most exciting concerts, tours, and nightlife. Discover what\'s hot and book your next experience!',
   openGraph: {
-    title: 'Mov33 | The Heartbeat of Nakuru\'s Culture & Entertainment',
-    description: 'Find and buy tickets for the best events, tours, and nightlife in Nakuru.',
+    title: 'Mov33 | The Heartbeat of Culture & Entertainment',
+    description: 'Find and buy tickets for the best events, tours, and nightlife.',
     url: 'https://mov33.com',
     images: [
       {
@@ -33,8 +33,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Mov33 | Tickets for Events, Tours, and Nightlife in Nakuru',
-    description: 'Discover and book tickets for the best events in Nakuru.',
+    title: 'Mov33 | Tickets for Events, Tours, and Nightlife',
+    description: 'Discover and book tickets for the best events.',
     images: ['https://i.postimg.cc/4yK23PLk/download.png'], // Replace with a proper hero image URL
   },
 };
@@ -96,7 +96,7 @@ function HotListingCard({ listing, rank }: { listing: HotListing, rank: number }
 
 const defaultFeatureCards: FeatureCardContent[] = [
     { title: 'Events', description: 'From music festivals to tech conferences, find your next experience.', href: '/events', cta: 'Browse Events', imageUrl: 'https://picsum.photos/seed/cat-event/800/600'},
-    { title: 'Tours', description: 'Explore the beauty of Nakuru with our curated local tours.', href: '/tours', cta: 'Discover Tours', imageUrl: 'https://picsum.photos/seed/cat-tour/800/600'},
+    { title: 'Tours', description: 'Explore the beauty of our country with our curated local tours.', href: '/tours', cta: 'Discover Tours', imageUrl: 'https://picsum.photos/seed/cat-tour/800/600'},
     { title: 'Nightlife', description: 'Discover the hottest parties, DJ sets, and club events happening tonight.', href: '/nightlife', cta: 'Explore Nightlife', imageUrl: 'https://picsum.photos/seed/cat-night/800/600'},
 ];
 const defaultPartnerSection: PartnerSectionContent = {

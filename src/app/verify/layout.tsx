@@ -40,8 +40,7 @@ export default function VerifyLayout({ children }: { children: ReactNode }) {
       <Sidebar>
         <SidebarHeader>
              <Link href="/" className="flex items-center space-x-2">
-                <Logo />
-                <span className="font-bold">NaksYetu</span>
+                <Logo variant="long" />
             </Link>
         </SidebarHeader>
         <SidebarMenu>

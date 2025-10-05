@@ -27,7 +27,7 @@ import { useRouter } from "next/navigation";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 type Listing = (Event | Tour) & { id: string; type: 'event' | 'tour' };
-type SelectedListing = Listing | { id: 'all', type: 'all', name: 'All Active Events' };
+type SelectedListing = Listing | { id: 'all', type: 'all', name: 'All Active Listings' };
 
 
 const couponSchema = z.object({
@@ -90,7 +90,7 @@ function ListingSelectionStep({ onSelect }: { onSelect: (listing: SelectedListin
     return (
         <div className="space-y-4">
              <Card
-                onClick={() => setSelectedListing({ id: 'all', type: 'all', name: 'All Active Events' })}
+                onClick={() => setSelectedListing({ id: 'all', type: 'all', name: 'All Active Listings' })}
                 className={cn(
                     "cursor-pointer transition-all border-2",
                     selectedListing?.id === 'all' ? "border-primary ring-2 ring-primary" : "hover:border-primary/50"
@@ -99,7 +99,7 @@ function ListingSelectionStep({ onSelect }: { onSelect: (listing: SelectedListin
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
                         <Globe className="h-5 w-5 text-primary" />
-                        All Active Events
+                        All Active Listings
                     </CardTitle>
                     <CardDescription>Create one code that works across all your published events and tours.</CardDescription>
                 </CardHeader>
@@ -151,7 +151,7 @@ function CouponDetailsStep({ onBack, onNext }: { onBack: () => void, onNext: (da
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onNext)} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
-                    <FormField control={form.control} name="code" render={({ field }) => (<FormItem><FormLabel>Coupon Code</FormLabel><FormControl><Input placeholder="e.g., NAKS10" {...field} onChange={e => field.onChange(e.target.value.toUpperCase())} /></FormControl><FormMessage /></FormItem>)}/>
+                    <FormField control={form.control} name="code" render={({ field }) => (<FormItem><FormLabel>Coupon Code</FormLabel><FormControl><Input placeholder="e.g., MOV33PROMO" {...field} onChange={e => field.onChange(e.target.value.toUpperCase())} /></FormControl><FormMessage /></FormItem>)}/>
                     <FormField control={form.control} name="discountType" render={({ field }) => (<FormItem><FormLabel>Discount Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl><SelectContent><SelectItem value="percentage">Percentage (%)</SelectItem><SelectItem value="fixed">Fixed Amount (Ksh)</SelectItem></SelectContent></Select><FormMessage /></FormItem>)}/>
                 </div>
                  <div className="grid md:grid-cols-2 gap-6">

@@ -66,7 +66,7 @@ export async function createPromocode(data: Partial<Omit<Promocode, 'id' | 'usag
         decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
     } catch (e) {
         // Allow system-level creation for new user coupons
-        if (data.organizerId !== 'NAKSYETU_SYSTEM') {
+        if (data.organizerId !== 'MOV33_SYSTEM') {
             return { success: false, error: 'Authentication failed.' };
         }
     }

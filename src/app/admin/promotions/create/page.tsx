@@ -82,8 +82,8 @@ function WelcomeGiftForm() {
         startSaving(async () => {
              const selectedListing = listings.find(l => l.id === listingId);
              const result = await createPromocode({
-                organizerId: 'NAKSYETU_SYSTEM',
-                code: 'NAKSYETU_WELCOME_GIFT',
+                organizerId: 'MOV33_SYSTEM',
+                code: 'MOV33_WELCOME_GIFT',
                 discountType: 'percentage',
                 discountValue: discountValue,
                 usageLimit: 999999, // Effectively infinite for a template
@@ -168,7 +168,7 @@ function GeneralCouponForm() {
         startSaving(async () => {
             const selectedListing = listings.find(l => l.id === values.listingId);
             const result = await createPromocode({
-                organizerId: 'NAKSYETU_SYSTEM',
+                organizerId: 'MOV33_SYSTEM',
                 code: values.code.toUpperCase(),
                 discountType: values.discountType,
                 discountValue: values.discountValue,

@@ -62,8 +62,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <Sidebar>
         <SidebarHeader>
              <Link href="/" className="flex items-center space-x-2">
-                <Logo />
-                <span className="font-bold">Mov33</span>
+                <Logo variant="long" />
             </Link>
         </SidebarHeader>
         <SidebarMenu>

@@ -421,7 +421,7 @@ const EventCreationWizard = () => {
                         <div className="space-y-8">
                           {/* Step 1 */}
                           {step === 1 && <Card><StepValidationTracker form={form as AnyForm} fields={stepFields[1]} title="Step 1: Event Details" /><CardContent className="space-y-6 pt-6">
-                              <FormField control={form.control} name="name" render={({ field }) => ( <FormItem> <FormLabel>Event Name</FormLabel> <FormControl> <Input placeholder="e.g., NaksYetu Fest" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
+                              <FormField control={form.control} name="name" render={({ field }) => ( <FormItem> <FormLabel>Event Name</FormLabel> <FormControl> <Input placeholder="e.g., Mov33 Fest" {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
                               <FormField control={form.control} name="description" render={({ field }) => ( <FormItem> <FormLabel>Description</FormLabel> <FormControl> <Textarea placeholder="Tell attendees all about your event..." rows={5} {...field} /> </FormControl> <FormMessage /> </FormItem> )}/>
                               <div className="grid md:grid-cols-2 gap-6">
                                   <FormField control={form.control} name="date" render={({ field }) => ( <FormItem> <FormLabel>Start Date</FormLabel> <FormControl><Input type="date" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
@@ -696,7 +696,7 @@ const TourCreationWizard = () => {
                             <Card>
                                 <StepValidationTracker form={form as AnyForm} fields={['acceptTerms']} title="Step 4: Review & Submit" />
                                 <CardContent className="space-y-6 pt-6">
-                                    <FormField control={form.control} name="acceptTerms" render={({ field }) => ( <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange}/></FormControl><div className="space-y-1 leading-none"><FormLabel>I accept the NaksYetu Terms of Service for Organizers.</FormLabel><FormMessage /></div></FormItem> )}/>
+                                    <FormField control={form.control} name="acceptTerms" render={({ field }) => ( <FormItem className="flex items-start space-x-3 space-y-0 rounded-md border p-4"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange}/></FormControl><div className="space-y-1 leading-none"><FormLabel>I accept the Mov33 Terms of Service for Organizers.</FormLabel><FormMessage /></div></FormItem> )}/>
                                 </CardContent>
                             </Card>
                         )}
@@ -745,5 +745,3 @@ export default function CreateListingPage() {
         </React.Suspense>
     )
 }
-
-    

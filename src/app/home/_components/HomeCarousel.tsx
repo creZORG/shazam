@@ -59,10 +59,10 @@ export function HomeCarousel({ posters }: { posters: Poster[] }) {
       </Carousel>
       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center h-full text-center p-4 text-white">
         <h1 className="text-4xl md:text-6xl font-bold tracking-tighter" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.7)' }}>
-          The Heartbeat of Nakuru's Culture & Entertainment
+          The Heartbeat of Culture & Entertainment
         </h1>
         <p className="mt-4 max-w-3xl text-lg md:text-xl" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.5)' }}>
-          Your one-stop platform for tickets to the most exciting concerts, tours, and nightlife across all Nakuru subcounties.
+          Your one-stop platform for tickets to the most exciting concerts, tours, and nightlife.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 mt-8">
           <Link href="/events">

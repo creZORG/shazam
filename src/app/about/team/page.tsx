@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Meet the Team | Mov33",
-  description: "Meet the passionate individuals behind Mov33, dedicated to bringing you the best of Nakuru's entertainment scene.",
+  description: "Meet the passionate individuals behind Mov33, dedicated to bringing you the best of the entertainment scene.",
 };
 
 function TeamMemberCard({ member }: { member: TeamMember }) {
@@ -42,7 +42,7 @@ export default async function TeamPage() {
         name: 'Mark Allan',
         role: 'Lead Software Developer',
         imageUrl: 'https://pbs.twimg.com/media/G06_u1TWsAAP7xe?format=jpg&name=900x900',
-        bio: 'Building the future of Nakuru\'s event scene, one line of code at a time.'
+        bio: 'Building the future of the event scene, one line of code at a time.'
     };
 
     return (
@@ -50,7 +50,7 @@ export default async function TeamPage() {
             <div className="text-center mb-12">
                 <h1 className="text-4xl font-bold tracking-tight">Meet Our Team</h1>
                 <p className="text-lg text-muted-foreground max-w-3xl mx-auto mt-2">
-                    The passionate individuals behind Mov33, dedicated to bringing you the best of Nakuru.
+                    The passionate individuals behind Mov33, dedicated to bringing you the best entertainment experiences.
                 </p>
             </div>
             

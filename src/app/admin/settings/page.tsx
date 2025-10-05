@@ -162,7 +162,7 @@ export default function AdminSettingsPage() {
             ],
             partnerSection: {
                 title: "Launch Your Event to the Moon",
-                description: "Are you an event organizer, tour operator, or influencer? NaksYetu provides the platform, tools, and audience to guarantee your success. Manage listings, sell tickets, and engage with your community—all in one place.",
+                description: "Are you an event organizer, tour operator, or influencer? Mov33 provides the platform, tools, and audience to guarantee your success. Manage listings, sell tickets, and engage with your community—all in one place.",
                 href: "/partner-with-us",
                 cta: "Start Selling Today",
                 imageUrl: "https://picsum.photos/seed/partner/800/600",

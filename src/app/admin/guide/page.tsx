@@ -116,7 +116,7 @@ export default function AdminGuidePage() {
 
              <Card className="border-primary/50 bg-primary/10">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Lightbulb /> Pro-Tip: Use the Admin AI</CardTitle>
+                    <CardTitle className="flex items-center gap-2"><Lightbulb /> Pro-Tip: Use the AI Assistant</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <p>The "Security & Audit" page features a powerful AI assistant chat bubble. You can ask it questions like <span className="font-semibold text-primary/80">"Show me all failed transactions from yesterday"</span> or <span className="font-semibold text-primary/80">"What was Mark's last activity?"</span> to get quick insights without manually searching through tables.</p>
